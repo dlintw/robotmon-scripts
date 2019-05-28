@@ -112,7 +112,9 @@ var Button = {
   gameMagicalTime2: {x: 750, y: 1255 + adjY, color: {'a': 0, 'b': 13, 'g': 175, 'r': 240}},
   gameMagicalTime3: {x: 320, y: 1130 + adjY, color: {'a': 0, 'b': 13, 'g': 175, 'r': 240}},
   gameMagicalTime4: {x: 750, y: 1130 + adjY, color: {'a': 0, 'b': 13, 'g': 175, 'r': 240}},
-  outGameItems: [{x: 205, y: 817 + adjY}, {x: 435, y: 821 + adjY}, {x: 651, y: 817 + adjY}, {x: 871, y: 821 + adjY}, {x: 201, y: 1095 + adjY}, {x: 424, y: 1098 + adjY}],
+  outGameItems: [
+    {x: 205, y: 817 + adjY}, {x: 435, y: 817 + adjY}, {x: 651, y: 817 + adjY}, {x: 871, y: 817 + adjY},
+    {x: 201, y: 1084 + adjY}, {x: 435, y: 1084 + adjY}],
   outGameEnd: {x: 890, y: 1520 + adjY, color: {'a': 0, 'b': 15, 'g': 140, 'r': 245}},
   outStart1: {x: 500, y: 1520 + adjY, color: {'a': 0, 'b': 19, 'g': 145, 'r': 247}}, // 開始遊戲
   outStart2: {x: 500, y: 1520 + adjY, color: {'a': 0, 'b': 129, 'g': 111, 'r': 236}}, // 開始
@@ -155,6 +157,16 @@ var Button = {
 };
 
 var Page = {
+  /*
+  BlueFrame: {
+    name: 'BlueFrame',
+    colors: [
+      {x:983, y:88 + adjY, b:228,g:189,r:31, match: true, threshold:80},
+      {x:976, y:1873 + adjY, b:58,g:52,r:7, match: true, threshold:80},
+      {x:107, y:1871 + adjY, b:231,g:195,r:28, match: true, threshold:80},
+    ],
+  },
+  */
   TodayMission: {
     name: 'TodayMission',
     colors: [
@@ -1163,50 +1175,24 @@ Tsum.prototype.sendMoneyInfo = function() {
 };
 
 Tsum.prototype.isAppOn = function() {
-  if (Date.now() - this.lastAppOnTime < this.detectAppOnPeriod) {
-    return true;
-  }
-  this.lastAppOnTime = Date.now();
-  while (Date.now() - this.lastAppOnTime < this.detectAppOnPeriod) {
-    log('dbg:1171');
-    var result = execute('dumpsys window windows').split('mCurrentFocus');
-    log('dbg:1173.a');
-    if (result.length < 2) {
-      log('dbg:1173');
-      this.sleep(100);
-      continue;
-    }
+  var result = execute('dumpsys window windows').split('mCurrentFocus');
+  if (result.length >= 2) {
     result = result[1].split(' ');
-    if (result.length < 3) {
-      log('dbg:1179');
-      this.sleep(100);
-      continue;
+    if (result.length >= 3) {
+      result = result[2].split('/');
+      if (result.length >= 2) {
+        var packageName = result[0];
+        // var activityName = result[1];
+        if (packageName.indexOf('LGTMTM') !== -1) {
+          return true;
+        }
+      }
     }
-    result = result[2].split('/');
-    if (result.length < 2) {
-      log('dbg:1185');
-      this.sleep(100);
-      continue;
-    }
-    var packageName = result[0];
-    // var activityName = result[1];
-    if (packageName.indexOf('LGTMTM') == -1) {
-      log('dbg:1192');
-      this.sleep(100);
-      continue;
-    }
-    log('dbg:1198');
-    this.lastAppOnTime = Date.now();
-    return true;
   }
-  log('dbg:1202');
   return false;
 };
 
 Tsum.prototype.startApp = function() {
-  if (!this.autoLaunch) {
-    return;
-  }
   log(this.logs.startTsumTsumApp);
   if (this.isJP) {
     execute('am start -n com.linecorp.LGTMTM/.TsumTsum');
@@ -1395,18 +1381,38 @@ Tsum.prototype.exitUnknownPage = function() {
   this.sleep(500);
 };
 
+Tsum.prototype.checkOnOrStop = function() {
+  var t = Date.now();
+  var timeout = false;
+  while (!this.isAppOn()) {
+    if (!this.isRunning) {
+      return false;
+    }
+    if (this.detectAppOnPeriod > 0) {
+      if (Date.now() - t > this.detectAppOnPeriod) {
+        timeout = true;
+      }
+      break;
+    }
+    this.sleep(this.detectPageMS);
+  }
+  if (this.autoLaunch) {
+    if (timeout) {
+      this.startApp();
+    }
+  } else {
+    if (timeout) {
+      stop();
+      return false;
+    }
+  }
+  return true;
+};
+
 Tsum.prototype.goFriendPage = function() {
   while (this.isRunning) {
-      log('dbg:1396');
-    if (!this.isAppOn()) {
-      log('dbg:1398');
-      this.startApp();
-      log('dbg:1400');
-      if (!this.isAppOn()) {
-        log('dbg:1402');
-        stop();
-        return;
-      }
+    if (!this.checkOnOrStop()) {
+      return;
     }
     var page = this.findPage(2, 1000);
     log(this.logs.currentPage, page, 'goFriend');
@@ -1473,8 +1479,8 @@ Tsum.prototype.checkGameItem = function() {
 
 Tsum.prototype.goGamePlayingPage = function() {
   while (this.isRunning) {
-    if (!this.isAppOn()) {
-      this.startApp();
+    if (!this.checkOnOrStop()) {
+      return;
     }
     var page = this.findPage(2, 2000);
     log(this.logs.currentPage, page, 'play');
@@ -2037,11 +2043,8 @@ Tsum.prototype.taskReceiveOneItem = function() {
   var sender = undefined;
   var receiveTime = Date.now();
   while (this.isRunning) {
-    log('dbg:2036');
-    if (!this.isAppOn()) {
-      this.isRunning = false;
-      log('dbg:2021');
-      break;
+    if (!this.checkOnOrStop()) {
+      return;
     }
     var img = this.screenshot();
     var isItem = isSameColor(Button.outReceiveOne.color, this.getColor(img, Button.outReceiveOne), 35);
@@ -2529,36 +2532,36 @@ function getRecordFilename() {
 }
 /*
 start(
-  false, // isJP,
-  false, // detect,
-  true, // autoLaunch,
-  3, // detectAppOnPeriod,
-  true, // autoPlay,
-  // false, // isSlowCalculation,
-  false, // isPause,
-  true, // clearBubbles,
-  true, // useFan,
-  false, // isFourTsum,
-  false, // coinItem,
-  false, // bubbleItem,
-  false, // enableAllItems,
-  1, // skillInterval,
-  3, // skillLevel,
-  'burst', // skillType,
-  false, // receiveItem,
-  25, // receiveItemInterval,
-  true, // receiveOneItem,
-  false, // keepRuby,
-  1, // receiveCheckLimit,
-  5, // receiveOneItemInterval,
-  false, // recordReceive,
-  false, // largeImage,
-  true, // sendHearts,
-  false, // sentToZero,
-  true, // sendFromFirst,
-  9, // sendHeartMaxDuring,
-  25, // sendHeartsInterval,
-  false // isLocaleTW
+    false, // isJP,
+    false, // detect,
+    false, // autoLaunch,
+    3, // detectAppOnPeriod,
+    true, // autoPlay,
+    // false, // isSlowCalculation,
+    false, // isPause,
+    true, // clearBubbles,
+    true, // useFan,
+    false, // isFourTsum,
+    false, // coinItem,
+    false, // bubbleItem,
+    false, // enableAllItems,
+    1, // skillInterval,
+    3, // skillLevel,
+    'burst', // skillType,
+    false, // receiveItem,
+    25, // receiveItemInterval,
+    true, // receiveOneItem,
+    false, // keepRuby,
+    1, // receiveCheckLimit,
+    5, // receiveOneItemInterval,
+    false, // recordReceive,
+    false, // largeImage,
+    true, // sendHearts,
+    false, // sentToZero,
+    true, // sendFromFirst,
+    9, // sendHeartMaxDuring,
+    25, // sendHeartsInterval,
+    true // isLocaleTW
 );
 */
 // vim:et sw=2 ts=2 ai
