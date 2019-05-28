@@ -2135,7 +2135,7 @@ Tsum.prototype.taskSendHearts = function() {
   this.sleep(1000);
   if (this.sendFromFirst) {
     this.friendPageGoTop();
-    tap(0, 0); // Avoid overlap between zero score and pointer location
+    tap(0, 0, 50); // Avoid overlap between zero score and pointer location
   }
 
   var startTime = Date.now();
