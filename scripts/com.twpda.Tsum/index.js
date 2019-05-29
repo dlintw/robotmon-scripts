@@ -33,27 +33,6 @@ function nowTime() {
 function log() {
   sleep(10);
   var args = [];
-  /* disable messy messages
-  if (ts != undefined && ts.showHeartLog && ts.record && ts.record['hearts_count']) {
-    var msg = '';
-    msg += 'R:'+ts.record['hearts_count'].receivedCount+' ';
-    msg += 'S:'+ts.record['hearts_count'].sentCount;
-    if (gTaskController != undefined && gTaskController.tasks != undefined) {
-      var sendTask = gTaskController.tasks['sendHearts'];
-      if (sendTask != undefined) {
-        if (sendTask.lastRunTime == 0) {
-          msg += '/0';
-        } else {
-          var next = (nowTime() - (sendTask.lastRunTime + sendTask.interval)) / 60000;
-          msg += '/' + (+next.toFixed(0));
-        }
-      }
-    }
-    if (msg != '') {
-      args.push('['+msg+']');
-    }
-  }
-  */
   for (var i = 0; i < arguments.length; i++) {
     if (typeof arguments[i] == 'object') {
       arguments[i] = JSON.stringify(arguments[i]);
@@ -89,8 +68,8 @@ var Config = {
   },
 };
 
-// 1776 * 1920 (y - 78)
-var adjY = 72;
+// capture on 1080*1920 phone with 114 height virutalscreen
+var adjY = 72;  // = (1920 - 114)/2
 var Button = {
   gameBubblesFrom: {x: 100, y: 560 + adjY},
   gameBubblesTo: {x: 1000, y: 1460 + adjY},
@@ -1245,8 +1224,8 @@ Tsum.prototype.checkOnOrStop = function() {
     if (this.detectAppOnPeriod > 0) {
       if (Date.now() - t > this.detectAppOnPeriod) {
         timeout = true;
+        break;
       }
-      break;
     }
     this.sleep(this.detectPageMS);
   }
