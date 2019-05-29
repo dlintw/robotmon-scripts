@@ -586,149 +586,8 @@ function sendMessage(topMsg, msg) {
 checkCanSendMessage();
 
 // Utils for Tsum
-
-function printMaxScores(tsumMaxScores) {
-  var str = '';
-  for (var i = 0; i < 10 && i < tsumMaxScores.length; i++) {
-    str += i + ', ' + tsumMaxScores[i].key + ', ' + tsumMaxScores[i].score + '    ';
-  }
-  log(str);
-}
-
 function usingTimeString(startTime) {
   return Date.now() - startTime;
-}
-
-function loadTsumImages(isJP) {
-  var tsumImages = {};
-  var tsumDir = isJP ? Config.tsumJpDir : Config.tsumDir;
-  var tsumPath = getStoragePath() + '/' + tsumDir;
-  var tsumFiles = isJP ? Config.tsumFilesJP : Config.tsumFiles;
-  for (var i in tsumFiles) {
-    var key = tsumFiles[i];
-    var filename = tsumPath + '/' + key + '_0.png';
-    var img = openImage(filename);
-    smooth(img, 1, 2);
-    tsumImages[key] = img;
-  }
-  return tsumImages;
-}
-
-function releaseTsumImages(tsumImages) {
-  for (var k in tsumImages) {
-    releaseImage(tsumImages[k]);
-  }
-}
-
-function loadTsumRotationImages(tsumMaxScores, isJP, debug) {
-  var tsumDir = isJP ? Config.tsumJpDir : Config.tsumDir;
-  var tsumPath = getStoragePath() + '/' + tsumDir;
-  for (var i = 0; i < Config.loadRotatedCount && i < tsumMaxScores.length; i++) {
-    if (debug) {
-      saveImage(tsumMaxScores[i].img, getStoragePath() + '/tmp/tsum' + i + '.jpg');
-    }
-  }
-  for (var i = 0; i < Config.loadRotatedCount && i < tsumMaxScores.length; i++) {
-    tsumMaxScores[i].rotations = [];
-    var maxScore = tsumMaxScores[i];
-    for (var r in Config.rotations) {
-      var filename = tsumPath + '/' + maxScore.key + '_' + Config.rotations[r] + '.png';
-      var img = openImage(filename);
-      smooth(img, 1, 2);
-      tsumMaxScores[i].rotations.push(img);
-    }
-  }
-}
-
-function adjustTable(k, myTsum) {
-  if (k == myTsum) {
-    return 1;
-  }
-  if (Config.scoreTable[k] != undefined) {
-    return Config.scoreTable[k];
-  }
-  return 0;
-}
-
-function findAllTsumMatchScore(tsumImages, boardImg, myTsum) {
-  var tsumMaxScores = [];
-  for (var k in tsumImages) {
-    var tsumImage = tsumImages[k];
-    var xyScore = findImage(boardImg, tsumImage);
-    xyScore.img = tsumImage;
-    xyScore.key = k;
-    if (k == myTsum) {
-      xyScore.score = 1;
-    } else {
-      xyScore.score += adjustTable(k, myTsum);
-    }
-    tsumMaxScores.push(xyScore);
-  }
-  tsumMaxScores.sort(function(a, b) {
-    return a.score > b.score ? -1 : 1;
-  });
-  return tsumMaxScores;
-}
-
-function removeSameTsumImages(tsumMaxScores, threshold) {
-  for (var i = 0; i < tsumMaxScores.length; i++) {
-    var erase = [];
-    for (var j = 0; j < tsumMaxScores.length; j++) {
-      if (i == j) {
-        continue;
-      }
-      var imgI = tsumMaxScores[i].img;
-      var imgJ = tsumMaxScores[j].img;
-      var score = getIdentityScore(imgI, imgJ);
-      if (score > threshold) {
-        erase.push(j);
-      }
-    }
-    for (var k = erase.length - 1; k >= 0; k--) {
-      tsumMaxScores.splice(erase[k], 1);
-    }
-  }
-  return tsumMaxScores;
-}
-
-function recognizeGameTsums(boardImg, allTsumImages, myTsum, isJP, debug, logs) {
-  // releaseRotationTsum();
-  if (debug) {
-    saveImage(boardImg, getStoragePath() + '/tmp/boardImg.png');
-  }
-  var gameTsums = findAllTsumMatchScore(allTsumImages, boardImg, myTsum);
-  gameTsums = gameTsums.splice(0, 50);
-
-  log(logs.totalTsums, gameTsums.length);
-  if (debug) {
-    printMaxScores(gameTsums);
-  }
-  // Remove same Tsums
-  removeSameTsumImages(gameTsums, 0.92);
-  log(logs.removeSameTsums, gameTsums.length);
-  if (debug) {
-    printMaxScores(gameTsums);
-  }
-
-  loadTsumRotationImages(gameTsums, isJP, debug);
-  // recheck first 5(4) tsums with rotation
-  for (var i = 0; i < gameTsums.length && i < Config.loadRotatedCount; i++) {
-    for (var j = 0; j < gameTsums[i].rotations.length; j++) {
-      var tsumImage = gameTsums[i].rotations[j];
-      var xyScore = findImage(boardImg, tsumImage);
-      if (xyScore.score > gameTsums[i].score) {
-        gameTsums[i].score = xyScore.score;
-      }
-    }
-  }
-  gameTsums.sort(function(a, b) {
-    return a.score > b.score ? -1 : 1;
-  });
-
-  if (debug) {
-    printMaxScores(gameTsums);
-  }
-  return gameTsums;
 }
 
 function releaseTsumRotationImages(tsumMaxScores) {
@@ -1031,13 +890,11 @@ function Tsum(isJP, detect, logs) {
   this.tsumCount = 5;
   this.isLoadAllTsum = false;
   this.isLoadRotateTsum = false;
-  this.allTsumImages = {};
   this.gameTsums = [];
   this.isJP = isJP;
   this.logs = logs;
   this.coinItem = false;
   this.bubbleItem = false;
-  this.isSlowCalculation = false;
   this.isPause = false;
   this.sentToZero = false;
   this.recordReceive = true;
@@ -1139,8 +996,7 @@ Tsum.prototype.init = function(detect) {
   }
   this.playHeight = this.playWidth;
   this.playOffsetY = 465 * this.captureGameRatio - this.gameOffsetY;
-  this.allTsumImages = loadTsumImages(this.isJP);
-  this.isLoadAllTsum = true;
+  // this.isLoadAllTsum = true;
 
   this.sleep(200);
   log(this.logs.offset, this.gameOffsetX, this.gameOffsetY, this.screenHeight, this.screenWidth);
@@ -1154,8 +1010,6 @@ Tsum.prototype.deinit = function() {
   if (this.isLoadRotateTsum) {
     releaseTsumRotationImages(this.gameTsums);
   }
-  releaseTsumImages(this.allTsumImages);
-  this.allTsumImages = {};
   this.isLoadAllTsum = false;
 };
 
@@ -1371,9 +1225,9 @@ Tsum.prototype.findPage = function(times, timeout) {
 };
 
 Tsum.prototype.exitUnknownPage = function() {
-  keycode('KEYCODE_DPAD_DOWN');
+  keycode('KEYCODE_DPAD_DOWN', 40);
   this.sleep(500);
-  keycode('KEYCODE_ENTER');
+  keycode('KEYCODE_ENTER', 40);
   this.tap(Button.gameQuestionCancel);
   this.tap(Button.gameQuestionCancel2);
   this.tap(Button.outClose);
@@ -1509,26 +1363,6 @@ Tsum.prototype.goGamePlayingPage = function() {
       this.tap(Page[page].back);
     }
   }
-};
-
-Tsum.prototype.findMyTsum = function() {
-  var tsumSize = Config.tsumWidth * this.gameWidth / this.playResizeWidth;
-  var myTsumImage = getScreenshotModify(
-      this.playOffsetX + tsumSize,
-      this.playOffsetY + this.playHeight,
-      tsumSize * 1.7,
-      tsumSize * 1.7,
-      Config.tsumWidth * 2.1,
-      Config.tsumWidth * 2.1,
-      100
-  );
-  smooth(myTsumImage, 1, 2);
-  var allScores = findAllTsumMatchScore(this.allTsumImages, myTsumImage, '');
-  if (this.debug) {
-    saveImage(myTsumImage, this.storagePath + '/tmp/mytsum.jpg');
-  }
-  releaseImage(myTsumImage);
-  this.myTsum = allScores[0].key;
 };
 
 Tsum.prototype.clearAllBubbles = function(startDelay, endDelay, fromY) {
@@ -1809,85 +1643,6 @@ Tsum.prototype.taskPlayGameQuick = function() {
   // releaseTsumRotationImages(this.gameTsums);
   this.gameTsums = [];
   this.isLoadRotateTsum = false;
-};
-
-Tsum.prototype.taskPlayGame = function() {
-  log(this.logs.gameStart);
-  this.goGamePlayingPage();
-  log(this.logs.gaming);
-  this.sleep(500);
-  this.findMyTsum();
-  log(this.logs.myTsum);
-  this.runTimes = 0;
-  var pathZero = 0;
-  var clearBubbles = 0;
-  while (this.isRunning) {
-    var board = this.scanBoard();
-    if (board == undefined || board == null) {
-      break;
-    }
-    log(this.logs.calculationPathStart);
-    var paths = calculatePaths(board, this.logs);
-    if (paths.length < 2) {
-      if (pathZero > 2) {
-        pathZero = 0;
-        log(this.logs.recalculatingPath);
-        if (this.useFan) {
-          this.tap(Button.gameRand, 60);
-          this.tap(Button.gameRand, 60);
-          this.sleep(1000);
-        }
-        releaseTsumRotationImages(this.gameTsums);
-        this.gameTsums = [];
-        this.isLoadRotateTsum = false;
-        continue;
-      }
-      pathZero++;
-    }
-
-    paths = paths.splice(0, 10);
-    var isBubble = this.link(paths);
-    if (isBubble) {
-      log(this.logs.bubbleGenerated);
-      clearBubbles++;
-    }
-
-    // click bubbles
-    if (this.clearBubbles && clearBubbles >= 2) {
-      log(this.logs.clearBubbles);
-      clearBubbles = 0;
-      this.clearAllBubbles();
-    }
-
-    if (this.useFan && this.runTimes % 4 == 3) {
-      this.tap(Button.gameRand, 100);
-      this.tap(Button.gameRand, 100);
-      this.sleep(700);
-    }
-    this.sleep(300);
-    if (this.useSkill(board)) {
-      clearBubbles++;
-      if (this.useSkill(board)) {
-        this.useSkill(board);
-      }
-    }
-
-    // double check
-    var page = this.findPage(1, 2500);
-    if (page != 'GamePlaying' && page != 'GamePause') {
-      this.sleep(500);
-      page = this.findPage(1, 2500);
-      if (page != 'GamePlaying' && page != 'GamePause') {
-        log(this.logs.gameOver);
-        break;
-      }
-    }
-    this.runTimes++;
-  }
-  releaseTsumRotationImages(this.gameTsums);
-  this.gameTsums = [];
-  this.isLoadRotateTsum = false;
-  this.sleep(4000);
 };
 
 Tsum.prototype.taskReceiveAllItems = function() {
@@ -2332,7 +2087,6 @@ Tsum.prototype.sleep = function(t, prevMS) {
 
 /* exported start */
 function start(isJP, detect, autoLaunch, detectAppOnPeriod, autoPlay,
-    // isSlowCalculation,
     isPause,
     clearBubbles, useFan, isFourTsum, coinItem, bubbleItem, enableAllItems,
     skillInterval, skillLevel, skillType, receiveItem, receiveItemInterval,
@@ -2345,14 +2099,13 @@ function start(isJP, detect, autoLaunch, detectAppOnPeriod, autoPlay,
   // ts.debug = true; // FIXME
   ts.autoLaunch = autoLaunch;
   ts.detectAppOnPeriod = detectAppOnPeriod * 1000;
-  // ts.isSlowCalculation = isSlowCalculation;
-  var isSlowCalculation = false; // FIXME: remove
   ts.isPause = isPause;
 
   ts.clearBubbles = clearBubbles;
   ts.useFan = useFan;
   if (isFourTsum) {
     ts.tsumCount = 4;
+    console.log('isFourTsum=', isFourTsum, 'tsumCount=', ts.tsumCount);
   }
   ts.coinItem = coinItem;
   ts.bubbleItem = bubbleItem;
@@ -2402,18 +2155,8 @@ function start(isJP, detect, autoLaunch, detectAppOnPeriod, autoPlay,
       gTaskController.newTask('receiveOneItem', ts.taskReceiveOneItem.bind(ts), receiveOneItemInterval * 60 * 1000, 0);
     }
   }
-  if (!isSlowCalculation && checkFunction(outRange)) {
-    if (autoPlay) {
-      gTaskController.newTask('taskPlayGameQuick', ts.taskPlayGameQuick.bind(ts), 3 * 1000, 0);
-    }
-  } else {
-    if (!isSlowCalculation) {
-      log(ts.logs.updateApp);
-      sleep(1000);
-    }
-    if (autoPlay) {
-      gTaskController.newTask('taskPlayGame', ts.taskPlayGame.bind(ts), 3 * 1000, 0);
-    }
+  if (autoPlay) {
+    gTaskController.newTask('taskPlayGameQuick', ts.taskPlayGameQuick.bind(ts), 3 * 1000, 0);
   }
   sleep(500);
   gTaskController.start();
@@ -2537,7 +2280,6 @@ start(
     false, // autoLaunch,
     3, // detectAppOnPeriod,
     true, // autoPlay,
-    // false, // isSlowCalculation,
     false, // isPause,
     true, // clearBubbles,
     true, // useFan,
