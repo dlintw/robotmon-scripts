@@ -12,7 +12,7 @@ var DEFAULT_CONFIG = {
 
 function RBM(config) {
   if (config == undefined) {
-      config = DEFAULT_CONFIG;
+    config = DEFAULT_CONFIG;
   }
   this.appName = config.appName || DEFAULT_CONFIG.appName;
   this.oriScreenWidth = config.oriScreenWidth || DEFAULT_CONFIG.oriScreenWidth;
@@ -39,7 +39,7 @@ function RBM(config) {
   this.running = true;
   this.isPartial = false;
   this.partialOffsetXY = {x: 0, y: 0};
-  
+
   this._screenshotImg = 0;
 }
 
@@ -94,7 +94,7 @@ RBM.prototype.mappingXY = function(xy) {
 };
 
 RBM.prototype.getImagePath = function() {
-  return getStoragePath() + "/scripts/" + this.appName + "/images";
+  return getStoragePath() + '/scripts/' + this.appName + '/images';
 };
 
 // app utils
@@ -111,7 +111,7 @@ RBM.prototype.stopApp = function(packageName) {
 };
 
 RBM.prototype.currentApp = function() {
-  var result = execute('dumpsys activity activities').split('mFocusedActivity')[1].split(" ")[3].split("/");
+  var result = execute('dumpsys activity activities').split('mFocusedActivity')[1].split(' ')[3].split('/');
   var packageName = result[0];
   var activityName = result[1];
   return {packageName: packageName, activityName: activityName};
@@ -141,7 +141,7 @@ RBM.prototype.swipe = function(fromXY, toXY, step) {
   }
   fromXY = this.mappingXY(fromXY);
   toXY = this.mappingXY(toXY);
-  var during = this.during / (step + 2) ;
+  var during = this.during / (step + 2);
   var diffX = (toXY.x - fromXY.x) / step;
   var diffY = (toXY.y - fromXY.y) / step;
 
@@ -184,7 +184,7 @@ RBM.prototype.findImage = function(filename, threshold) {
   if (threshold === undefined) {
     threshold = this.imageThreshold;
   }
-  var sourceImg = 0; 
+  var sourceImg = 0;
   if (this._screenshotImg != 0) {
     sourceImg = this._screenshotImg;
   } else {
@@ -193,7 +193,7 @@ RBM.prototype.findImage = function(filename, threshold) {
   var filePath = this.getImagePath() + '/' + filename;
   var targetImg = openImage(filePath);
   if (targetImg === 0) {
-    this.log("Image is not found: ", filePath);
+    this.log('Image is not found: ', filePath);
     if (sourceImg != this._screenshotImg) {
       releaseImage(sourceImg);
     }
@@ -221,7 +221,7 @@ RBM.prototype.findImage = function(filename, threshold) {
   if (sourceImg != this._screenshotImg) {
     releaseImage(sourceImg);
   }
-  
+
   if (result !== undefined) {
     result.x = this.partialOffsetXY.x + result.x * (this.appWidth / this.resizeAppWidth);
     result.y = this.partialOffsetXY.y + result.y * (this.appHeight / this.resizeAppHeight);
@@ -229,13 +229,13 @@ RBM.prototype.findImage = function(filename, threshold) {
     result.height *= this.appWidth / this.resizeAppWidth;
   }
   return result;
-}
+};
 
 RBM.prototype.findImages = function(filename, threshold, countLimit, allowOverlap, deep) {
   if (threshold === undefined) {
     threshold = this.imageThreshold;
   }
-  var sourceImg = 0; 
+  var sourceImg = 0;
   if (this._screenshotImg != 0) {
     sourceImg = this._screenshotImg;
   } else {
@@ -244,7 +244,7 @@ RBM.prototype.findImages = function(filename, threshold, countLimit, allowOverla
   var filePath = this.getImagePath() + '/' + filename;
   var targetImg = openImage(filePath);
   if (targetImg === 0) {
-    this.log("Image is not found: ", filePath);
+    this.log('Image is not found: ', filePath);
     if (sourceImg != this._screenshotImg) {
       releaseImage(sourceImg);
     }
@@ -287,7 +287,7 @@ RBM.prototype.findImages = function(filename, threshold, countLimit, allowOverla
     results[i].height *= this.appWidth / this.resizeAppWidth;
   }
   return results;
-}
+};
 
 RBM.prototype.imageExists = function(filename, threshold) {
   var result = this.findImage(filename, threshold);
@@ -313,7 +313,7 @@ RBM.prototype.imageWaitClick = function(filename, timeout, threshold) {
     timeout = 10000;
   }
   var startTime = Date.now();
-  while(this.running) {
+  while (this.running) {
     var result = this.findImage(filename, threshold);
     if (result !== undefined) {
       var x = result.x + (result.width / 2);
@@ -333,7 +333,7 @@ RBM.prototype.imageWaitShow = function(filename, timeout, threshold) {
     timeout = 10000;
   }
   var startTime = Date.now();
-  while(this.running) {
+  while (this.running) {
     var result = this.findImage(filename, threshold);
     if (result !== undefined) {
       break;
@@ -350,7 +350,7 @@ RBM.prototype.imageWaitGone = function(filename, timeout, threshold) {
     timeout = 10000;
   }
   var startTime = Date.now();
-  while(this.running) {
+  while (this.running) {
     var result = this.findImage(filename, threshold);
     if (result === undefined) {
       break;
@@ -382,7 +382,7 @@ RBM.prototype.keepScreenshotPartial = function(fx, fy, tx, ty) {
   this._screenshotImg = getScreenshotModify(Math.min(fxy.x, txy.x), Math.min(fxy.y, txy.y), w, h, w * this.resizeFactor, h * this.resizeFactor, this.imageQuality);
   this.isPartial = true;
   this.partialOffsetXY = {x: Math.min(fxy.x, txy.x), y: Math.min(fxy.y, txy.y)};
-}
+};
 
 RBM.prototype.releaseScreenshot = function() {
   if (this._screenshotImg != 0) {
@@ -429,7 +429,7 @@ function testMappingImageWHs() {
   if (results[0].height != 150 || results[0].width != 120) {
     rbm.log("Error result.height != 150 || result.width != 120", results);
   }
-  
+
   // 2
   rbm = new RBM(config);
   rbm.oriAppWidth = 1440;
@@ -439,7 +439,7 @@ function testMappingImageWHs() {
   if (results[0].height != 125 || results[5].height != 150) {
     rbm.log("Error results[0].height != 125 || results[5].height != 150", results);
   }
-  
+
   // 3
   rbm = new RBM(config);
   rbm.oriAppWidth = 720;
@@ -455,13 +455,13 @@ function testFindImage() {
   var rbm = new RBM(config);
   rbm.init();
   //rbm.oriScreencrop('test1.png', 50, 120, 450, 320); // h 200, w 400
-  
+
   // 1
   var result = rbm.findImage('test1.png');
   if (result.height != 200 || result.width != 400 || result.x != 50 || result.y != 120) {
     rbm.log("Error result.height != 200 || result.width != 400 || result.x != 50 || result.y != 120", result);
   }
-  
+
   // 2
   rbm.keepScreenshotPartial(0, 20, 500, 420);
   var result = rbm.findImage('test1.png');
@@ -476,14 +476,14 @@ function testFindImageRetry() {
   rbm.oriAppWidth = 1440;
   rbm.oriAppHeight = 3072;
   rbm.init();
-  
+
   // 1
   var result = rbm.findImage('test1.png', 0.95);
   rbm.log(result);
   if (result.height != 200 || result.width != 400 || result.x != 50 || result.y != 120) {
     rbm.log("Error result.height != 200 || result.width != 400 || result.x != 50 || result.y != 120", result);
   }
-  
+
   // 2
   rbm.keepScreenshotPartial(0, 20, 500, 420);
   var result = rbm.findImage('test1.png', 0.95);
@@ -497,7 +497,7 @@ function testFindImages() {
   var rbm = new RBM(config);
   rbm.init();
   //rbm.oriScreencrop('test1.png', 50, 120, 450, 320); // h 200, w 400
-  
+
   // 1
   var results = rbm.findImages('test1.png', 0.95, 3, false);
   rbm.log(results);

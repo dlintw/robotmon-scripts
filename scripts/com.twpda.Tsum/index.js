@@ -1,5 +1,5 @@
 'use strict;';
-importJS('TaskController-0.0.1');
+importJS('TaskController-0.0.2');
 
 var ts;
 var gTaskController;
@@ -69,7 +69,7 @@ var Config = {
 };
 
 // capture on 1080*1920 phone with 114 height virutalscreen
-var adjY = 72;  // = (1920 - 114)/2
+var adjY = 72; // = (1920 - 114)/2
 var Button = {
   gameBubblesFrom: {x: 100, y: 560 + adjY},
   gameBubblesTo: {x: 1000, y: 1460 + adjY},
@@ -1867,7 +1867,10 @@ Tsum.prototype.taskSendHearts = function() {
   }
   log(this.logs.startSendingHearts);
   this.sleep(1000);
-  if (this.sendFromFirst) {
+  if (this.sendFromFirst != 1) { // not 'send from me'
+    if (this.sendFromFirst == 0) {
+      this.sendFromFirst = 1;
+    }
     this.friendPageGoTop();
     tap(0, 0, 50); // Avoid overlap between zero score and pointer location
   }
@@ -2279,7 +2282,7 @@ start(
     false, // largeImage,
     true, // sendHearts,
     false, // sentToZero,
-    true, // sendFromFirst,
+    0, // sendFromFirst,
     9, // sendHeartMaxDuring,
     25, // sendHeartsInterval,
     true // isLocaleTW

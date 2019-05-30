@@ -1,6 +1,6 @@
 'use strict;';
 
-var VERSION = 47.5;
+var VERSION = 48;
 
 function saveState() {
   if (localStorage !== undefined) {
@@ -102,7 +102,20 @@ var state = {
     {label: '---'},
     {label: 'Auto Send Hearts', labelZh: '自動送愛心', value: true},
     {label: 'Send to 0 score', labelZh: '送心給 0 分', value: false},
-    {label: 'Send from first', labelZh: '從第1名開始送', value: true},
+    {label: 'Send Type', labelZh: '送心類型', value: 0,
+      keyList: [
+        'sendallonce',
+        'sendfromme',
+        'sendfromfirst',
+      ], list: [
+        'Send all at once',
+        'Send from me',
+        'Send from first',
+      ], listZh: [
+        '第一次全送',
+        '從自己送',
+        '從第1名送',
+      ]},
     {label: 'Max run time(min)', labelZh: '執行時間上限(分)', value: 0,
       min: 0, max: 80, step: 1},
     {label: 'Waiting time (min) before repeat',

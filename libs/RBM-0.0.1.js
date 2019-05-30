@@ -12,7 +12,7 @@ var DEFAULT_CONFIG = {
 
 function RBM(config) {
   if (config == undefined) {
-      config = DEFAULT_CONFIG;
+    config = DEFAULT_CONFIG;
   }
   this.appName = config.appName || DEFAULT_CONFIG.appName;
   this.oriScreenWidth = config.oriScreenWidth || DEFAULT_CONFIG.oriScreenWidth;
@@ -37,7 +37,7 @@ function RBM(config) {
   this.ip = '';
   this.during = config.eventDelay || DEFAULT_CONFIG.eventDelay;
   this.running = true;
-  
+
   this._screenshotImg = 0;
 }
 
@@ -92,7 +92,7 @@ RBM.prototype.mappingXY = function(xy) {
 };
 
 RBM.prototype.getImagePath = function() {
-  return getStoragePath() + "/scripts/" + this.appName + "/images";
+  return getStoragePath() + '/scripts/' + this.appName + '/images';
 };
 
 // app utils
@@ -109,7 +109,7 @@ RBM.prototype.stopApp = function(packageName) {
 };
 
 RBM.prototype.currentApp = function() {
-  var result = execute('dumpsys activity activities').split('mFocusedActivity')[1].split(" ")[3].split("/");
+  var result = execute('dumpsys activity activities').split('mFocusedActivity')[1].split(' ')[3].split('/');
   var packageName = result[0];
   var activityName = result[1];
   return {packageName: packageName, activityName: activityName};
@@ -139,10 +139,10 @@ RBM.prototype.swipe = function(fromXY, toXY, step) {
   }
   fromXY = this.mappingXY(fromXY);
   toXY = this.mappingXY(toXY);
-  var during = this.during / (step + 2) ;
+  var during = this.during / (step + 2);
   var diffX = (fromXY.x - toXY.x) / step;
   var diffY = (fromXY.y - toXY.y) / step;
-  
+
   tapDown(fromXY.x, fromXY.y, during);
   for (var i = 0; i <= step; i++) {
     moveTo(fromXY.x + i * diffX, fromXY.y + i * diffY, during);
@@ -171,7 +171,7 @@ RBM.prototype.findImage = function(filename, threshold) {
   if (threshold === undefined) {
     threshold = this.imageThreshold;
   }
-  var sourceImg = 0; 
+  var sourceImg = 0;
   if (this._screenshotImg != 0) {
     sourceImg = this._screenshotImg;
   } else {
@@ -180,7 +180,7 @@ RBM.prototype.findImage = function(filename, threshold) {
   var filePath = this.getImagePath() + '/' + filename;
   var targetImg = openImage(filePath);
   if (targetImg === 0) {
-    this.log("Image is not found: ", filePath);
+    this.log('Image is not found: ', filePath);
     releaseImage(sourceImg);
     return undefined;
   }
@@ -205,7 +205,7 @@ RBM.prototype.findImage = function(filename, threshold) {
   releaseImage(targetImg);
   releaseImage(sourceImg);
   return result;
-}
+};
 
 RBM.prototype.imageExists = function(filename, threshold) {
   var result = this.findImage(filename, threshold);
@@ -231,7 +231,7 @@ RBM.prototype.imageWaitClick = function(filename, timeout, threshold) {
     timeout = 10000;
   }
   var startTime = Date.now();
-  while(this.running) {
+  while (this.running) {
     var result = this.findImage(filename, threshold);
     if (result !== undefined) {
       var x = Math.round(result.x * this.appWidth / this.resizeAppWidth);
@@ -251,7 +251,7 @@ RBM.prototype.imageWaitShow = function(timeout) {
     timeout = 10000;
   }
   var startTime = Date.now();
-  while(this.running) {
+  while (this.running) {
     var result = this.findImage(filename, threshold);
     if (result !== undefined) {
       break;
@@ -268,7 +268,7 @@ RBM.prototype.imageWaitGone = function(timeout) {
     timeout = 10000;
   }
   var startTime = Date.now();
-  while(this.running) {
+  while (this.running) {
     var result = this.findImage(filename, threshold);
     if (result === undefined) {
       break;
