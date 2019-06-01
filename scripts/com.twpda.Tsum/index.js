@@ -1,5 +1,5 @@
 'use strict;';
-importJS('TaskController-0.0.2');
+importJS('TaskController-0.0.1');
 
 var ts;
 var gTaskController;
@@ -532,6 +532,7 @@ var LogsTW = {
   timeIsUp: '送心時間結束',
 };
 
+/*
 // Utils for sending message
 var _userPlan = -1;
 var _lastSendingTime = 0;
@@ -563,6 +564,7 @@ function sendMessage(topMsg, msg) {
   }
 }
 checkCanSendMessage();
+*/
 
 // Utils for Tsum
 function usingTimeString(startTime) {
@@ -991,7 +993,7 @@ Tsum.prototype.deinit = function() {
   }
   this.isLoadAllTsum = false;
 };
-
+/*
 Tsum.prototype.sendMoneyInfo = function() {
   if (!canSendMessage()) {
     return;
@@ -1006,7 +1008,7 @@ Tsum.prototype.sendMoneyInfo = function() {
   log(this.logs.sendMessage);
   sendMessage('Tsum Tsum', base64);
 };
-
+*/
 Tsum.prototype.isAppOn = function() {
   var result = execute('dumpsys window windows').split('mCurrentFocus');
   if (result.length >= 2) {
@@ -1204,14 +1206,17 @@ Tsum.prototype.findPage = function(times, timeout) {
 };
 
 Tsum.prototype.exitUnknownPage = function() {
+  log('dbg:1209');
   keycode('KEYCODE_DPAD_DOWN', 40);
   this.sleep(500);
+  log('dbg:1212');
   keycode('KEYCODE_ENTER', 40);
   this.tap(Button.gameQuestionCancel);
   this.tap(Button.gameQuestionCancel2);
   this.tap(Button.outClose);
   this.tap(Button.gameStop);
   this.sleep(500);
+  log('dbg:1219');
 };
 
 Tsum.prototype.checkOnOrStop = function() {
@@ -1244,25 +1249,33 @@ Tsum.prototype.checkOnOrStop = function() {
 
 Tsum.prototype.goFriendPage = function() {
   while (this.isRunning) {
-    if (!this.checkOnOrStop()) {
-      return;
-    }
+    if (!this.checkOnOrStop()) return;
     var page = this.findPage(2, 1000);
     log(this.logs.currentPage, page, 'goFriend');
     if (page == 'FriendPage') {
       // check again
       page = this.findPage(1, 500);
       if (page == 'FriendPage') {
+        /*
         this.sendMoneyInfo();
+        */
         return;
       }
     } else if (page == 'ClosePage') {
+      log('dbg:1265');
       this.tap(Page.ClosePage.back);
       this.tap({x: 310, y: 1588 - 140});
     } else if (page == 'unknown') {
+      log('dbg:1269');
+      if (!this.checkOnOrStop()) return;
+      log('dbg:1271');
       this.exitUnknownPage();
+      log('dbg:1273');
     } else {
+      if (!this.checkOnOrStop()) return;
+      log('dbg:1276');
       this.tap(Page[page].back);
+      log('dbg:1278');
     }
     this.sleep(1000);
   }
@@ -1318,27 +1331,43 @@ Tsum.prototype.goGamePlayingPage = function() {
     var page = this.findPage(2, 2000);
     log(this.logs.currentPage, page, 'play');
     if (page == 'FriendPage') {
+      log('dbg:1334');
       this.tap(Page[page].next);
     } else if (page == 'StartPage') {
       this.sleep(500);
+      log('dbg:1338');
       this.checkGameItem();
+      /*
       this.sendMoneyInfo();
+      */
       this.tap(Button.outStart2);
+      log('dbg:1344');
       this.sleep(3000); // avoid checking items again!
+      log('dbg:1346');
     } else if (page == 'GamePlaying') {
+      log('dbg:1348');
       // check again
       page = this.findPage(1, 500);
       if (page == 'GamePlaying') {
+        log('dbg:1352');
         return;
       }
+      log('dbg:1355');
     } else if (page == 'GamePause') {
+      log('dbg:1357');
       this.tap(Page[page].next);
     } else if (page == 'unknown') {
+      log('dbg:1360');
+      if (!this.checkOnOrStop()) return;
+      log('dbg:1362');
       this.exitUnknownPage();
+      log('dbg:1364');
     } else if (page == 'ClosePage') {
+      log('dbg:1366');
       this.tap(Page.ClosePage.back);
       this.tap({x: 310, y: 1588 - 140});
     } else {
+      log('dbg:1370');
       this.tap(Page[page].back);
     }
   }
@@ -1559,6 +1588,8 @@ Tsum.prototype.scanBoardQuick = function() {
 Tsum.prototype.taskPlayGameQuick = function() {
   log(this.logs.gameStart);
   this.goGamePlayingPage();
+  if (!this.isRunning)
+    return;
   log(this.logs.fastGaming);
   if (this.isPause) {
     this.sleep(350);
@@ -1867,9 +1898,9 @@ Tsum.prototype.taskSendHearts = function() {
   }
   log(this.logs.startSendingHearts);
   this.sleep(1000);
-  if (this.sendFromFirst != 1) { // not 'send from me'
-    if (this.sendFromFirst == 0) {
-      this.sendFromFirst = 1;
+  if (this.sendFromFirst !== 'sendfromme') {
+    if (this.sendFromFirst === 'sendallonce') {
+      this.sendFromFirst = 'sendfromme';
     }
     this.friendPageGoTop();
     tap(0, 0, 50); // Avoid overlap between zero score and pointer location
@@ -2118,12 +2149,12 @@ function start(isJP, detect, autoLaunch, detectAppOnPeriod, autoPlay,
       sentCount: 0,
     };
   }
-
+/*
   if (!checkFunction(TaskController)) {
     console.log('File lose...');
     return;
   }
-
+*/
   gTaskController = new TaskController();
   if (receiveOneItem) {
     gTaskController.newTask('receiveOneItem', ts.taskReceiveOneItem.bind(ts), receiveOneItemInterval * 60 * 1000, 0);
@@ -2282,10 +2313,12 @@ start(
     false, // largeImage,
     true, // sendHearts,
     false, // sentToZero,
-    0, // sendFromFirst,
+    'sendallonce', // sendFromFirst,
     9, // sendHeartMaxDuring,
     25, // sendHeartsInterval,
     true // isLocaleTW
 );
+// tap(44, 1199, 40); // move to left role panel
+// tap(1026,1190,40); // move to right role panel
 */
 // vim:et sw=2 ts=2 ai
