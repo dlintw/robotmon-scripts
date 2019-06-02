@@ -31,7 +31,7 @@ function nowTime() {
 }
 
 function log() {
-  sleep(10);
+  // sleep(10);
   var args = [];
   for (var i = 0; i < arguments.length; i++) {
     if (typeof arguments[i] == 'object') {
@@ -1295,6 +1295,7 @@ Tsum.prototype.checkGameItem = function() {
   if (this.bubbleItem) {
     isItemsOn[4] = true;
   }
+  this.sleep(500); // prevent to get wrong first screenshot
   for (var t = 0; t < 3; t++) {
     var img = this.screenshot();
     var isChange = false;
