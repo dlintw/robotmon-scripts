@@ -1295,10 +1295,8 @@ Tsum.prototype.checkGameItem = function() {
   if (this.bubbleItem) {
     isItemsOn[4] = true;
   }
-  this.sleep(500); // prevent to get wrong first screenshot
-  for (var t = 0; t < 3; t++) {
+  for (var t = 0; t < 3; t++) { // force check 3 times
     var img = this.screenshot();
-    var isChange = false;
     for (var i = 0; i < 6; i++) {
       var c = this.getColor(img, Button.outGameItems[i]);
       if (c.b > 128) { // off
@@ -1316,10 +1314,7 @@ Tsum.prototype.checkGameItem = function() {
       }
     }
     releaseImage(img);
-    if (!isChange) {
-      break;
-    }
-    this.sleep(500);
+    this.sleep(200);
   }
   log(this.logs.checkBonusItems, isItemsOn);
 };
@@ -1332,43 +1327,42 @@ Tsum.prototype.goGamePlayingPage = function() {
     var page = this.findPage(2, 2000);
     log(this.logs.currentPage, page, 'play');
     if (page == 'FriendPage') {
-      log('dbg:1334');
+      log('dbg:1330');
       this.tap(Page[page].next);
     } else if (page == 'StartPage') {
-      this.sleep(500);
-      log('dbg:1338');
+      log('dbg:1333');
       this.checkGameItem();
       /*
       this.sendMoneyInfo();
       */
       this.tap(Button.outStart2);
-      log('dbg:1344');
+      log('dbg:1339');
       this.sleep(3000); // avoid checking items again!
-      log('dbg:1346');
+      log('dbg:1341');
     } else if (page == 'GamePlaying') {
-      log('dbg:1348');
+      log('dbg:1343');
       // check again
       page = this.findPage(1, 500);
       if (page == 'GamePlaying') {
-        log('dbg:1352');
+        log('dbg:1347');
         return;
       }
-      log('dbg:1355');
+      log('dbg:1350');
     } else if (page == 'GamePause') {
-      log('dbg:1357');
+      log('dbg:1352');
       this.tap(Page[page].next);
     } else if (page == 'unknown') {
-      log('dbg:1360');
+      log('dbg:1355');
       if (!this.checkOnOrStop()) return;
-      log('dbg:1362');
+      log('dbg:1357');
       this.exitUnknownPage();
-      log('dbg:1364');
+      log('dbg:1359');
     } else if (page == 'ClosePage') {
-      log('dbg:1366');
+      log('dbg:1361');
       this.tap(Page.ClosePage.back);
       this.tap({x: 310, y: 1588 - 140});
     } else {
-      log('dbg:1370');
+      log('dbg:1365');
       this.tap(Page[page].back);
     }
   }
@@ -1572,7 +1566,7 @@ Tsum.prototype.scanBoardQuick = function() {
   }
   releaseImage(srcImg);
   log(this.logs.recognizedTsums, board.length);
-  sleep(30);
+  // sleep(30);
   log(this.logs.recognitionTime, usingTimeString(startTime));
 
   if (this.isPause) {
