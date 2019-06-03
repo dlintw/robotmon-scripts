@@ -901,7 +901,7 @@ function Tsum(isJP, detect, logs) {
   this.clearBubbles = true;
   this.lastAppOnTime = Date.now();
   this.detectAppOnPeriod = 3000; // stop game if outside app for 2 second.
-  this.detectPageMS = 100; // check page per 0.1 second
+  this.detectPageMS = 50;  // check page per 0.5 second
   this.init(detect);
 }
 
@@ -1191,9 +1191,7 @@ Tsum.prototype.findPage = function(times, timeout) {
         this.sleep(this.detectPageMS);
         break;
       }
-      if (times > 1) {
-        prevTime = this.sleep(this.detectPageMS, prevTime);
-      }
+      prevTime = this.sleep(this.detectPageMS, prevTime);
     } // for times
     if (currentPage != '') {
       return currentPage;
@@ -1206,17 +1204,17 @@ Tsum.prototype.findPage = function(times, timeout) {
 };
 
 Tsum.prototype.exitUnknownPage = function() {
-  log('dbg:1209');
+  log('dbg:1207');
   keycode('KEYCODE_DPAD_DOWN', 40);
   this.sleep(500);
-  log('dbg:1212');
+  log('dbg:1210');
   keycode('KEYCODE_ENTER', 40);
   this.tap(Button.gameQuestionCancel);
   this.tap(Button.gameQuestionCancel2);
   this.tap(Button.outClose);
   this.tap(Button.gameStop);
   this.sleep(500);
-  log('dbg:1219');
+  log('dbg:1217');
 };
 
 Tsum.prototype.checkOnOrStop = function() {
@@ -1262,20 +1260,20 @@ Tsum.prototype.goFriendPage = function() {
         return;
       }
     } else if (page == 'ClosePage') {
-      log('dbg:1265');
+      log('dbg:1263');
       this.tap(Page.ClosePage.back);
       this.tap({x: 310, y: 1588 - 140});
     } else if (page == 'unknown') {
-      log('dbg:1269');
+      log('dbg:1267');
       if (!this.checkOnOrStop()) return;
-      log('dbg:1271');
+      log('dbg:1269');
       this.exitUnknownPage();
-      log('dbg:1273');
+      log('dbg:1271');
     } else {
       if (!this.checkOnOrStop()) return;
-      log('dbg:1276');
+      log('dbg:1274');
       this.tap(Page[page].back);
-      log('dbg:1278');
+      log('dbg:1276');
     }
     this.sleep(1000);
   }
@@ -1327,43 +1325,66 @@ Tsum.prototype.goGamePlayingPage = function() {
     var page = this.findPage(2, 2000);
     log(this.logs.currentPage, page, 'play');
     if (page == 'FriendPage') {
-      log('dbg:1330');
-      this.tap(Page[page].next);
+      log('dbg:1328');
+      // check again
+      page = this.findPage(1, 500);
+      if (page == 'FriendPage') {
+        log('dbg:1332');
+        this.tap(Page[page].next);
+      }
     } else if (page == 'StartPage') {
-      log('dbg:1333');
-      this.checkGameItem();
-      /*
-      this.sendMoneyInfo();
-      */
-      this.tap(Button.outStart2);
-      log('dbg:1339');
-      this.sleep(3000); // avoid checking items again!
-      log('dbg:1341');
+      log('dbg:1336');
+      // check again
+      page = this.findPage(1, 500);
+      if (page == 'StartPage') {
+        this.checkGameItem();
+        /*
+        this.sendMoneyInfo();
+        */
+        this.tap(Button.outStart2);
+        log('dbg:1345');
+        this.sleep(3000); // avoid checking items again!
+      }
     } else if (page == 'GamePlaying') {
-      log('dbg:1343');
+      log('dbg:1349');
       // check again
       page = this.findPage(1, 500);
       if (page == 'GamePlaying') {
-        log('dbg:1347');
+        log('dbg:1353');
         return;
       }
-      log('dbg:1350');
+      log('dbg:1356');
     } else if (page == 'GamePause') {
-      log('dbg:1352');
-      this.tap(Page[page].next);
+      log('dbg:1358');
+      // check again
+      page = this.findPage(1, 500);
+      if (page == 'GamePause') {
+        log('dbg:1362');
+        this.tap(Page[page].next);
+      }
     } else if (page == 'unknown') {
-      log('dbg:1355');
-      if (!this.checkOnOrStop()) return;
-      log('dbg:1357');
-      this.exitUnknownPage();
-      log('dbg:1359');
+      log('dbg:1366');
+      page = this.findPage(1, 500);
+      if (page == 'unknown') {
+        if (!this.checkOnOrStop()) return;
+        log('dbg:1370');
+        this.exitUnknownPage();
+        log('dbg:1372');
+      }
     } else if (page == 'ClosePage') {
-      log('dbg:1361');
-      this.tap(Page.ClosePage.back);
-      this.tap({x: 310, y: 1588 - 140});
+      page = this.findPage(1, 500);
+      if (page == 'ClosePage') {
+        log('dbg:1377');
+        this.tap(Page.ClosePage.back);
+        this.tap({x: 310, y: 1588 - 140});
+      }
     } else {
-      log('dbg:1365');
-      this.tap(Page[page].back);
+      var prevPageName = page;
+      page = this.findPage(1, 500);
+      if (page == prevPageName) {
+        log('dbg:1385');
+        this.tap(Page[page].back);
+      }
     }
   }
 };
@@ -1583,8 +1604,9 @@ Tsum.prototype.scanBoardQuick = function() {
 Tsum.prototype.taskPlayGameQuick = function() {
   log(this.logs.gameStart);
   this.goGamePlayingPage();
-  if (!this.isRunning)
+  if (!this.isRunning) {
     return;
+  }
   log(this.logs.fastGaming);
   if (this.isPause) {
     this.sleep(350);
@@ -1634,10 +1656,10 @@ Tsum.prototype.taskPlayGameQuick = function() {
     }
 
     // double check
-    var page = this.findPage(1, 2500);
+    var page = this.findPage(2, 2500);
     if (page != 'GamePlaying' && page != 'GamePause') {
       this.sleep(500);
-      page = this.findPage(1, 2500);
+      page = this.findPage(2, 2500);
       if (page != 'GamePlaying' && page != 'GamePause') {
         log(this.logs.gameOver);
         break;
@@ -2024,7 +2046,7 @@ Tsum.prototype.sendHeart = function(btn) {
   var isSent = false;
   // log("sendHeart");
   while (this.isRunning) {
-    var page = this.findPage(1, 300);
+    var page = this.findPage(2, 100);
     if (page == 'FriendPage') {
       // log("sendHeart A", Date.now() / 1000);
       var img = this.screenshot();
@@ -2144,7 +2166,7 @@ function start(isJP, detect, autoLaunch, detectAppOnPeriod, autoPlay,
       sentCount: 0,
     };
   }
-/*
+  /*
   if (!checkFunction(TaskController)) {
     console.log('File lose...');
     return;
