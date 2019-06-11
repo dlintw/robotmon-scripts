@@ -1,0 +1,12 @@
+!.gitignore
+*.o
+*.orig
+*.swp
+.fossil-settings
+.fslckout
+.hg
+.svn
+_cgo_export.h
+_obj
+index.html
+index.js
