@@ -4,9 +4,9 @@ Only support ES5
 
 ## Contents
 
-* [JavaScript Events](#javascrip-svents)
-* [JavaScript Interface](#javascrip-interface)
-* [JavaScript Raw APIs](#javascrip-apis)
+* [JavaScript Events](#javascript-events)
+* [JavaScript Interface](#javascript-interface)
+* [JavaScript Raw APIs](#javascript-raw-apis)
 * [RBM library APIs](#rbm-library-apis)
 * [gRPC APIs](#grpc-apis)
 * [Debug](#debug)
