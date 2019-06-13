@@ -1,6 +1,40 @@
+// main.js
 'use strict;';
 
-var isRunning = false;
+var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
+  appName: 'com.twpda.tsum',
+  // global for this game
+  isRunning: false,
+  appOnChkPeriod: 500, // check per 0.5 s
+  maxAppOffCount: 3, // continue 3 times off will trigger stop()
+  packageName: 'com.linecorp.LGTMTMG',
+  chkPagePeriod: 100, // check per 0.1 second
+  loopSleepMS: 100, // sleep per 0.1 second in main loop
+};
+
+var rbm;
+
+function init() {
+  rbm = new RBM(config);
+}
+function fini() {
+  rbm = undefined;
+}
+
+// remove RBM 0.0.3's log delay time
+RBM.prototype.log = function() {
+  // sleep(10);
+  for (var i = 0; i < arguments.length; i++) {
+    if (typeof arguments[i] == 'object') {
+      arguments[i] = JSON.stringify(arguments[i]);
+    }
+  }
+  console.log.apply(console, arguments);
+};
+
+function findPage() {
+  return 'test';
+};
 
 /* eslint no-unused-vars: ["error", { "vars": "local" }]*/
 function start( // exported start()
@@ -11,20 +45,55 @@ function start( // exported start()
     receiveOneItemInterval,
     recordReceive, largeImage, sendHearts, sentToZero, sendFromFirst,
     sendHeartMaxDuring, sendHeartsInterval, numParams) {
-  if (numParams != 27) {
-    log('dbg: invalid numParams=', numParams);
+  console.log('dbg: start()');
+  if (numParams != 27) { // check the index.html genStartCommand()
+    console.log('dbg: invalid numParams=', numParams);
     return;
   }
-  log('dbg:start() begin');
-  while (isRunning) {
-    sleep(1000);
+  init();
+  // rbm.startApp('com.linecorp.LGTMTM', '.TsumTsum'); // isJP
+  rbm.startApp(config.packageName, '.TsumTsum');
+
+  var lastChkAppTime = 0;
+  var outOfGameCount = 0;
+  var prevPage = undefined;
+  var currentPage = undefined;
+  var lastChkPageTime = 0;
+
+  while (config.isRunning) {
+    // check if out of game
+    var now = Date.now();
+    if (now - lastChkAppTime > config.appOnChkPeriod) {
+      var r = rpm.currentApp();
+      if (r.packageName !== config.packageName) {
+        outOfGameCount++;
+        if (outOfGameCount >= config.maxAppOffCount) {
+          config.isRunning = false;
+          break;
+        }
+      }
+      lastChkAppTime = now;
+    }
+
+    // check current page
+    if (now - lastChkPageTime > config.chkPagePeriod) {
+      prevPage = currentPage;
+      currentPage = findPage();
+      lastChkPageTime = now;
+    }
+    console.log('p:', prevPage.name, 'c:', currentPage.name);
+
+    sleep(config.loopSleepMS);
   }
-  ;og('dbg:start() end');
+  console.log('dbg: start() end');
 }
 
 function stop() { // exported stop()
-  isRunning = true;
-  log('dbg:stop()');
+  console.log('dbg: stop()');
+  config.isRunning = false;
+  sleep(500); // wait other thread before release memory
+  fini();
+  console.log('dbg: stop() end');
 }
 
 /* example test function
