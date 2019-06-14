@@ -201,20 +201,25 @@ var ConfigPage = {
 
 function genStartCommand() {
   var command = 'start(';
+  var n = 0;
   uistate.forEach(function(v) {
     if (typeof v.value === 'boolean') {
       command += v.value.toString() + ', ';
+      n++;
     } else if (typeof v.value === 'number') {
       if (v.list !== undefined) {
         command += '"' + v.keyList[v.value] + '", ';
+        n++;
       } else {
         command += v.value + ', ';
+        n++;
       }
     } else if (typeof v.value === 'string') {
       command += '"' + v.value + '", ';
+      n++;
     }
   });
-  command += uistate.length.toString() + ');';
+  command += n.toString() + ');';
   console.log('dbg: command=' + command);
   return command;
 }

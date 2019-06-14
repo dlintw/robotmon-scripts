@@ -16,6 +16,8 @@ var rbm;
 
 function init() {
   rbm = new RBM(config);
+  rbm.init();
+  config.isRunning = true;
 }
 function fini() {
   rbm = undefined;
@@ -52,7 +54,12 @@ function start( // exported start()
   }
   init();
   // rbm.startApp('com.linecorp.LGTMTM', '.TsumTsum'); // isJP
+  console.log('dbg: startApp');
   rbm.startApp(config.packageName, '.TsumTsum');
+  console.log('dbg: sleep 3 seconds');
+  rbm.sleep(3000);
+  var r = rbm.currentApp();
+  rbm.log('dbg: currentApp()=', r);
 
   var lastChkAppTime = 0;
   var outOfGameCount = 0;
@@ -64,7 +71,7 @@ function start( // exported start()
     // check if out of game
     var now = Date.now();
     if (now - lastChkAppTime > config.appOnChkPeriod) {
-      var r = rpm.currentApp();
+      r = rbm.currentApp();
       if (r.packageName !== config.packageName) {
         outOfGameCount++;
         if (outOfGameCount >= config.maxAppOffCount) {
