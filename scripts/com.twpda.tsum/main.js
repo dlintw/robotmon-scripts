@@ -22,6 +22,15 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
       ],
     },{
     */
+    name: 'ChooseLanguage*',
+    colors: [
+      {x: 553, y: 1539, r: 247, g: 190, b: 16, match: true, threshold: 60}, // TAP to Start button top
+      {x: 777, y: 208, r: 255, g: 255, b: 255, match: true, threshold: 60}, // Language left white edge
+      {x: 956, y: 212, r: 156, g: 158, b: 156, match: true, threshold: 60}, // Language right gray triangle
+    ],
+    back: {x: 553, y: 1539},
+    next: {x: 553, y: 1539},
+  }, {
     name: 'TodayMission',
     colors: [
       {x: 540, y: 1480, r: 238, g: 181, b: 12, match: true, threshold: 80},
@@ -40,7 +49,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 309, y: 1653},
     next: {x: 784, y: 1653},
   }, {
-    name: 'FriendPage',
+    name: 'FriendPage*',
     colors: [
       {x: 540, y: 1592, r: 246, g: 135, b: 17, match: true, threshold: 60}, // top of the start button
       {x: 187, y: 1599, r: 240, g: 218, b: 72, match: true, threshold: 60}, // top of the card button
@@ -252,13 +261,23 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 300, y: 1660},
     next: {x: 300, y: 1660},
   }, { // including EventPage, MyInfo, SettingPage, others
-    name: 'ClosePage', // the close button at center bottom
+    name: 'ClosePage*', // the close button at center bottom
     colors: [
       {x: 540, y: 1588, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
       {x: 540, y: 1714, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
     ],
     back: {x: 576, y: 1660},
     next: {x: 576, y: 1660},
+  }, { // including Login Bonus
+    name: 'ClosePage2*', // the close button at 3/4 height
+    colors: [
+      {x: 545, y: 570, r: 33, g: 198, b: 239, match: true, threshold: 60}, // top center of blue info box
+      {x: 545, y: 1260, r: 25, g: 190, b: 230, match: true, threshold: 60}, // bottom center of blue info box
+      {x: 545, y: 1409, r: 247, g: 190, b: 8, match: true, threshold: 60}, // top center of yellow Close button
+      {x: 549, y: 1562, r: 230, g: 121, b: 8, match: true, threshold: 60}, // bottom center of yellow Close button
+    ],
+    back: {x: 545, y: 1409},
+    next: {x: 545, y: 1409},
   }, {
     name: 'HighScore',
     colors: [
@@ -268,13 +287,33 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 298, y: 1325},
     next: {x: 810, y: 1325},
   }, {
+    name: 'TsumInfoMe', // the close button at left bottom
+    colors: [
+      {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 80}, // left bottom back button
+      {x: 919, y: 1696, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red Store
+      {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
+      {x: 414, y: 1655, r: 49, g: 154, b: 197, match: true, threshold: 60}, // bottom disabled MyTsum Set
+    ],
+    back: {x: 180, y: 1592},
+    next: {x: 176, y: 1592},
+  }, {
+    name: 'TsumInfoOther', // the close button at left bottom
+    colors: [
+      {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 80}, // left bottom back button
+      {x: 919, y: 1696, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red Store
+      {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
+      {x: 553, y: 1718, r: 239, g: 93, b: 8, match: true, threshold: 60}, // bottom MyTsum Set
+    ],
+    back: {x: 180, y: 1592},
+    next: {x: 176, y: 1592},
+  }, /* {
     name: 'InvitePage', // the close button at left bottom
     colors: [
-      {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 80},
+      {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 60},
     ],
     back: {x: 176, y: 1592},
     next: {x: 176, y: 1592},
-  }],
+  }*/],
 };
 
 var rbm;
@@ -420,7 +459,8 @@ function start( // exported start()
 
     console.log('dbg: p:', prevPage.name, 'c:', currentPage.name);
     releaseImage(img);
-    rbm.log('dbg: wait 5s for debug', now);
+    rbm.log('dbg: wait', config.loopSleepMS/1000, 's for debug',
+        Date(now).toLocaleString());
     sleep(config.loopSleepMS);
   }
   console.log('dbg: start() end');
