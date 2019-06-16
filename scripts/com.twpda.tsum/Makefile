@@ -14,7 +14,7 @@ index.html: $(HTMLSRC)
 	cat $(HTMLSRC) > $@
 	! which patchdbg || patchdbg $@
 index.js: main.js $(RBM) $(COLORLIB)
-	cat $(RBM) $(COLORLIB) $< > $@
+	cat $< $(RBM) $(COLORLIB) > $@
 	! which patchdbg || patchdbg $@
 index.zip: index.html index.js
 	zip $@ index.html index.js

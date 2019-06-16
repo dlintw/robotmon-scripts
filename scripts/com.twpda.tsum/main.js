@@ -1,4 +1,3 @@
-// dbg: main.js
 'use strict;';
 
 var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
@@ -10,9 +9,9 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   packageName: 'com.linecorp.LGTMTMG',
   activityName: '.TsumTsum',
   chkPagePeriod: 100, // check per 0.1 second
-  // loopSleepMS: 100, // sleep per 0.1 second in main loop
-  loopSleepMS: 5000, // sleep per 5 second in main loop
-  pageColors: [{
+  loopSleepMS: 100, // sleep per 0.1 second in main loop
+  // loopSleepMS: 5000, // sleep per 5 second in main loop
+  pageColors: [{ // sort by action sequence, y, x, comment with color, position, button
     /*
       name: 'BlueFrame',
       colors: [
@@ -24,9 +23,9 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     */
     name: 'ChooseLanguage*',
     colors: [
-      {x: 553, y: 1539, r: 247, g: 190, b: 16, match: true, threshold: 60}, // TAP to Start button top
-      {x: 777, y: 208, r: 255, g: 255, b: 255, match: true, threshold: 60}, // Language left white edge
-      {x: 956, y: 212, r: 156, g: 158, b: 156, match: true, threshold: 60}, // Language right gray triangle
+      {x: 777, y: 208, r: 255, g: 255, b: 255, match: true, threshold: 60}, // white Language button left edge
+      {x: 956, y: 212, r: 156, g: 158, b: 156, match: true, threshold: 60}, // gray Language button right triangle
+      {x: 553, y: 1539, r: 247, g: 190, b: 16, match: true, threshold: 60}, // yellow to Start button's top
     ],
     back: {x: 553, y: 1539},
     next: {x: 553, y: 1539},
@@ -40,11 +39,11 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 558, y: 1473},
     next: {x: 558, y: 1473},
   }, {
-    name: 'ScorePage',
+    name: 'ScorePage*',
     colors: [
-      {x: 302, y: 1581, r: 235, g: 184, b: 7, match: true, threshold: 80},
-      {x: 777, y: 1588, r: 248, g: 142, b: 20, match: true, threshold: 80},
-      {x: 774, y: 500, r: 243, g: 248, b: 242, match: true, threshold: 80},
+      {x: 774, y: 500, r: 243, g: 248, b: 242, match: true, threshold: 80}, // white score title
+      {x: 302, y: 1581, r: 235, g: 184, b: 7, match: true, threshold: 60}, // yellow Close button
+      {x: 777, y: 1588, r: 248, g: 142, b: 20, match: true, threshold: 80}, // orange Play button
     ],
     back: {x: 309, y: 1653},
     next: {x: 784, y: 1653},
@@ -89,25 +88,52 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 547, y: 1653},
     next: {x: 547, y: 1653},
   }, {
-    name: 'GiftHeart1',
+    name: 'MailBox1*',
     colors: [
-      {x: 216, y: 1084, r: 233, g: 172, b: 6, match: true, threshold: 80},
-      {x: 673, y: 1080, r: 235, g: 174, b: 8, match: true, threshold: 80},
-      {x: 468, y: 803, r: 214, g: 61, b: 143, match: true, threshold: 100},
-      {x: 572, y: 561, r: 30, g: 193, b: 224, match: true, threshold: 80},
-      {x: 583, y: 1195, r: 28, g: 186, b: 221, match: true, threshold: 80},
+      {x: 738, y: 414, r: 240, g: 245, b: 239, match: true, threshold: 60}, // white mail box title
+      {x: 604, y: 1419, r: 234, g: 171, b: 6, match: true, threshold: 60}, // yellow receive button
+      {x: 550, y: 1581, r: 238, g: 187, b: 10, match: true, threshold: 60}, // yellow close button
+    ],
+    back: {x: 561, y: 1653},
+    next: {x: 561, y: 1653},
+  }, {
+    name: 'ReceiveGiftHeart*',
+    colors: [
+      {x: 781, y: 447, r: 49, g: 49, b: 49, match: true, threshold: 60}, // dark white mail box title
+      {x: 572, y: 561, r: 30, g: 193, b: 224, match: true, threshold: 80}, // blue top frame
+      {x: 468, y: 803, r: 214, g: 61, b: 143, match: true, threshold: 100}, // red heart
+      {x: 216, y: 1084, r: 233, g: 172, b: 6, match: true, threshold: 80}, // yellow Cancel button
+      {x: 673, y: 1080, r: 235, g: 174, b: 8, match: true, threshold: 80}, // yellow OK button
+      {x: 583, y: 1195, r: 28, g: 186, b: 221, match: true, threshold: 80}, // blue bottom frame
     ],
     back: {x: 774, y: 1095},
     next: {x: 320, y: 1091},
   }, {
-    name: 'MailBox1',
+    /* TODO
+    name: 'ReceiveGiftAd*',
     colors: [
-      {x: 738, y: 414, r: 240, g: 245, b: 239, match: true, threshold: 80},
-      {x: 550, y: 1581, r: 238, g: 187, b: 10, match: true, threshold: 80},
-      {x: 604, y: 1419, r: 234, g: 171, b: 6, match: true, threshold: 80},
+      {x: 781, y: 447, r: 49, g: 49, b: 49, match: true, threshold: 60}, // dark white mail box title
+      {x: 560, y: 555, r: 33, g: 194, b: 230, match: true, threshold: 60}, // blue top frame
+      {x: 468, y: 803, r: 214, g: 61, b: 143, match: false, threshold: 100}, // red heart(not ReceiveGiftHeart)
+      {x: 209, y: 1092, r: 247, g: 178, b: 8, match: true, threshold: 60}, // left of yellow Cancel button
+      {x: 668, y: 1092, r: 239, g: 174, b: 8, match: true, threshold: 60}, // left of yellow OK button
+      {x: 583, y: 1195, r: 28, g: 186, b: 221, match: true, threshold: 80}, // blue bottom frame
     ],
-    back: {x: 561, y: 1653},
-    next: {x: 561, y: 1653},
+    back: {x: 209, y: 1092},
+    next: {x: 668, y: 1092},
+  }, {
+    */
+    name: 'ReceiveGiftOther*',
+    colors: [
+      {x: 781, y: 447, r: 49, g: 49, b: 49, match: true, threshold: 60}, // dark white mail box title
+      {x: 560, y: 555, r: 33, g: 194, b: 230, match: true, threshold: 60}, // blue top frame
+      {x: 468, y: 803, r: 214, g: 61, b: 143, match: false, threshold: 100}, // red heart(not ReceiveGiftHeart)
+      {x: 209, y: 1092, r: 247, g: 178, b: 8, match: true, threshold: 60}, // left of yellow Cancel button
+      {x: 668, y: 1092, r: 239, g: 174, b: 8, match: true, threshold: 60}, // left of yellow OK button
+      {x: 583, y: 1195, r: 28, g: 186, b: 221, match: true, threshold: 80}, // blue bottom frame
+    ],
+    back: {x: 209, y: 1092},
+    next: {x: 668, y: 1092},
   }, {
     name: 'MailBox2',
     colors: [
@@ -159,17 +185,20 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 190, y: 1646},
     next: {x: 558, y: 1635},
   }, {
-    name: 'StartPage2',
+    name: 'ChooseBonusItem',
     colors: [
-      {x: 820, y: 515, r: 245, g: 250, b: 244, match: true, threshold: 80},
-      {x: 954, y: 1426, r: 31, g: 190, b: 220, match: true, threshold: 80},
-      {x: 180, y: 1584, r: 235, g: 182, b: 8, match: true, threshold: 80},
-      {x: 540, y: 1584, r: 238, g: 115, b: 133, match: true, threshold: 80},
-      {x: 1011, y: 1675, r: 229, g: 166, b: 11, match: true, threshold: 100},
+      {x: 153, y: 380, r: 222, g: 61, b: 148, match: true, threshold: 60}, // first red heart
+      {x: 859, y: 380, r: 239, g: 174, b: 8, match: true, threshold: 60}, // message box
+      {x: 545, y: 469, r: 255, g: 255, b: 255, match: true, threshold: 60}, // Bonus Items white title
+      {x: 179, y: 1580, r: 247, g: 190, b: 16, match: true, threshold: 60}, // yellow Back button
+      {x: 545, y: 1591, r: 230, g: 101, b: 123, match: true, threshold: 60}, // red Start button
+      {x: 799, y: 1647, r: 239, g: 178, b: 8, match: true, threshold: 60}, // right yellow Tsum button
+      {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
     ],
-    back: {x: 190, y: 1646},
-    next: {x: 558, y: 1635},
+    back: {x: 179, y: 1580},
+    next: {x: 545, y: 1591},
   }, {
+    /* conflict with StartPage2
     name: 'StartPage3',
     colors: [
       {x: 400, y: 1672, r: 245, g: 85, b: 115, match: true, threshold: 80},
@@ -179,6 +208,8 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 190, y: 1646},
     next: {x: 558, y: 1635},
   }, {
+    */
+    /* replaced by TsumsMe & TsumsOther
     name: 'TsumsPage',
     colors: [
       {x: 514, y: 914, r: 41, g: 177, b: 203, match: true, threshold: 80},
@@ -188,6 +219,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 176, y: 1592},
     next: {x: 176, y: 1592},
   }, {
+    */
     name: 'GamePause',
     colors: [
       {x: 165, y: 1077, r: 234, g: 173, b: 7, match: true, threshold: 80},
@@ -201,6 +233,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }, {
     name: 'GamePlaying',
     colors: [
+      // {x: 980, y: 258, r: 244, g: 197, b: 5, match: true, threshold: 60}, // right of pause
       {x: 916, y: 318, r: 230, g: 150, b: 6, match: true, threshold: 60}, // below pause
       {x: 916, y: 1688, r: 230, g: 150, b: 6, match: true, threshold: 60}, // below fan
       {x: 287, y: 1662, r: 0, g: 182, b: 230, match: true, threshold: 60}, // between mytsum and fever
@@ -208,6 +241,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 986, y: 273},
     next: {x: 986, y: 273},
   }, {
+    /* conflict with GamePlaying
     name: 'GamePlaying2',
     colors: [
       {x: 980, y: 258, r: 244, g: 197, b: 5, match: true, threshold: 80}, // right of pause
@@ -216,6 +250,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 986, y: 273},
     next: {x: 986, y: 273},
   }, {
+    */
     name: 'MagicalTime',
     colors: [
       {x: 817, y: 507, r: 244, g: 249, b: 243, match: true, threshold: 80},
@@ -265,6 +300,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     colors: [
       {x: 540, y: 1588, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
       {x: 540, y: 1714, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
+      {x: 604, y: 1419, r: 234, g: 171, b: 6, match: false, threshold: 80}, // yellow receive button (not MailBox1)
     ],
     back: {x: 576, y: 1660},
     next: {x: 576, y: 1660},
@@ -287,22 +323,26 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 298, y: 1325},
     next: {x: 810, y: 1325},
   }, {
-    name: 'TsumInfoMe', // the close button at left bottom
+    name: 'TsumsMe', // the close button at left bottom
     colors: [
       {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 80}, // left bottom back button
       {x: 919, y: 1696, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red Store
       {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
       {x: 414, y: 1655, r: 49, g: 154, b: 197, match: true, threshold: 60}, // bottom disabled MyTsum Set
+      {x: 1008, y: 898, r: 239, g: 178, b: 16, match: true, threshold: 60}, // Sort Button yellow
+      {x: 982, y: 909, r: 115, g: 57, b: 41, match: true, threshold: 60}, // Sort Button dark yellow
     ],
     back: {x: 180, y: 1592},
     next: {x: 176, y: 1592},
   }, {
-    name: 'TsumInfoOther', // the close button at left bottom
+    name: 'TsumsOther', // the close button at left bottom
     colors: [
       {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 80}, // left bottom back button
       {x: 919, y: 1696, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red Store
       {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
       {x: 553, y: 1718, r: 239, g: 93, b: 8, match: true, threshold: 60}, // bottom MyTsum Set
+      {x: 1008, y: 898, r: 239, g: 178, b: 16, match: true, threshold: 60}, // Sort Button yellow
+      {x: 982, y: 909, r: 115, g: 57, b: 41, match: true, threshold: 60}, // Sort Button dark yellow
     ],
     back: {x: 180, y: 1592},
     next: {x: 176, y: 1592},
@@ -380,7 +420,7 @@ function findPage(img, pageColors) {
       var diff = Colors.diffColor(pcolor, pxcolor);
       // rbm.log('dbg: diff', diff);
       if ((pcolor.match && diff >= pcolor.threshold) ||
-        !pcolor.match && diff < threshold) {
+        (!pcolor.match && diff < pcolor.threshold)) {
         break;
       }
     }
@@ -394,7 +434,7 @@ function findPage(img, pageColors) {
     return result[0];
   }
   if (result.length > 0) {
-    rbm.log('dbg: too many page:', names);
+    mylog('dbg: too many page:', names);
   }
   return {name: ''};
 };
@@ -414,20 +454,21 @@ function start( // exported start()
     return;
   }
   init();
-  /* failed
-  // rbm.startApp('com.linecorp.LGTMTM', '.TsumTsum'); // isJP
-  console.log('dbg: startApp');
-  // var r = rbm.startApp(config.packageName, config.activityName);
-  var r = startApp(config.packageName, config.activityName);
-  console.log('dbg:', r);
-  rbm.sleep(3000);
-  */
+  if (autoLaunch) {
+    // rbm.startApp('com.linecorp.LGTMTM', '.TsumTsum'); // isJP
+    console.log('dbg: startApp');
+    var r = rbm.startApp(config.packageName, config.activityName); // test failed 2019/06/16
+    // var r = startApp(config.packageName, config.activityName);
+    console.log('dbg:', r);
+    rbm.sleep(3000);
+  }
 
   var lastChkAppTime = 0;
   var outOfGameCount = 0;
   var prevPage = {name: ''};
   var currentPage = prevPage;
   var lastChkPageTime = 0;
+  var samePageCount = 0;
 
   while (config.isRunning) {
     // check if out of game
@@ -456,11 +497,17 @@ function start( // exported start()
       // rbm.log('dbg: page=', currentPage);
       lastChkPageTime = now;
     }
-
-    console.log('dbg: p:', prevPage.name, 'c:', currentPage.name);
+    if (prevPage.name != currentPage.name) {
+      console.log('dbg: prevPage:', prevPage.name, 'currentPage:', currentPage.name);
+      samePageCount = 1;
+    } else {
+      samePageCount++;
+      if (samePageCount === 2) {
+        console.log('dbg: Page:', currentPage.name);
+      }
+    }
     releaseImage(img);
-    rbm.log('dbg: wait', config.loopSleepMS/1000, 's for debug',
-        Date(now).toLocaleString());
+    // rbm.log('dbg: wait', config.loopSleepMS/1000, 's for debug', Date(now));
     sleep(config.loopSleepMS);
   }
   console.log('dbg: start() end');
