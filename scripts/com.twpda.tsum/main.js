@@ -4,23 +4,27 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   appName: 'com.twpda.tsum',
   // global for this game
   isRunning: false,
-  appOnChkPeriod: 500, // check per 0.5 s
-  maxAppOffCount: 3, // continue 3 times off will trigger stop()
   packageName: 'com.linecorp.LGTMTMG',
   activityName: '.TsumTsum',
+  // UI options
+  appOnChkPeriod: 500, // check per 0.5 s
+  maxAppOffCount: 3, // continue 3 times off will trigger stop()
   chkPagePeriod: 100, // check per 0.1 second
   loopSleepMS: 100, // sleep per 0.1 second in main loop
   // loopSleepMS: 5000, // sleep per 5 second in main loop
   pageColors: [{ // sort by action sequence, y, x, comment with color, position, button
-    /*
-      name: 'BlueFrame',
-      colors: [
-        {x:983, y:160, b:228,g:189,r:31, match: true, threshold:80},
-        {x:976, y:1945, b:58,g:52,r:7, match: true, threshold:80},
-        {x:107, y:1943, b:231,g:195,r:28, match: true, threshold:80},
-      ],
-    },{
-    */
+    name: 'RootDetection*',
+    colors: [
+      {x: 541, y: 67, r: 102, g: 102, b: 102, match: true, threshold: 60}, // dark white top
+      {x: 538, y: 548, r: 10, g: 9, b: 3, match: true, threshold: 60}, // black frame top
+      {x: 127, y: 1300, r: 214, g: 214, b: 214, match: true, threshold: 60}, // white left of Permit botton
+      {x: 541, y: 1300, r: 150, g: 150, b: 150, match: true, threshold: 60}, // gray between two botton
+      {x: 631, y: 1300, r: 214, g: 214, b: 214, match: true, threshold: 60}, // white left of Refuse botton
+      {x: 556, y: 1547, r: 99, g: 73, b: 6, match: true, threshold: 60}, // dark yellow 'TAP TO START' button
+    ],
+    back: {x: 631, y: 1300},
+    next: {x: 127, y: 1300},
+  }, {
     name: 'ChooseLanguage*',
     colors: [
       {x: 777, y: 208, r: 255, g: 255, b: 255, match: true, threshold: 60}, // white Language button left edge
@@ -174,6 +178,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 774, y: 1095},
     next: {x: 320, y: 1091},
   }, {
+    /* conflict with GamePlay
     name: 'StartPage',
     colors: [
       {x: 752, y: 471, r: 244, g: 249, b: 243, match: true, threshold: 80},
@@ -185,6 +190,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 190, y: 1646},
     next: {x: 558, y: 1635},
   }, {
+    */
     name: 'ChooseBonusItem',
     colors: [
       {x: 153, y: 380, r: 222, g: 61, b: 148, match: true, threshold: 60}, // first red heart
@@ -325,9 +331,10 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }, {
     name: 'TsumsMe', // the close button at left bottom
     colors: [
-      {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 80}, // left bottom back button
-      {x: 919, y: 1696, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red Store
-      {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
+      {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 60}, // left bottom back button
+      // {x: 922, y: 1620, r: 156, g: 0, b: 0, match: true, threshold: 80}, // right bottom red Store
+      {x: 790, y: 1652, r: 239, g: 174, b: 8, match: true, threshold: 60}, // right bottom yellow button
+      // {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
       {x: 414, y: 1655, r: 49, g: 154, b: 197, match: true, threshold: 60}, // bottom disabled MyTsum Set
       {x: 1008, y: 898, r: 239, g: 178, b: 16, match: true, threshold: 60}, // Sort Button yellow
       {x: 982, y: 909, r: 115, g: 57, b: 41, match: true, threshold: 60}, // Sort Button dark yellow
@@ -337,9 +344,10 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }, {
     name: 'TsumsOther', // the close button at left bottom
     colors: [
-      {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 80}, // left bottom back button
-      {x: 919, y: 1696, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red Store
-      {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
+      {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 60}, // left bottom back button
+      // {x: 922, y: 1620, r: 156, g: 0, b: 0, match: true, threshold: 80}, // right bottom red Store
+      {x: 790, y: 1652, r: 239, g: 174, b: 8, match: true, threshold: 60}, // right bottom yellow button
+      // {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
       {x: 553, y: 1718, r: 239, g: 93, b: 8, match: true, threshold: 60}, // bottom MyTsum Set
       {x: 1008, y: 898, r: 239, g: 178, b: 16, match: true, threshold: 60}, // Sort Button yellow
       {x: 982, y: 909, r: 115, g: 57, b: 41, match: true, threshold: 60}, // Sort Button dark yellow
@@ -370,14 +378,11 @@ function fini() {
 // remove RBM 0.0.3's log delay time
 // RBM.prototype.log = function() {
 function mylog() {
-  // sleep(10);
-  console.log('dbg:');
   for (var i = 0; i < arguments.length; i++) {
     if (typeof arguments[i] == 'object') {
       arguments[i] = JSON.stringify(arguments[i]);
     }
   }
-  console.log('dbg:');
   console.log.apply(console, arguments);
 };
 
@@ -439,21 +444,38 @@ function findPage(img, pageColors) {
   return {name: ''};
 };
 
+function mySleep(t, prevMS) {
+  var now = Date.now();
+  var diff = t - (now - prevMS);
+  if (diff <= 0) {
+    return now;
+  }
+  t = diff;
+  sleep(t);
+  return Date.now();
+}
+
 /* eslint no-unused-vars: ["error", { "vars": "local" }]*/
 function start( // exported start()
-    isLocaleTW, autoLaunch, detectAppOnPeriod, autoPlay, isPause,
-    clearBubbles, useFan, isFourTsum, coinItem, bubbleItem,
-    enableAllItems, skillInterval, skillLevel, skillType, receiveItem,
-    receiveItemInterval, receiveOneItem, keepRuby, receiveCheckLimit,
-    receiveOneItemInterval,
-    recordReceive, largeImage, sendHearts, sentToZero, sendFromFirst,
-    sendHeartMaxDuring, sendHeartsInterval, numParams) {
+    isLocaleTW, autoLaunch, appOnChkPeriodSec, maxAppOffCount, chkPagePeriodSec,
+    loopSleepSec, isPermitRootScan, autoPlay, isPause, clearBubbles,
+    useFan, isFourTsum, coinItem, bubbleItem, enableAllItems,
+    skillInterval, skillLevel, skillType, receiveItem, receiveItemInterval,
+    receiveOneItem, keepRuby, receiveCheckLimit, receiveOneItemInterval,
+    sendHearts,
+    sentToZero, sendFromFirst, sendHeartMaxDuring, sendHeartsInterval,
+    numParams) {
   console.log('dbg: start()');
-  if (numParams != 27) { // check the index.html genStartCommand()
+  if (numParams != 29) { // check the index.html genStartCommand()
     console.log('dbg: invalid numParams=', numParams);
     return;
   }
   init();
+  config.appOnChkPeriod = appOnChkPeriodSec*1000;
+  config.maxAppOffCount = maxAppOffCount;
+  config.chkPagePeriod = chkPagePeriodSec*1000;
+  config.loopSleepMS = loopSleepSec*1000;
+
   if (autoLaunch) {
     // rbm.startApp('com.linecorp.LGTMTM', '.TsumTsum'); // isJP
     console.log('dbg: startApp');
@@ -462,13 +484,15 @@ function start( // exported start()
     console.log('dbg:', r);
     rbm.sleep(3000);
   }
-
+  config.loopSleepMS = loopSleepSec * 1000;
   var lastChkAppTime = 0;
   var outOfGameCount = 0;
   var prevPage = {name: ''};
   var currentPage = prevPage;
   var lastChkPageTime = 0;
   var samePageCount = 0;
+  var prevSleepTime = Date.now();
+  // var shotnum = 0;
 
   while (config.isRunning) {
     // check if out of game
@@ -486,7 +510,8 @@ function start( // exported start()
       }
       lastChkAppTime = now;
     }
-    rbm.screenshot('tsum.png'); // failed
+    // rbm.screenshot('tsum'+shotnum.toString()+'.png');
+    // shotnum = (shotnum + 1) % 10;
     var img = getScreenshotModify(0, 0, rbm.appWidth, rbm.appHeight,
         rbm.resizeAppWidth, rbm.resizeAppHeight, rbm.imageQuality);
 
@@ -508,7 +533,7 @@ function start( // exported start()
     }
     releaseImage(img);
     // rbm.log('dbg: wait', config.loopSleepMS/1000, 's for debug', Date(now));
-    sleep(config.loopSleepMS);
+    prevSleepTime = mySleep(config.loopSleepMS, prevSleepTime);
   }
   console.log('dbg: start() end');
 }
@@ -520,37 +545,4 @@ function stop() { // exported stop()
   fini();
   console.log('dbg: stop() end');
 }
-
-/* example test function
-start(
-  false, // isLocaleTW
-  true, // autoLaunch,
-  3, // detectAppOnPeriod,
-  true, // autoPlay,
-  false, // isPause,
-  true, // clearBubbles,
-  true, // useFan,
-  false, // isFourTsum,
-  false, // coinItem,
-  false, // bubbleItem,
-  false, // enableAllItems,
-  1, // skillInterval,
-  3, // skillLevel,
-  'burst', // skillType,
-  false, // receiveItem,
-  25, // receiveItemInterval,
-  true, // receiveOneItem,
-  false, // keepRuby,
-  1, // receiveCheckLimit,
-  5, // receiveOneItemInterval,
-  false, // recordReceive,
-  false, // largeImage,
-  true, // sendHearts,
-  false, // sentToZero,
-  true, // sendFromFirst,
-  9, // sendHeartMaxDuring,
-  25, // sendHeartsInterval,
-  27 // numParams
-);
-*/
 // vim:et sw=2 ts=2 ai

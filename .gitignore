@@ -6,5 +6,3 @@ node_modules
 out
 package-lock.json
 yarn.lock
-scripts/com.twpda.tsum/testrun.js
-scripts/com.twpda.tsum/tsum.png
