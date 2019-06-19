@@ -12,6 +12,13 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   chkPagePeriod: 100, // check per 0.1 second
   loopSleepMS: 100, // sleep per 0.1 second in main loop
   // loopSleepMS: 5000, // sleep per 5 second in main loop
+  points: {
+    'RedMail': {x: 964, y: 311, r: 255, g: 32, b: 41}, // red number
+    'Mail': {x: 909, y: 366, r: 164, g: 89, b: 58}, // dark yellow mail
+    'RecvFirstMail': {x: 851, y: 561, r: 247, g: 190, b: 8}, // yellow button
+    'ADGift': {x: 308, y: 651, r: 222, g: 166, b: 99}, // yellow gift
+  },
+
   pageColors: [{ // sort by action sequence, y, x, comment with color, position, button
     name: 'RootDetection*',
     colors: [
@@ -127,6 +134,29 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     next: {x: 668, y: 1092},
   }, {
     */
+    name: 'PackageInfo*',
+    colors: [
+      {x: 546, y: 540, r: 33, g: 194, b: 230, match: true, threshold: 60}, // blue top frame
+      {x: 540, y: 969, r: 255, g: 255, b: 247, match: true, threshold: 60}, // light yellow gift box
+      {x: 774, y: 1210, r: 25, g: 190, b: 222, match: true, threshold: 60}, // blue bottom frame
+      {x: 540, y: 1329, r: 247, g: 190, b: 16, match: true, threshold: 60}, // yellow Close button
+      {x: 540, y: 1570, r: 49, g: 36, b: 0, match: true, threshold: 60}, // dark yellow Close button
+    ],
+    back: {x: 540, y: 1329},
+    next: {x: 540, y: 1329},
+  }, {
+    name: 'PackagePage*',
+    colors: [
+      {x: 546, y: 520, r: 33, g: 194, b: 230, match: true, threshold: 60}, // blue top frame
+      {x: 540, y: 825, r: 90, g: 57, b: 25, match: true, threshold: 60}, // yellow gift
+      {x: 151, y: 1082, r: 247, g: 93, b: 115, match: true, threshold: 60}, // red Delete button
+      {x: 604, y: 1085, r: 239, g: 174, b: 8, match: true, threshold: 60}, // yellow Watch an Ad button
+      {x: 536, y: 1204, r: 33, g: 198, b: 230, match: true, threshold: 60}, // blue bottom frame
+      {x: 533, y: 1335, r: 247, g: 186, b: 8, match: true, threshold: 60}, // yellow close button
+    ],
+    back: {x: 533, y: 1335},
+    next: {x: 151, y: 1082},
+  }, {
     name: 'ReceiveGiftOther*',
     colors: [
       {x: 781, y: 447, r: 49, g: 49, b: 49, match: true, threshold: 60}, // dark white mail box title
@@ -139,14 +169,14 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     back: {x: 209, y: 1092},
     next: {x: 668, y: 1092},
   }, {
-    name: 'MailBox2',
+    name: 'MailBox2*',
     colors: [
-      {x: 738, y: 414, r: 240, g: 245, b: 239, match: true, threshold: 80},
-      {x: 550, y: 1581, r: 238, g: 187, b: 10, match: true, threshold: 80},
-      {x: 619, y: 1426, r: 19, g: 137, b: 175, match: true, threshold: 80},
+      {x: 738, y: 414, r: 240, g: 245, b: 239, match: true, threshold: 60}, // white Mail Box title
+      {x: 619, y: 1426, r: 19, g: 137, b: 175, match: true, threshold: 60}, // yellow Claim All Button
+      {x: 550, y: 1581, r: 238, g: 187, b: 10, match: true, threshold: 60}, // yellow CLose Button
     ],
-    back: {x: 561, y: 1653},
-    next: {x: 561, y: 1653},
+    back: {x: 550, y: 1581}, // Close Button
+    next: {x: 550, y: 1581}, // Close Button
   }, {
     name: 'ReceiveHeart',
     colors: [
@@ -269,8 +299,9 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }, {
     name: 'NetworkDisable',
     colors: [
-      {x: 478, y: 1080, r: 236, g: 94, b: 116, match: true, threshold: 80},
+      {x: 540, y: 825, r: 90, g: 57, b: 25, match: false, threshold: 60}, // yellow gift conflict with PackagePage
       {x: 932, y: 1077, r: 232, g: 171, b: 5, match: true, threshold: 80},
+      {x: 478, y: 1080, r: 236, g: 94, b: 116, match: true, threshold: 80},
     ],
     back: {x: 885, y: 1080},
     next: {x: 885, y: 1084},
@@ -286,6 +317,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     name: 'FriendInfo',
     colors: [
       {x: 565, y: 576, r: 31, g: 190, b: 220, match: true, threshold: 80},
+      {x: 540, y: 825, r: 90, g: 57, b: 25, match: false, threshold: 60}, // yellow gift conflict with PackagePage
       {x: 547, y: 1195, r: 27, g: 192, b: 222, match: true, threshold: 80},
       {x: 554, y: 1332, r: 238, g: 186, b: 12, match: true, threshold: 80},
     ],
@@ -304,9 +336,10 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }, { // including EventPage, MyInfo, SettingPage, others
     name: 'ClosePage*', // the close button at center bottom
     colors: [
+      {x: 738, y: 414, r: 240, g: 245, b: 239, match: false, threshold: 60}, // white Mail Box title (not MailBox2)
+      {x: 604, y: 1419, r: 234, g: 171, b: 6, match: false, threshold: 60}, // yellow receive button (not MailBox1)
       {x: 540, y: 1588, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
       {x: 540, y: 1714, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
-      {x: 604, y: 1419, r: 234, g: 171, b: 6, match: false, threshold: 80}, // yellow receive button (not MailBox1)
     ],
     back: {x: 576, y: 1660},
     next: {x: 576, y: 1660},
@@ -410,6 +443,13 @@ function getColor(img, xy) {
   return getImageColor(img, rxy.x, rxy.y);
 };
 
+function checkPoint(img, pointName) {
+  var pcolor = config.points[pointName];
+  var pxcolor = getColor(img, pcolor);
+  var diff = Colors.diffColor(pcolor, pxcolor);
+  return (diff < 60);
+};
+
 function findPage(img, pageColors) {
   var result = [];
   var names = [];
@@ -455,6 +495,19 @@ function mySleep(t, prevMS) {
   return Date.now();
 }
 
+function skipAD() {
+  console.log('dbg: ignore AD');
+  rbm.click(config.points['RecvFirstMail']);
+  sleep(4000);
+  // delete ad
+  tap({x: 462, y: 1235 - 140});
+  sleep(4000);
+  tap({x: 172, y: 1360 - 140});
+  sleep(2000);
+  tap({x: 556, y: 1557 - 140});
+  sleep(2000);
+};
+
 /* eslint no-unused-vars: ["error", { "vars": "local" }]*/
 function start( // exported start()
     isLocaleTW, autoLaunch, appOnChkPeriodSec, maxAppOffCount, chkPagePeriodSec,
@@ -493,7 +546,7 @@ function start( // exported start()
   var samePageCount = 0;
   var prevSleepTime = Date.now();
   // var shotnum = 0;
-
+  var state = 0; // 0:init, 1:recv/send
   while (config.isRunning) {
     // check if out of game
     var now = Date.now();
@@ -527,8 +580,59 @@ function start( // exported start()
       samePageCount = 1;
     } else {
       samePageCount++;
-      if (samePageCount === 2) {
-        console.log('dbg: Page:', currentPage.name);
+      if (samePageCount >= 2) {
+        if (samePageCount === 2) {
+          console.log('dbg: Page:', currentPage.name, 'state=', state);
+        }
+        if (state == 0) { // init
+          if (currentPage.name == 'RootDetection*') {
+            if (isPermitRootScan) {
+              rbm.click(currentPage.next);
+            } else {
+              console.log('dbg: wait human action');
+              sleep(10000); // wait 10 seconds
+            }
+          } else if ((currentPage.name == 'FriendPage*') ||
+            (currentPage.name == 'MailBox1*') ||
+            (currentPage.name == 'PackagePage*')) {
+            // receiveItem, receiveItemInterval,
+            if (receiveOneItem || receiveItem) {
+              state = 1;
+              console.log('dbg: to recv mode');
+              // keepRuby, receiveCheckLimit, receiveOneItemInterval,
+            } else if (sendHearts) {
+              state = 1;
+              console.log('dbg: to sendHearts mode');
+            } else {
+              rbm.click(currentPage.next);
+            }
+          } else if ((currentPage.name == 'ClosePage*') ||
+            (currentPage.name == 'ChooseLanguage*') ||
+            (currentPage.name == 'PackagePage*') ||
+            (currentPage.name == 'PackageInfo*') ||
+            (currentPage.name == 'ClosePage2*')) {
+            rbm.click(currentPage.next);
+          }
+        } else if (state == 1) { // send/recv
+          if ((currentPage.name == 'ClosePage*') ||
+            (currentPage.name == 'ClosePage2*')) {
+            rbm.click(currentPage.next);
+          } else if (currentPage.name == 'FriendPage*') {
+            if (checkPoint(img, 'RedMail')) {
+              rbm.click(config.points['Mail']);
+            }
+          } else if (currentPage.name == 'MailBox1*') {
+            if (checkPoint(img, 'RecvFirstMail')) {
+              if (checkPoint(img, 'ADGift')) {
+                rbm.click(config.points['RecvFirstMail']);
+              }
+            }
+          } else if (currentPage.name == 'PackagePage*') {
+            rbm.click(currentPage.next);
+          } else if (currentPage.name == 'PackageInfo*') {
+            rbm.click(currentPage.next);
+          }
+        }
       }
     }
     releaseImage(img);
