@@ -24,6 +24,6 @@ cp: all
 	adb shell mkdir -p /sdcard/Robotmon/scripts/com.twpda.tsum
 	adb push index.html index.js /sdcard/Robotmon/scripts/com.twpda.tsum
 log:
-	adb logcat | grep GoLog | grep -v GrpcService
+	adb logcat | grep GoLog | grep -vE 'GrpcService|GetScreenshotJPEG'
 cpimg:
 	adb pull -a /sdcard/Robotmon/scripts/com.twpda.tsum/images .
