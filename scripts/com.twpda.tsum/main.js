@@ -336,7 +336,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }, { // including EventPage, MyInfo, SettingPage, others
     name: 'ClosePage*', // the close button at center bottom
     colors: [
-      {x: 738, y: 414, r: 240, g: 245, b: 239, match: false, threshold: 60}, // white Mail Box title (not MailBox2)
+      // {x: 738, y: 414, r: 240, g: 245, b: 239, match: false, threshold: 60}, // white Mail Box title (not MailBox2)
       {x: 604, y: 1419, r: 234, g: 171, b: 6, match: false, threshold: 60}, // yellow receive button (not MailBox1)
       {x: 540, y: 1588, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
       {x: 540, y: 1714, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
@@ -484,6 +484,42 @@ function findPage(img, pageColors) {
   return {name: ''};
 };
 
+function whyNotPage(img, pageName) {
+  var page;
+  var p;
+  var pageColors = config.pageColors;
+  for (p = 0; p < pageColors.length; p++) {
+    page = pageColors[p];
+    if (page.name == pageName) {
+      break;
+    }
+  }
+  if (p == pageColors.length) {
+    mylog('dbg: pageName invalid:', pageName);
+    return;
+  }
+  mylog('dbg: whyNotPage:', pageName);
+  var i;
+  for (i = 0; i < page.colors.length; i++) {
+    var pcolor = page.colors[i];
+    var pxcolor = getColor(img, pcolor);
+    var diff = Colors.diffColor(pcolor, pxcolor);
+    if (pcolor.match) {
+      if (diff >= pcolor.threshold) {
+        mylog('dbg: x match', diff, 'img', pxcolor, 'page', pcolor);
+      } else {
+        mylog('dbg: v match', diff, 'img', pxcolor, 'page', pcolor);
+      }
+    } else {
+      if (diff < pcolor.threshold) {
+        mylog('dbg: x notmatch', diff, 'img', pxcolor, 'page', pcolor);
+      } else {
+        mylog('dbg: v notmatch', diff, 'img', pxcolor, 'page', pcolor);
+      }
+    }
+  }
+};
+
 function mySleep(t, prevMS) {
   var now = Date.now();
   var diff = t - (now - prevMS);
@@ -532,9 +568,9 @@ function start( // exported start()
   if (autoLaunch) {
     // rbm.startApp('com.linecorp.LGTMTM', '.TsumTsum'); // isJP
     console.log('dbg: startApp');
-    var r = rbm.startApp(config.packageName, config.activityName); // test failed 2019/06/16
+    rbm.startApp(config.packageName, config.activityName); // test failed 2019/06/16
     // var r = startApp(config.packageName, config.activityName);
-    console.log('dbg:', r);
+    // console.log('dbg:', r);
     rbm.sleep(3000);
   }
   config.loopSleepMS = loopSleepSec * 1000;
@@ -612,6 +648,9 @@ function start( // exported start()
             (currentPage.name == 'PackageInfo*') ||
             (currentPage.name == 'ClosePage2*')) {
             rbm.click(currentPage.next);
+          } else {
+            whyNotPage(img, 'ClosePage*');
+            whyNotPage(img, 'ClosePage2*');
           }
         } else if (state == 1) { // send/recv
           if ((currentPage.name == 'ClosePage*') ||
