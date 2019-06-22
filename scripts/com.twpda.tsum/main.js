@@ -53,6 +53,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
     // ZERO ACTIONS PAGES => just wait
+    /*
     name: 'NetworkDisable+',
     colors: [
       {x: 540, y: 825, r: 90, g: 57, b: 25, match: false, threshold: 60}, // yellow gift conflict with PackagePage
@@ -61,7 +62,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     ],
     actions: [], // just sleep
   }, {
-
+*/
     // ONE ACTIONS PAGES => always click
     /*
     name: 'NetworkTimeout+',
@@ -153,6 +154,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
       {x: 930, y: 1656, r: 233, g: 175, b: 6, match: true, threshold: 80}, // right of the share button
     ],
     actions: [{x: 300, y: 1660}], // TODO:test
+    /*
   }, { // including EventPage, MyInfo, SettingPage, others
     name: 'ClosePage', // the close button at center bottom
     colors: [
@@ -163,6 +165,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
       {x: 540, y: 1714, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
     ],
     actions: [{x: 576, y: 1660}], // Close
+    */
   }, { // including Login Bonus
     name: 'ClosePage2', // the close button at 3/4 height
     colors: [
@@ -360,12 +363,39 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     ],
     actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 799, y: 1653}], // Card, Play, MyTsum
   }, {
-    name: 'GamePlaying',
+    name: 'GamePlay1', // blue around MyTsum
     colors: [
       {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
-      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 60}, // dark yellow Pause button lower part
-      {x: 137, y: 1555, r: 90, g: 117, b: 164, match: true, threshold: 60}, // dark blue MyTsum button 11 clock part
-      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 60}, // yellow Fan button upper part
+      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
+      {x: 137, y: 1555, r: 90, g: 117, b: 164, match: true, threshold: 160}, // light blue to dark MyTsum button 11 clock part
+      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
+    ],
+    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
+  }, {
+    name: 'GamePlay2', // yellow around MyTsum
+    colors: [
+      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
+      {x: 137, y: 1555, r: 247, g: 219, b: 25, match: true, threshold: 160}, // light yellow to dark MyTsum button 11 clock part
+      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
+    ],
+    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
+  }, {
+    name: 'GamePlay3', // white around MyTsum
+    colors: [
+      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
+      {x: 137, y: 1555, r: 255, g: 255, b: 247, match: true, threshold: 120}, // white MyTsum button 11 clock part
+      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
+    ],
+    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
+  }, {
+    name: 'GamePlay4', // black around MyTsum
+    colors: [
+      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
+      {x: 137, y: 1555, r: 33, g: 36, b: 33, match: true, threshold: 120}, // black MyTsum button 11 clock part
+      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
     ],
     actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
   }],
@@ -618,7 +648,10 @@ function clickUnknown(img) {
     rbm.log('dbg: not in currentApp', r.packageName);
     return;
   }
-  whyNotPage(img, 'GamePlaying');
+  // whyNotPage(img, 'GamePlay1');
+  // whyNotPage(img, 'GamePlay2');
+  // whyNotPage(img, 'GamePlay3');
+  // whyNotPage(img, 'GamePlay4');
   // whyNotPage(img, 'ChooseBonusItem');
   // whyNotPage(img, 'RootDetection');
   // whyNotPage(img, 'ClosePage');
@@ -713,8 +746,12 @@ function start(params) { // exported start()
     }
     if (prevPage.name != currentPage.name) {
       console.log('dbg: prevPage:', prevPage.name, 'currentPage:', currentPage.name);
-      if (prevPage.name === 'GamePlaying' && currentPage.name === '') {
-        whyNotPage(img, 'GamePlaying');
+      if (currentPage.name == '' && (prevPage.name === 'GamePlay1' || prevPage.name === 'GamePlay2' ||
+         prevPage.name === 'GamePlay3' || prevPage.name === 'GamePlay4')) {
+        whyNotPage(img, 'GamePlay1');
+        whyNotPage(img, 'GamePlay2');
+        whyNotPage(img, 'GamePlay3');
+        whyNotPage(img, 'GamePlay4');
       }
       samePageCount = 1;
     } else {
@@ -807,7 +844,7 @@ function start(params) { // exported start()
                     if (clickBonus(bonusState) == 0) {
                       if (config.autoPlayCount == 0 ||
                           config.autoPlayCount > autoPlayCount) {
-                        rbm.log('dbg: bonus OK, click Play ', autoPlayCount);
+                        rbm.log('dbg: bonus OK, click Start ', autoPlayCount);
                         rbm.click(currentPage.actions[1]);
                         autoPlayCount++;
                       } else {
@@ -844,9 +881,12 @@ function start(params) { // exported start()
             break;
           default: // more than 2 actions
             switch (currentPage.name) {
-              case 'GamePlaying':
-                rbm.log('dbg: playing TODO');
-                longSleep(config.hibernateMS);
+              case 'GamePlay1':
+              case 'GamePlay2':
+              case 'GamePlay3':
+              case 'GamePlay4':
+                rbm.log('dbg: playing', samePageCount);
+                // longSleep(config.hibernateMS);
                 break;
               case 'FriendPage':
               case 'FriendPage2':
