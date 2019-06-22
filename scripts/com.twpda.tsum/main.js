@@ -362,12 +362,12 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }, {
     name: 'GamePlaying',
     colors: [
-      // {x: 980, y: 258, r: 244, g: 197, b: 5, match: true, threshold: 60}, // right of pause
-      {x: 916, y: 318, r: 230, g: 150, b: 6, match: true, threshold: 60}, // below pause
-      {x: 916, y: 1688, r: 230, g: 150, b: 6, match: true, threshold: 60}, // below fan
-      {x: 287, y: 1662, r: 0, g: 182, b: 230, match: true, threshold: 60}, // between mytsum and fever
+      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 60}, // dark yellow Pause button lower part
+      {x: 137, y: 1555, r: 90, g: 117, b: 164, match: true, threshold: 60}, // dark blue MyTsum button 11 clock part
+      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 60}, // yellow Fan button upper part
     ],
-    actions: [{x: 986, y: 273},, {x: 986, y: 273}, {x: 986, y: 273}], // TODO:
+    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
   }],
 };
 
@@ -596,12 +596,29 @@ function clickBonus(bonusState) {
   return clickCount;
 };
 
+// rbm.CurrentApp() exist bug when screenlock, so use com.r2studio.Tsum index.js
+function myCurrentApp() {
+  var result = execute('dumpsys window windows').split('mCurrentFocus');
+  if (result.length >= 2) {
+    result = result[1].split(' ');
+    if (result.length >= 3) {
+      result = result[2].split('/');
+      if (result.length >= 2) {
+        var packageName = result[0];
+        return {packageName: packageName};
+      }
+    }
+  }
+  return {packageName: ''};
+};
+
 function clickUnknown(img) {
-  var r = rbm.currentApp();
+  var r = myCurrentApp();
   if (r.packageName !== config.packageName) {
     rbm.log('dbg: not in currentApp', r.packageName);
     return;
   }
+  whyNotPage(img, 'GamePlaying');
   // whyNotPage(img, 'ChooseBonusItem');
   // whyNotPage(img, 'RootDetection');
   // whyNotPage(img, 'ClosePage');
@@ -667,8 +684,7 @@ function start(params) { // exported start()
     // wait config.hibernateMS before check again
     var now = Date.now();
     if (now - lastChkAppTime > config.appOnChkMS) {
-      var r = rbm.currentApp();
-      // rbm.log('dbg: currentApp()=', r);
+      var r = myCurrentApp();
       if (r.packageName !== config.packageName) {
         outOfGameCount++;
         console.log('dbg: outOfGameCount', outOfGameCount, r.packageName);
@@ -697,8 +713,8 @@ function start(params) { // exported start()
     }
     if (prevPage.name != currentPage.name) {
       console.log('dbg: prevPage:', prevPage.name, 'currentPage:', currentPage.name);
-      if (prevPage.name === "GamePlaying" && currentPage.name === "") {
-        whyNotPage(img, "GamePlaying");
+      if (prevPage.name === 'GamePlaying' && currentPage.name === '') {
+        whyNotPage(img, 'GamePlaying');
       }
       samePageCount = 1;
     } else {
@@ -721,7 +737,7 @@ function start(params) { // exported start()
           case 1:
             rbm.click(currentPage.actions[0]);
             if (currentPage.name == 'Received') {
-              rbm.sleep(animationMS);
+              rbm.sleep(config.animationMS);
             } else if (currentPage.name == 'MailBoxNoMessage') {
               rbm.log('dbg: gotCoins:', gotCoins, 'in clicks:', msgClicks);
             }
@@ -753,7 +769,7 @@ function start(params) { // exported start()
                     msgClicks++;
                     console.log('dbg: click First Mail button');
                     rbm.click(config.points['RecvFirstMail']);
-                    rbm.sleep(animationMS);
+                    rbm.sleep(config.animationMS);
                   } else {
                     whyNotPoint(img, 'RecvFirstMail');
                     whyNotPoint(img, 'FirstMailGet');
