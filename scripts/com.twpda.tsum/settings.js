@@ -2,107 +2,53 @@
 
 var VERSION = 1;
 var storeKey = 'com.twpda.tsum.'+VERSION;
-var uistate = [
-  {label: 'Switch Language:English(英文)',
+var uiState = [
+  {label: 'Switch language:English(英文)',
     labelZh: '切換語言:中文(Chinese)', value: false}, // true for zh_TW
-
-  {label: '---'},
-  {label: 'Auto Launch Tsum App', labelZh: '自動開啟 Tsum App',
+  {label: 'Play game', labelZh: '玩遊戲', value: true},
+  {label: 'Receive gift', labelZh: '收禮物', value: true},
+  {label: 'Send hearts', labelZh: '送心', value: false},
+  {label: '--- Bonus item switches', labelZh: '--- 遊戲寶物選項'},
+  {label: 'Auto play count:(0: forever)',
+    labelZh: '自動玩次數(0:永遠)',
+    value: 1, min: 0, max: 10, step: 1},
+  {label: 'Score+10%', labelZh: '分數加10%', value: false},
+  {label: 'Coin+', labelZh: '加金幣', value: false},
+  {label: 'Exp+10%', labelZh: '經驗值加10%', value: false},
+  {label: 'Time+10%', labelZh: '時間加10%', value: false},
+  {label: 'Chain 6 tsum to generate Bubble', labelZh: '串6隻產生泡泡',
     value: false},
-  {label: 'App ON check period(second)', labelZh: '偵測仍在遊戲周期(秒)',
-    value: 0.5, min: 0.1, max: 60, step: 0.1},
-  {label: 'Max app OFF count', labelZh: '最多脫離遊戲次數',
-    value: 10, min: 3, max: 20, step: 1},
-  {label: 'Check page period(second)', labelZh: '檢查頁面周期(秒)',
-    value: 0.1, min: 0.05, max: 1, step: 0.05},
-  {label: 'Loop sleep(second)', labelZh: '檢查迴圈周期(秒)',
-    value: 0.1, min: 0.05, max: 10, step: 0.05},
-  {label: 'Permit Root Scan', labelZh: '允許Root掃描', value: false},
-
-  {label: '---'},
-  {label: 'Auto Play Game', labelZh: '自動玩遊戲', value: true},
-  {label: 'Pause When Calculating', labelZh: '計算時暫停', value: false},
-  {label: 'Clear Bubbles', labelZh: '自動清除泡泡', value: true},
-  {label: 'Use Fan?', labelZh: '使用風扇', value: true},
-  {label: '5>4', labelZh: '道具五變四', value: false},
-  {label: '+Coin', labelZh: '道具Coin', value: false},
-  {label: '+Bubble', labelZh: '道具Bubble', value: false},
-  {label: 'All Bonus Items', labelZh: '開/關全部道具', value: false},
-  {label: 'Skill Waiting time (sec)', labelZh: '技能等待時間(秒)',
-    value: 1, min: 0.5, max: 15, step: 0.5},
-  {label: 'Skill Level', labelZh: '技能等級',
-    value: 3, min: 1, max: 6, step: 1},
-  {label: 'Skill Type', labelZh: '技能類型', value: 0,
-    keyList: [
-      'burst',
-      'block_donald_s',
-      'block_donaldx_s',
-      'block_lukej_s',
-      'block_moana_s',
-      'block_marie_s',
-      'block_missbunny_s',
-      'block_rabbit_s',
-      'block_mickeyh2015_s',
-      'block_snowwhite_s',
-      'block_cinderella_s',
-    ], list: [
-      'Burst',
-      'Donald',
-      'Holiday Donald',
-      'Jedi Luke',
-      'Moana',
-      'Marie',
-      'Miss Bunny',
-      'Rabbit',
-      'Horn Hat Mickey',
-      'Snow White',
-      'Cinderella',
-    ], listZh: [
-      '消除系',
-      '唐老鴨',
-      '假日唐老鴨',
-      '絕地路克',
-      '莫娜',
-      '瑪麗',
-      '小兔子',
-      '兔子',
-      '角帽米奇',
-      '白雪公主',
-      '仙度瑞拉',
-    ]},
-  {label: '---'},
-  {label: 'Receive All Hearts', labelZh: '收全部愛心', value: false},
-  {label: 'Waiting time (min) before repeat',
-    labelZh: '完成後休息時間(分)',
-    value: 25, min: 5, max: 60, step: 1},
-  {label: '---'},
-  {label: 'Receive Hearts One By One', labelZh: '一顆一顆收愛心', value: true},
-  {label: 'Skip Ruby', labelZh: '保留鑽石', value: false},
-  {label: 'Max Times to Open Mailbox', labelZh: '重複檢查上限次數',
-    value: 1, min: 1, max: 20, step: 1},
-  {label: 'Waiting time (min) before repeat',
-    labelZh: '完成後休息時間(分)', value: 5, min: 1, max: 60, step: 1},
-  {label: '---'},
-  {label: 'Auto Send Hearts', labelZh: '自動送愛心', value: true},
-  {label: 'Send to 0 score', labelZh: '送心給 0 分', value: false},
-  {label: 'Send from first', labelZh: '從第1名開始送', value: true},
-  {label: 'Max run time(min)', labelZh: '執行時間上限(分)', value: 0,
-    min: 0, max: 80, step: 1},
-  {label: 'Waiting time (min) before repeat',
-    labelZh: '完成後休息時間(分)',
-    value: 25, min: 1, max: 59, step: 1},
+  {label: 'Reduce Tsum kind', labelZh: '減少種類', value: false},
+  {label: '--- Misc options', labelZh: '--- 雜項'},
+  {label: 'Auto launch Tsum app', labelZh: '自動開啟 Tsum App', value: false},
+  {label: 'Permit ROOT scan', labelZh: '允許Root掃描', value: false},
+  {label: 'Hibernate period(msec)', labelZh: '休眠周期(微秒)',
+    value: 10000, min: 5000, max: 60000, step: 5000},
+  {label: 'Max not in game time(msec) to hibernate',
+    labelZh: '超過最長不在遊戲時間(微秒)進入休眠',
+    value: 1000, min: 1000, max: 60000, step: 1000},
+  {label: 'Check in game period(msec)', labelZh: '檢查是否在遊戲內周期(微秒)',
+    value: 500, min: 50, max: 3000, step: 50},
+  {label: 'Find game page period(msec)', labelZh: '辨識遊戲頁面周期(微秒)',
+    value: 100, min: 50, max: 3000, step: 50},
+  {label: 'Wait time for click unknown game page(msec)',
+    labelZh: '點擊未知頁面前等待時間(微秒)',
+    value: 1000, min: 1000, max: 10000, step: 1000},
+  {label: 'Capture period(msec)', labelZh: '擷取畫面周期(微秒)',
+    value: 50, min: 50, max: 3000, step: 50},
 ];
 
 function saveState() {
   if (localStorage !== undefined) {
-    localStorage.setItem(storeKey, JSON.stringify(uistate));
+    localStorage.setItem(storeKey, JSON.stringify(uiState));
   }
 }
 
 function loadState() {
   if (localStorage !== undefined) {
-    if ( localStorage.getItem(storeKey) !== null) {
-      uistate = JSON.parse(v);
+    var v = localStorage.getItem(storeKey);
+    if (v !== null) {
+      uiState = JSON.parse(v);
     }
   }
 }
@@ -115,7 +61,7 @@ var ConfigPage = {
   oninit: loadState,
   view: function() {
     var uiList = [];
-    uistate.forEach(function(v, i, a) {
+    uiState.forEach(function(v, i, a) {
       var ui;
       if (typeof(v.value) === 'boolean') {
         ui = m('input[type=checkbox]', {
@@ -130,7 +76,7 @@ var ConfigPage = {
         if (v.list !== undefined) {
           radioList = [];
           aList = v.list;
-          if (uistate[0].value) {
+          if (uiState[0].value) {
             aList = v.listZh;
           }
           aList.forEach(function(rv, ri) {
@@ -197,7 +143,7 @@ var ConfigPage = {
             }
           },
         },
-          (uistate[0].value) ? '重置' : 'RESET'
+          (uiState[0].value) ? '重置' : 'RESET'
         ),
         m('ol', uiList),
     );
@@ -205,26 +151,21 @@ var ConfigPage = {
 };
 
 function genStartCommand() {
-  var command = 'start(';
-  var n = 0;
-  uistate.forEach(function(v) {
+  var command = 'start([';
+  uiState.forEach(function(v) {
     if (typeof v.value === 'boolean') {
       command += v.value.toString() + ', ';
-      n++;
     } else if (typeof v.value === 'number') {
       if (v.list !== undefined) {
         command += '"' + v.keyList[v.value] + '", ';
-        n++;
       } else {
         command += v.value + ', ';
-        n++;
       }
     } else if (typeof v.value === 'string') {
       command += '"' + v.value + '", ';
-      n++;
     }
   });
-  command += n.toString() + ');';
+  command += ']);';
   console.log('dbg: command=' + command);
   return command;
 }
