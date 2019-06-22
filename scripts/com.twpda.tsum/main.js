@@ -4,24 +4,41 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   appName: 'com.twpda.tsum',
   // global for this game
   isRunning: false,
-  isPlay: true,
-  isSendHeart: false,
-  isRecvGift: true,
   bonusState: 0,
   packageName: 'com.linecorp.LGTMTMG',
   activityName: '.TsumTsum',
+  animationMS: 500,
 
-  // UI options
-  appOnChkPeriod: 500, // check per 0.5 s
-  maxAppOffCount: 3, // continue 3 times off will trigger stop()
-  chkPagePeriod: 100, // check per 0.1 second
-  loopSleepMS: 100, // sleep per 0.1 second in main loop
-  // loopSleepMS: 5000, // sleep per 5 second in main loop
+  // UI options in settings.js order
+  isLangZhTW: false,
+  isPlay: true,
+  isRecvGift: true,
+  isSendHeart: false,
+
+  autoPlayCount: 1,
+  isBonusScore: false,
+  isBonusCoin: false,
+  isBonusExp: false,
+  isBonusTime: false,
+  isBonusBubble: false,
+  isBonus5to4: false,
+
+  isAutoLaunch: true,
+  isPermitRootScan: true,
+  hibernateMS: 10000, // check app on per 10s
+  maxAppOffMS: 1000, // max 1s on other app switch to hibernate mode
+  appOnChkMS: 500, // check per 0.5s
+  findPageMS: 100, // call findPage() per 0.1s
+  waitUnknownMS: 1000, // wait 1 second before click on unknown page
+  captureMS: 50, // sleep per 0.05 second before capture screen
+
+  uiOptionCount: 19, // count of UI options
 
   points: {
     'RedMail': {x: 964, y: 311, r: 255, g: 32, b: 41}, // red number
     'Mail': {x: 909, y: 366, r: 164, g: 89, b: 58}, // dark yellow mail
-    'RecvFirstMail': {x: 851, y: 561, r: 247, g: 190, b: 8}, // yellow button
+    'RecvFirstMail': {x: 768, y: 596, r: 239, g: 174, b: 8}, // yellow Check button left side
+    'FirstMailGet': {x: 950, y: 541, r: 247, g: 227, b: 33}, // yellow Get icon
     'ADGift': {x: 308, y: 651, r: 222, g: 166, b: 99}, // yellow gift
     'BonusScore': {x: 140, y: 863, r: 49, g: 109, b: 197}, // blue 1
     'BonusCoin': {x: 357, y: 854, r: 49, g: 117, b: 206}, // blue 2
@@ -29,6 +46,9 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     'BonusTime': {x: 799, y: 857, r: 49, g: 121, b: 206}, // blue 8
     'BonusBubble': {x: 136, y: 1127, r: 49, g: 117, b: 206}, // blue 16
     'Bonus5to4': {x: 351, y: 1127, r: 49, g: 121, b: 206}, // blue 32
+    'Close1': {x: 540, y: 1329, r: 247, g: 190, b: 16}, // yellow Close of PackageInfo
+    'Close2': {x: 550, y: 1581, r: 238, g: 187, b: 10}, // yellow Close of MailBoxNoMessage
+    'Close3': {x: 382, y: 1612, r: 239, g: 182, b: 8}, // yellow Close of OptionsPage
   },
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
@@ -43,13 +63,16 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }, {
 
     // ONE ACTIONS PAGES => always click
+    /*
     name: 'NetworkTimeout+',
     colors: [
       {x: 478, y: 1080, r: 232, g: 171, b: 5, match: true, threshold: 80},
+      {x: 155, y: 1073, r: 239, g: 170, b: 8, match: true, threshold: 60}, // yellow Try Again button conflict of GamePause
       {x: 932, y: 1077, r: 232, g: 171, b: 5, match: true, threshold: 80},
     ],
     actions: [{x: 885, y: 1084}], // TODO: retry?
   }, {
+  */
     name: 'ChooseLanguage',
     colors: [
       {x: 777, y: 208, r: 255, g: 255, b: 255, match: true, threshold: 60}, // white Language button left edge
@@ -89,14 +112,16 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
       {x: 540, y: 1329, r: 247, g: 190, b: 16, match: true, threshold: 60}, // yellow Close button
       {x: 540, y: 1570, r: 49, g: 36, b: 0, match: true, threshold: 60}, // dark yellow Close button
     ],
-    actions: [{x: 540, y: 1329}], // CLose
+    actions: [{x: 540, y: 1329}], // Close
   }, {
     name: 'MailBoxNoMessage',
     colors: [
+
       {x: 738, y: 414, r: 240, g: 245, b: 239, match: true, threshold: 60}, // white Mail Box title
+      {x: 768, y: 596, r: 239, g: 174, b: 8, match: false, threshold: 60}, // yellow watch Ad button
       // {x: 619, y: 1426, r: 19, g: 137, b: 175, match: true, threshold: 60}, // yellow Claim All Button
       {x: 889, y: 1395, r: 0, g: 105, b: 156, match: true, threshold: 60}, // blue Claim All Button
-      {x: 550, y: 1581, r: 238, g: 187, b: 10, match: true, threshold: 60}, // yellow CLose Button
+      {x: 550, y: 1581, r: 238, g: 187, b: 10, match: true, threshold: 60}, // yellow Close Button
     ],
     actions: [{x: 550, y: 1581}], // Close
   }, {
@@ -107,15 +132,18 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
       {x: 799, y: 1048, r: 27, g: 188, b: 217, match: true, threshold: 80},
     ],
     actions: [{x: 799, y: 716}], // Any key
+    /*
   }, { // FriendInfo of Friend Page, SocailAccount of Setting Page
-    name: 'FriendInfo+',
+    name: 'FriendInfo',
     colors: [
       {x: 565, y: 576, r: 31, g: 190, b: 220, match: true, threshold: 80},
-      {x: 540, y: 825, r: 90, g: 57, b: 25, match: false, threshold: 60}, // yellow gift conflict with PackagePage
+      {x: 540, y: 825, r: 90, g: 57, b: 25, match: false, threshold: 60}, // yellow gift conflict of PackagePage
+      {x: 155, y: 1073, r: 239, g: 170, b: 8, match: false, threshold: 60}, // yellow Try Again button conflict of GamePause
       {x: 547, y: 1195, r: 27, g: 192, b: 222, match: true, threshold: 80},
       {x: 554, y: 1332, r: 238, g: 186, b: 12, match: true, threshold: 80},
     ],
     actions: [{x: 576, y: 1408}], // TODO:?
+    */
   }, { // LevelUp and RankUp
     name: 'LevelUp+',
     colors: [
@@ -205,6 +233,15 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     ],
     actions: [{x: 550, y: 1581}, {x: 604, y: 1419}], // Close, Receive
   }, {
+    name: 'MailBoxAd',
+    colors: [
+      {x: 738, y: 414, r: 240, g: 245, b: 239, match: true, threshold: 60}, // white Mail Box title
+      {x: 768, y: 596, r: 239, g: 174, b: 8, match: true, threshold: 60}, // yellow Watch Ad button
+      {x: 889, y: 1395, r: 0, g: 105, b: 156, match: true, threshold: 60}, // blue Claim All Button
+      {x: 550, y: 1581, r: 238, g: 187, b: 10, match: true, threshold: 60}, // yellow Close Button
+    ],
+    actions: [{x: 550, y: 1581}, {x: 768, y: 596}], // Close, Watch
+  }, {
     name: 'ReceiveGiftHeart',
     colors: [
       {x: 781, y: 447, r: 49, g: 49, b: 49, match: true, threshold: 60}, // dark white mail box title
@@ -250,15 +287,16 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     ],
     actions: [{x: 179, y: 1580}, {x: 545, y: 1591}], // Back, Start
   }, {
-    name: 'GamePause+',
+    name: 'GamePause',
     colors: [
-      {x: 165, y: 1077, r: 234, g: 173, b: 7, match: true, threshold: 80},
-      {x: 594, y: 1073, r: 233, g: 171, b: 8, match: true, threshold: 80},
-      {x: 367, y: 774, r: 24, g: 191, b: 225, match: true, threshold: 80},
-      {x: 738, y: 612, r: 248, g: 244, b: 245, match: true, threshold: 80},
-      {x: 550, y: 1336, r: 236, g: 182, b: 11, match: true, threshold: 80},
+      {x: 535, y: 538, r: 33, g: 194, b: 230, match: true, threshold: 60}, // blue frame top
+      {x: 327, y: 658, r: 255, g: 251, b: 255, match: true, threshold: 60}, // white title
+      {x: 158, y: 771, r: 25, g: 202, b: 239, match: true, threshold: 60}, // blue Sound
+      {x: 155, y: 1073, r: 239, g: 170, b: 8, match: true, threshold: 60}, // yellow Try Again button
+      {x: 583, y: 1073, r: 247, g: 186, b: 8, match: true, threshold: 60}, //  yellow View Rankings button
+      {x: 541, y: 1329, r: 247, g: 190, b: 8, match: true, threshold: 60}, //  yellow Continue button
     ],
-    actions: [{x: 331, y: 1080}, {x: 561, y: 1422}], // back, next
+    actions: [{x: 155, y: 1073}, {x: 541, y: 1329}], // TryAgain, Continue
   }, {
     name: 'TsumsMe', // the close button at left bottom
     colors: [
@@ -335,11 +373,45 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
 
 var rbm;
 
-function init() {
+function init(args) {
   rbm = new RBM(config);
   rbm.init();
+  if (args !== undefined) {
+    if (args.length != config.uiOptionCount) {
+      rbm.log('dbg: parameter length invalid', args.length);
+      stop();
+      return false;
+    } else {
+      var i=0;
+      config.isLangZhTW = args[i++];
+      config.isPlay = args[i++];
+      config.isRecvGift = args[i++];
+      config.isSendHeart = args[i++];
+
+      config.autoPlayCount = args[i++];
+      config.isBonusScore = args[i++];
+      config.isBonusCoin = args[i++];
+      config.isBonusExp = args[i++];
+      config.isBonusTime = args[i++];
+      config.isBonusBubble = args[i++];
+      config.isBonus5to4 = args[i++];
+
+      config.isAutoLaunch = args[i++];
+      config.isPermitRootScan = args[i++];
+      config.hibernateMS = args[i++];
+      config.maxAppOffMS = args[i++];
+      config.appOnChkMS = args[i++];
+      config.findPageMS = args[i++];
+      config.waitUnknownMS = args[i++];
+      config.captureMS = args[i++];
+    }
+  } else {
+    rbm.log('dbg: no arguments of start(), use default');
+  }
   config.isRunning = true;
-}
+  return true;
+};
+
 function fini() {
   rbm = undefined;
 }
@@ -384,6 +456,17 @@ function checkPoint(img, pointName) {
   var pxcolor = getColor(img, pcolor);
   var diff = Colors.diffColor(pcolor, pxcolor);
   return (diff < 60);
+};
+
+function whyNotPoint(img, pointName) {
+  var pcolor = config.points[pointName];
+  var pxcolor = getColor(img, pcolor);
+  var diff = Colors.diffColor(pcolor, pxcolor);
+  if (diff < 60) {
+    rbm.log('dbg: v', diff, pointName, pcolor, pxcolor);
+  } else {
+    rbm.log('dbg: x', diff, pointName, pcolor, pxcolor);
+  }
 };
 
 function findPage(img, pagePixels) {
@@ -513,28 +596,48 @@ function clickBonus(bonusState) {
   return clickCount;
 };
 
-/* eslint no-unused-vars: ["error", { "vars": "local" }]*/
-function start( // exported start()
-    isLocaleTW, autoLaunch, appOnChkPeriodSec, maxAppOffCount, chkPagePeriodSec,
-    loopSleepSec, isPermitRootScan, autoPlay, isPause, clearBubbles,
-    useFan, isFourTsum, coinItem, bubbleItem, enableAllItems,
-    skillInterval, skillLevel, skillType, receiveItem, receiveItemInterval,
-    receiveOneItem, keepRuby, receiveCheckLimit, receiveOneItemInterval,
-    sendHearts,
-    sentToZero, sendFromFirst, sendHeartMaxDuring, sendHeartsInterval,
-    numParams) {
-  console.log('dbg: start()');
-  if (numParams != 29) { // check the index.html genStartCommand()
-    console.log('dbg: invalid numParams=', numParams);
+function clickUnknown(img) {
+  var r = rbm.currentApp();
+  if (r.packageName !== config.packageName) {
+    rbm.log('dbg: not in currentApp', r.packageName);
     return;
   }
-  init();
-  config.appOnChkPeriod = appOnChkPeriodSec*1000;
-  config.maxAppOffCount = maxAppOffCount;
-  config.chkPagePeriod = chkPagePeriodSec*1000;
-  config.loopSleepMS = loopSleepSec*1000;
+  // whyNotPage(img, 'ChooseBonusItem');
+  // whyNotPage(img, 'RootDetection');
+  // whyNotPage(img, 'ClosePage');
+  // whyNotPage(img, 'ClosePage2');
+  var buttons = ['Close1', 'Close2', 'Close3'];
+  for (var i=0; i< buttons.length; i++) {
+    if (checkPoint(img, buttons[i])) {
+      rbm.log('dbg: click', buttons[i], r.packageName);
+      rbm.click(config.points[buttons[i]]);
+      return;
+    }
+  }
+  rbm.log('dbg: click center of screen', r.packageName);
+  rbm.click({x: rbm.oriScreenWidth/2, y: rbm.oriScreenHeight/2});
+};
 
-  if (autoLaunch) {
+function longSleep(ms) {
+  var maxSleepMS = 500; ;
+  while (ms > 0) {
+    if (ms >= maxSleepMS) {
+      sleep(maxSleepMS);
+      ms -= maxSleepMS;
+    } else {
+      sleep(ms);
+      break;
+    }
+  }
+};
+
+/* eslint no-unused-vars: ["error", { "vars": "local" }]*/
+function start(params) { // exported start()
+  if (!init(params)) {
+    return;
+  }
+
+  if (config.isAutoLaunch) {
     // rbm.startApp('com.linecorp.LGTMTM', '.TsumTsum'); // isJP
     console.log('dbg: startApp');
     rbm.startApp(config.packageName, config.activityName); // test failed 2019/06/16
@@ -542,82 +645,96 @@ function start( // exported start()
     // console.log('dbg:', r);
     rbm.sleep(3000);
   }
-  config.loopSleepMS = loopSleepSec * 1000;
   var lastChkAppTime = 0;
   var outOfGameCount = 0;
-  var prevPage = {name: ''};
+  var prevPage = {name: '', actions: []};
   var currentPage = prevPage;
-  var lastChkPageTime = 0;
+  var lastFindPageTime = 0;
   var samePageCount = 0;
-  var prevSleepTime = Date.now();
-  var state = 0; // 0:init, 1:recvGift, 2:sendHeart, 3:play
+  var prevCaptureTime = Date.now();
+  // var state = 0; // 0:init, 1:recvGift, 2:sendHeart, 3:play
   var prevBonusState = -1;
   var bonusState;
-  var debugCount = 0;
+  var waitUnknownCount = config.waitUnknownMS/config.captureMS; ;
+  var autoPlayCount = 0;
+  var maxAppOffCount = config.maxAppOffMS / config.appOnChkMS;
+  var minSamePageCount = 2 * config.findPageMS / config.captureMS;
+  var gotCoins = 0;
+  var msgClicks = 0;
   // var shotnum = 0;
   while (config.isRunning) {
-    // check if out of game
+    // if focus window not in game and continue for config.maxAppOffMS
+    // wait config.hibernateMS before check again
     var now = Date.now();
-    if (now - lastChkAppTime > config.appOnChkPeriod) {
+    if (now - lastChkAppTime > config.appOnChkMS) {
       var r = rbm.currentApp();
       // rbm.log('dbg: currentApp()=', r);
       if (r.packageName !== config.packageName) {
         outOfGameCount++;
-        console.log('dbg: outOfGameCount', outOfGameCount);
-        if (outOfGameCount >= config.maxAppOffCount) {
-          config.isRunning = false;
-          break;
+        console.log('dbg: outOfGameCount', outOfGameCount, r.packageName);
+        if (outOfGameCount >= maxAppOffCount) {
+          console.log('dbg: hibernate', Date());
+          longSleep(config.hibernateMS);
+          continue;
         }
+      } else {
+        outOfGameCount = 0;
       }
       lastChkAppTime = now;
     }
+
     // rbm.screenshot('tsum'+shotnum.toString()+'.png');
     // shotnum = (shotnum + 1) % 10;
     var img = getScreenshotModify(0, 0, rbm.appWidth, rbm.appHeight,
         rbm.resizeAppWidth, rbm.resizeAppHeight, rbm.imageQuality);
 
     // check current page
-    if (now - lastChkPageTime > config.chkPagePeriod) {
+    if (now - lastFindPageTime > config.findPageMS) {
       prevPage = currentPage;
       currentPage = findPage(img, config.pagePixels);
       // rbm.log('dbg: page=', currentPage);
-      lastChkPageTime = now;
+      lastFindPageTime = now;
     }
     if (prevPage.name != currentPage.name) {
       console.log('dbg: prevPage:', prevPage.name, 'currentPage:', currentPage.name);
+      if (prevPage.name === "GamePlaying" && currentPage.name === "") {
+        whyNotPage(img, "GamePlaying");
+      }
       samePageCount = 1;
     } else {
       samePageCount++;
-      if (samePageCount >= 2) {
-        console.log('dbg: Page:', currentPage.name, 'state=', state,
-            'samePageCount=', samePageCount);
+      if (samePageCount >= minSamePageCount) {
+        // console.log('dbg: Page:', currentPage.name, 'samePageCount=', samePageCount);
         switch (currentPage.actions.length) {
           case 0:
             if (currentPage.name == '') {
-              // whyNotPage(img, 'ChooseBonusItem');
-              /*
-              whyNotPage(img, 'RootDetection');
-              whyNotPage(img, 'ClosePage');
-              whyNotPage(img, 'ClosePage2');
-              console.log('dbg: sleep 5 s');
-              sleep(5000);
-              */
-              console.log('dbg: sleep 1 second for unknown page');
-              sleep(5000);
+              // console.log('dbg: sleep 1 second for unknown page');
+              // sleep(5000);
+              if (samePageCount > waitUnknownCount) {
+                clickUnknown(img);
+                sleep(config.findPageMS);
+                lastFindPageTime = 0;
+                samePageCount = 0;
+              }
             }
             break;
           case 1:
             rbm.click(currentPage.actions[0]);
+            if (currentPage.name == 'Received') {
+              rbm.sleep(animationMS);
+            } else if (currentPage.name == 'MailBoxNoMessage') {
+              rbm.log('dbg: gotCoins:', gotCoins, 'in clicks:', msgClicks);
+            }
             break;
           case 2:
             switch (currentPage.name) {
               case 'RootDetection':
-                if (isPermitRootScan) {
+                if (config.isPermitRootScan) {
                   console.log('dbg: click next');
                   rbm.click(currentPage.actions[1]);
                 } else {
                   console.log('dbg: wait human action');
-                  sleep(10000); // wait 10 seconds
+                  longSleep(config.hibernateMS);
                 }
                 break;
               case 'ScorePage':
@@ -627,12 +744,22 @@ function start( // exported start()
                 rbm.click(currentPage.actions[0]);
                 break;
               case 'MailBox':
+              case 'MailBoxAd':
                 if (config.isRecvGift) {
                   if (checkPoint(img, 'RecvFirstMail')) {
+                    if (checkPoint(img, 'FirstMailGet')) {
+                      gotCoins++;
+                    }
+                    msgClicks++;
                     console.log('dbg: click First Mail button');
                     rbm.click(config.points['RecvFirstMail']);
+                    rbm.sleep(animationMS);
                   } else {
-                    console.log('dbg: click Back');
+                    whyNotPoint(img, 'RecvFirstMail');
+                    whyNotPoint(img, 'FirstMailGet');
+                    console.log('dbg: click Back, got coins', gotCoins, 'in clicks:', msgClicks);
+                    gotCoins = 0;
+                    msgClicks = 0;
                     rbm.click(currentPage.actions[0]);
                   }
                 } else {
@@ -662,11 +789,19 @@ function start( // exported start()
                   if (prevBonusState == bonusState) { // check two times
                     prevBonusState = -1;
                     if (clickBonus(bonusState) == 0) {
-                      rbm.log('dbg: bonus setting OK, click play');
-                      if (debugCount == 0) {
+                      if (config.autoPlayCount == 0 ||
+                          config.autoPlayCount > autoPlayCount) {
+                        rbm.log('dbg: bonus OK, click Play ', autoPlayCount);
                         rbm.click(currentPage.actions[1]);
+                        autoPlayCount++;
+                      } else {
+                        rbm.log('dbg: hibernate');
+                        longSleep(config.hibernateMS);
                       }
-                      debugCount++;
+                    } else {
+                      rbm.sleep(config.findPageMS);
+                      lastFindPageTime = 0;
+                      samePageCount = 0;
                     }
                   } else {
                     prevBonusState = bonusState;
@@ -675,7 +810,7 @@ function start( // exported start()
                   rbm.click(currentPage.actions[0]);
                 }
                 break;
-              case 'GamePause+':
+              case 'GamePause':
                 if (config.isPlay) {
                   rbm.click(currentPage.actions[1]);
                 } else {
@@ -695,7 +830,7 @@ function start( // exported start()
             switch (currentPage.name) {
               case 'GamePlaying':
                 rbm.log('dbg: playing TODO');
-                sleep(10000);
+                longSleep(config.hibernateMS);
                 break;
               case 'FriendPage':
               case 'FriendPage2':
@@ -703,6 +838,7 @@ function start( // exported start()
                   if (checkPoint(img, 'RedMail')) {
                     console.log('dbg: click Mail button');
                     rbm.click(config.points['Mail']);
+                    break;
                   }
                 }
                 if (config.isPlay) {
@@ -719,8 +855,7 @@ function start( // exported start()
       }
     }
     releaseImage(img);
-    // rbm.log('dbg: wait', config.loopSleepMS/1000, 's for debug', Date(now));
-    prevSleepTime = mySleep(config.loopSleepMS, prevSleepTime);
+    prevCaptureTime = mySleep(config.captureMS, prevCaptureTime);
   }
   console.log('dbg: start() end');
 }
