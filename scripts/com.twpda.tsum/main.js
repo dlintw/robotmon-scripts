@@ -31,8 +31,9 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   findPageMS: 100, // call findPage() per 0.1s
   waitUnknownMS: 1000, // wait 1 second before click on unknown page
   captureMS: 50, // sleep per 0.05 second before capture screen
+  sendHeartMin: 30, // send heart period
 
-  uiOptionCount: 19, // count of UI options
+  uiOptionCount: 20, // count of UI options
 
   points: {
     'RedMail': {x: 964, y: 311, r: 255, g: 32, b: 41}, // red number
@@ -702,6 +703,7 @@ function start(params) { // exported start()
   var lastFindPageTime = 0;
   var samePageCount = 0;
   var prevCaptureTime = Date.now();
+  var nextSendHeartTime = prevCaptureTime;
   // var state = 0; // 0:init, 1:recvGift, 2:sendHeart, 3:play
   var prevBonusState = -1;
   var bonusState;
@@ -712,6 +714,7 @@ function start(params) { // exported start()
   var gotCoins = 0;
   var msgClicks = 0;
   // var shotnum = 0;
+  rbm.log('dbg:', nextSendHeartTime);
   while (config.isRunning) {
     // if focus window not in game and continue for config.maxAppOffMS
     // wait config.hibernateMS before check again

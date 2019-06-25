@@ -36,6 +36,8 @@ var uiState = [
     value: 1000, min: 1000, max: 10000, step: 1000},
   {label: 'Capture period(msec)', labelZh: '擷取畫面周期(微秒)',
     value: 50, min: 50, max: 3000, step: 50},
+  {label: 'Send heart period(Min)', labelZh: '送心周期(秒)',
+    value: 30, min: 10, max: 60000, step: 10},
 ];
 
 function saveState() {
