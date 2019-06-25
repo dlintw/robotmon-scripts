@@ -503,6 +503,9 @@ function mappingResizeXY(xy) {
   return {x: nx, y: ny};
 };
 
+function myDiffColor(c, c1) {
+  return Math.abs(c1.r - c.r) + Math.abs(c1.g - c.g) + Math.abs(c1.b - c.b);
+};
 
 function getColor(img, xy) {
   var rxy = mappingResizeXY(xy);
@@ -512,14 +515,14 @@ function getColor(img, xy) {
 function checkPoint(img, pointName) {
   var pcolor = config.points[pointName];
   var pxcolor = getColor(img, pcolor);
-  var diff = Colors.diffColor(pcolor, pxcolor);
+  var diff = myDiffColor(pcolor, pxcolor);
   return (diff < 60);
 };
 
 function whyNotPoint(img, pointName) {
   var pcolor = config.points[pointName];
   var pxcolor = getColor(img, pcolor);
-  var diff = Colors.diffColor(pcolor, pxcolor);
+  var diff = myDiffColor(pcolor, pxcolor);
   if (diff < 60) {
     mylog('dbg: v', diff, pointName, pcolor, pxcolor);
   } else {
@@ -537,7 +540,7 @@ function findPage(img, pagePixels) {
     for (i = 0; i < page.colors.length; i++) {
       var pcolor = page.colors[i];
       var pxcolor = getColor(img, pcolor);
-      var diff = Colors.diffColor(pcolor, pxcolor);
+      var diff = myDiffColor(pcolor, pxcolor);
       if ((pcolor.match && diff >= pcolor.threshold) ||
         (!pcolor.match && diff < pcolor.threshold)) {
         break;
@@ -576,7 +579,7 @@ function whyNotPage(img, pageName) {
   for (i = 0; i < page.colors.length; i++) {
     var pcolor = page.colors[i];
     var pxcolor = getColor(img, pcolor);
-    var diff = Colors.diffColor(pcolor, pxcolor);
+    var diff = myDiffColor(pcolor, pxcolor);
     if (pcolor.match) {
       if (diff >= pcolor.threshold) {
         mylog('dbg: x match', diff, 'img', pxcolor, 'page', pcolor);
