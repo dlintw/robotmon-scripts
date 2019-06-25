@@ -433,8 +433,8 @@ function init(args) {
   config.appHeight = config.screenHeight - config.virtualButtonHeight;
   config.resizeAppWidth = config.appWidth * config.resizeFactor;
   config.resizeAppHeight = config.appHeight * config.resizeFactor;
-  config.appWidthRatio = config.AppWidth / config.oriAppWidth;
-  config.appHeightRatio = config.AppHeight / config.oriAppHeight;
+  config.appWidthRatio = config.appWidth / config.oriAppWidth;
+  config.appHeightRatio = config.appHeight / config.oriAppHeight;
   mylog('dbg: runtime screensize', size, 'virtualButtonHeight',
       config.virtualButtonHeight);
 
@@ -625,7 +625,7 @@ function mappingXY(xy) {
 };
 
 function myclick(xy) {
-  xy = mappingXY(xy);
+  var xy = mappingXY(xy);
   tap(xy.x, xy.y, config.during);
 };
 
@@ -731,7 +731,7 @@ function start(params) { // exported start()
 
   if (config.isAutoLaunch) {
     console.log('dbg: startApp');
-    var r = mystartApp(config.packageName, config.activityName);
+    var r = myStartApp(config.packageName, config.activityName);
     longSleep(3000);
   }
   var lastChkAppTime = 0;
@@ -743,7 +743,10 @@ function start(params) { // exported start()
   var prevCaptureTime = Date.now();
   var nextSendHeartTime = prevCaptureTime;
   var nextPlayTime = prevCaptureTime;
-  var playState = 0; // 0:init, 1:BounsItem, 2:play, 3:score
+  // state could be:
+  //   init(0) ->send0(21)->send1(22)->send2(23)->0,31
+  //           ->play0(31)->play1(32)->play2(33)->0,22
+  var state = 0;
   var prevBonusState = -1;
   var bonusState;
   var waitUnknownCount = config.waitUnknownMS/config.captureMS; ;
@@ -787,8 +790,8 @@ function start(params) { // exported start()
     if (img !== undefined) { // prevent forgotting free when break/continue
       releaseImage(img);
     }
-    img = getScreenshotModify(0, 0, condfig.appWidth, condfig.appHeight,
-        condfig.resizeAppWidth, condfig.resizeAppHeight, condfig.imageQuality);
+    img = getScreenshotModify(0, 0, config.appWidth, config.appHeight,
+        config.resizeAppWidth, config.resizeAppHeight, config.imageQuality);
 
     // check current page
     if (now - lastFindPageTime > config.findPageMS) {
@@ -844,15 +847,15 @@ function start(params) { // exported start()
                 }
                 break;
               case 'ScorePage':
-                if (playState == 2) {
+                if (state == 22) {
                   mylog('dbg: play end', Date());
-                  playState = 3;
+                  state = 23;
                 }
                 if (config.isRecvGift) {
                   if (checkPoint(img, 'RedMail')) {
                     console.log('dbg: click Mail button');
                     myclick(config.points['Mail']);
-                    playState = 0;
+                    state = 0;
                     break;
                   }
                 }
@@ -914,7 +917,7 @@ function start(params) { // exported start()
                           config.autoPlayCount > autoPlayCount) {
                         mylog('dbg: bonus OK, click Start ', autoPlayCount);
                         myclick(currentPage.actions[1]);
-                        playState = 1;
+                        state = 21;
                         autoPlayCount++;
                       } else {
                         mylog('dbg: hibernate');
@@ -956,9 +959,9 @@ function start(params) { // exported start()
               case 'GamePlay2':
               case 'GamePlay3':
               case 'GamePlay4':
-                if (playState == 1) {
+                if (state == 21) {
                   mylog('dbg: play start', Date());
-                  playState = 2;
+                  state = 22;
                 }
                 mylog('dbg: playing', samePageCount);
                 myPlay(img);
