@@ -8,6 +8,27 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   packageName: 'com.linecorp.LGTMTMG',
   activityName: '.TsumTsum',
   animationMS: 500,
+  during: 200, // human can click only about 3~4 clicks, this is 5 clicks
+  oriScreenWidth: 1080,
+  oriScreenHeight: 1920,
+  oriVirtualButtonHeight: 0,
+  oriAppWidth: 1080,
+  oriAppHeight: 1920 - 0, // Height - VirtualButtonHeight
+  oriResizeFactor: 0.4, // original screen capture to smaller image
+  resizeFactor: 0.4, // screen capture to smaller image
+  imageQuality: 80,
+  /* runtime parameters from player's env
+  screenWidth: 0,
+  screenHeight: 0,
+  virtualButtonHeight: 0,
+  appWidth: 0,
+  appHeight: 0,
+  resizeAppWidth, 0,
+  resizeAppHeight, 0,
+  // mapping from original to runtime screen ratio
+  appWidthRatio: 1,
+  appHeightRatio: 1,
+  */
 
   // UI options in settings.js order
   isLangZhTW: false,
@@ -402,14 +423,24 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }],
 };
 
-var rbm;
 
 function init(args) {
-  rbm = new RBM(config);
-  rbm.init();
+  var size = getScreenSize();
+  config.screenWidth = size.width;
+  config.screenHeight = size.height;
+  config.virtualButtonHeight = getVirtualButtonHeight();
+  config.appWidth = config.screenWidth;
+  config.appHeight = config.screenHeight - config.virtualButtonHeight;
+  config.resizeAppWidth = config.appWidth * config.resizeFactor;
+  config.resizeAppHeight = config.appHeight * config.resizeFactor;
+  config.appWidthRatio = config.AppWidth / config.oriAppWidth;
+  config.appHeightRatio = config.AppHeight / config.oriAppHeight;
+  mylog('dbg: runtime screensize', size, 'virtualButtonHeight',
+      config.virtualButtonHeight);
+
   if (args !== undefined) {
     if (args.length != config.uiOptionCount) {
-      rbm.log('dbg: parameter length invalid', args.length);
+      mylog('dbg: parameter length invalid', args.length);
       stop();
       return false;
     } else {
@@ -437,14 +468,13 @@ function init(args) {
       config.captureMS = args[i++];
     }
   } else {
-    rbm.log('dbg: no arguments of start(), use default');
+    mylog('dbg: no arguments of start(), use default');
   }
   config.isRunning = true;
   return true;
 };
 
 function fini() {
-  rbm = undefined;
 }
 
 // remove RBM 0.0.3's log delay time
@@ -458,27 +488,24 @@ function mylog() {
   console.log.apply(console, arguments);
 };
 
-/* failed
+
 // patch for BOOTCLASSPATH of RBM 0.0.3
-// RBM.prototype.startApp = function(packageName, activityName) {
-function startApp(packageName, activityName) {
+function myStartApp(packageName, activityName) {
   var path = 'BOOTCLASSPATH=/system/framework/core.jar:/system/framework/conscrypt.jar:/system/framework/okhttp.jar:/system/framework/core-junit.jar:/system/framework/bouncycastle.jar:/system/framework/ext.jar:/system/framework/framework.jar:/system/framework/framework2.jar:/system/framework/telephony-common.jar:/system/framework/voip-common.jar:/system/framework/mms-common.jar:/system/framework/android.policy.jar:/system/framework/services.jar:/system/framework/apache-xml.jar:/system/framework/webviewchromium.jar';
   execute(path + ' am start -n ' + packageName + '/' + activityName);
   // monkey -p com.linecorp.LGTMTMG -c android.intent.category.LAUNCHER 1
 };
-*/
+
 
 function mappingResizeXY(xy) {
-  var nx = Math.round(xy.x * rbm.resizeAppWidth / rbm.oriAppWidth);
-  var ny = Math.round(xy.y * rbm.resizeAppHeight / rbm.oriAppHeight);
+  var nx = Math.round(xy.x * config.resizeAppWidth / config.oriAppWidth);
+  var ny = Math.round(xy.y * config.resizeAppHeight / config.oriAppHeight);
   return {x: nx, y: ny};
 };
 
 
 function getColor(img, xy) {
-  // var rxy = rbm.mappingImageWHs({height: xy.y, width: xy.x});
   var rxy = mappingResizeXY(xy);
-  // rbm.log('dbg: getColor', xy, rxy);
   return getImageColor(img, rxy.x, rxy.y);
 };
 
@@ -494,9 +521,9 @@ function whyNotPoint(img, pointName) {
   var pxcolor = getColor(img, pcolor);
   var diff = Colors.diffColor(pcolor, pxcolor);
   if (diff < 60) {
-    rbm.log('dbg: v', diff, pointName, pcolor, pxcolor);
+    mylog('dbg: v', diff, pointName, pcolor, pxcolor);
   } else {
-    rbm.log('dbg: x', diff, pointName, pcolor, pxcolor);
+    mylog('dbg: x', diff, pointName, pcolor, pxcolor);
   }
 };
 
@@ -509,11 +536,8 @@ function findPage(img, pagePixels) {
     var i;
     for (i = 0; i < page.colors.length; i++) {
       var pcolor = page.colors[i];
-      // rbm.log('dbg: pcolor', pcolor);
       var pxcolor = getColor(img, pcolor);
-      // rbm.log('dbg: pxcolor', pxcolor);
       var diff = Colors.diffColor(pcolor, pxcolor);
-      // rbm.log('dbg: diff', diff);
       if ((pcolor.match && diff >= pcolor.threshold) ||
         (!pcolor.match && diff < pcolor.threshold)) {
         break;
@@ -525,7 +549,6 @@ function findPage(img, pagePixels) {
     }
   }
   if (result.length === 1) {
-    // rbm.log('dbg: findPage:', names);
     return result[0];
   }
   if (result.length > 0) {
@@ -592,36 +615,47 @@ function getBonusState(img) {
   return flag;
 };
 
+function mappingXY(xy) {
+  var nx = Math.round(xy.x * config.appWidthRatio);
+  var ny = Math.round(xy.y * config.appHeightRatio);
+  return {x: nx, y: ny};
+};
+
+function myclick(xy) {
+  xy = mappingXY(xy);
+  tap(xy.x, xy.y, config.during);
+};
+
 function clickBonus(bonusState) {
   var clickCount = 0;
   if ((bonusState & 1) == (config.bonusState & 1)) {
-    rbm.log('dbg: click BonusScore');
-    rbm.click(config.points['BonusScore']);
+    mylog('dbg: click BonusScore');
+    myclick(config.points['BonusScore']);
     clickCount++;
   };
   if ((bonusState & 2) == (config.bonusState & 2)) {
-    rbm.log('dbg: click BonusCoin');
-    rbm.click(config.points['BonusCoin']);
+    mylog('dbg: click BonusCoin');
+    myclick(config.points['BonusCoin']);
     clickCount++;
   };
   if ((bonusState & 4) == (config.bonusState & 4)) {
-    rbm.log('dbg: click BonusExp');
-    rbm.click(config.points['BonusExp']);
+    mylog('dbg: click BonusExp');
+    myclick(config.points['BonusExp']);
     clickCount++;
   };
   if ((bonusState & 8) == (config.bonusState & 8)) {
-    rbm.log('dbg: click BonusTime');
-    rbm.click(config.points['BonusTime']);
+    mylog('dbg: click BonusTime');
+    myclick(config.points['BonusTime']);
     clickCount++;
   };
   if ((bonusState & 16) == (config.bonusState & 16)) {
-    rbm.log('dbg: click BonusBubble');
-    rbm.click(config.points['BonusBubble']);
+    mylog('dbg: click BonusBubble');
+    myclick(config.points['BonusBubble']);
     clickCount++;
   };
   if ((bonusState & 32) == (config.bonusState & 32)) {
-    rbm.log('dbg: click Bonus5to4');
-    rbm.click(config.points['Bonus5to4']);
+    mylog('dbg: click Bonus5to4');
+    myclick(config.points['Bonus5to4']);
     clickCount++;
   };
   return clickCount;
@@ -646,7 +680,7 @@ function myCurrentApp() {
 function clickUnknown(img) {
   var r = myCurrentApp();
   if (r.packageName !== config.packageName) {
-    rbm.log('dbg: not in currentApp', r.packageName);
+    mylog('dbg: not in currentApp', r.packageName);
     return;
   }
   // whyNotPage(img, 'GamePlay1');
@@ -660,13 +694,13 @@ function clickUnknown(img) {
   var buttons = ['Close1', 'Close2', 'Close3'];
   for (var i=0; i< buttons.length; i++) {
     if (checkPoint(img, buttons[i])) {
-      rbm.log('dbg: click', buttons[i], r.packageName);
-      rbm.click(config.points[buttons[i]]);
+      mylog('dbg: click', buttons[i], r.packageName);
+      myclick(config.points[buttons[i]]);
       return;
     }
   }
-  rbm.log('dbg: click center of screen', r.packageName);
-  rbm.click({x: rbm.oriScreenWidth/2, y: rbm.oriScreenHeight/2});
+  mylog('dbg: click center of screen', r.packageName);
+  myclick({x: config.oriScreenWidth/2, y: config.oriScreenHeight/2});
 };
 
 function longSleep(ms) {
@@ -682,6 +716,10 @@ function longSleep(ms) {
   }
 };
 
+function myPlay() {
+  mylog('dbg: TODO play');
+  longSleep(config.hibernateMS);
+}
 /* eslint no-unused-vars: ["error", { "vars": "local" }]*/
 function start(params) { // exported start()
   if (!init(params)) {
@@ -689,12 +727,9 @@ function start(params) { // exported start()
   }
 
   if (config.isAutoLaunch) {
-    // rbm.startApp('com.linecorp.LGTMTM', '.TsumTsum'); // isJP
     console.log('dbg: startApp');
-    rbm.startApp(config.packageName, config.activityName); // test failed 2019/06/16
-    // var r = startApp(config.packageName, config.activityName);
-    // console.log('dbg:', r);
-    rbm.sleep(3000);
+    var r = mystartApp(config.packageName, config.activityName);
+    longSleep(3000);
   }
   var lastChkAppTime = 0;
   var outOfGameCount = 0;
@@ -704,7 +739,8 @@ function start(params) { // exported start()
   var samePageCount = 0;
   var prevCaptureTime = Date.now();
   var nextSendHeartTime = prevCaptureTime;
-  // var state = 0; // 0:init, 1:recvGift, 2:sendHeart, 3:play
+  var nextPlayTime = prevCaptureTime;
+  var playState = 0; // 0:init, 1:BounsItem, 2:play, 3:score
   var prevBonusState = -1;
   var bonusState;
   var waitUnknownCount = config.waitUnknownMS/config.captureMS; ;
@@ -714,7 +750,15 @@ function start(params) { // exported start()
   var gotCoins = 0;
   var msgClicks = 0;
   // var shotnum = 0;
-  rbm.log('dbg:', nextSendHeartTime);
+  mylog('dbg:', nextSendHeartTime);
+  var img;
+
+  if (!config.isSendHeart) {
+    nextSendHeartTime += 24*60*60*365; // next year
+  }
+  if (!config.isPlay) {
+    nextPlayTime += 24*60*60*365; // next year
+  }
   while (config.isRunning) {
     // if focus window not in game and continue for config.maxAppOffMS
     // wait config.hibernateMS before check again
@@ -737,14 +781,17 @@ function start(params) { // exported start()
 
     // rbm.screenshot('tsum'+shotnum.toString()+'.png');
     // shotnum = (shotnum + 1) % 10;
-    var img = getScreenshotModify(0, 0, rbm.appWidth, rbm.appHeight,
-        rbm.resizeAppWidth, rbm.resizeAppHeight, rbm.imageQuality);
+    if (img !== undefined) { // prevent forgotting free when break/continue
+      releaseImage(img);
+    }
+    img = getScreenshotModify(0, 0, condfig.appWidth, condfig.appHeight,
+        condfig.resizeAppWidth, condfig.resizeAppHeight, condfig.imageQuality);
 
     // check current page
     if (now - lastFindPageTime > config.findPageMS) {
       prevPage = currentPage;
       currentPage = findPage(img, config.pagePixels);
-      // rbm.log('dbg: page=', currentPage);
+      // mylog('dbg: page=', currentPage);
       lastFindPageTime = now;
     }
     if (prevPage.name != currentPage.name) {
@@ -775,11 +822,11 @@ function start(params) { // exported start()
             }
             break;
           case 1:
-            rbm.click(currentPage.actions[0]);
+            myclick(currentPage.actions[0]);
             if (currentPage.name == 'Received') {
-              rbm.sleep(config.animationMS);
+              sleep(config.animationMS);
             } else if (currentPage.name == 'MailBoxNoMessage') {
-              rbm.log('dbg: gotCoins:', gotCoins, 'in clicks:', msgClicks);
+              mylog('dbg: gotCoins:', gotCoins, 'in clicks:', msgClicks);
             }
             break;
           case 2:
@@ -787,17 +834,30 @@ function start(params) { // exported start()
               case 'RootDetection':
                 if (config.isPermitRootScan) {
                   console.log('dbg: click next');
-                  rbm.click(currentPage.actions[1]);
+                  myclick(currentPage.actions[1]);
                 } else {
                   console.log('dbg: wait human action');
                   longSleep(config.hibernateMS);
                 }
                 break;
               case 'ScorePage':
-                // TODO: if isRecvGift and got mail then recv
-                // TODO: if isSendHeart and in sendHeart state  then send
-                // TODO: if isPlay and not in sendHeart then play
-                rbm.click(currentPage.actions[0]);
+                if (playState == 2) {
+                  mylog('dbg: play end', Date());
+                  playState = 3;
+                }
+                if (config.isRecvGift) {
+                  if (checkPoint(img, 'RedMail')) {
+                    console.log('dbg: click Mail button');
+                    myclick(config.points['Mail']);
+                    playState = 0;
+                    break;
+                  }
+                }
+                if (now > nextSendHeartTime) {
+                  myclick(currentPage.actions[0]); // Close
+                } else if (now > nextPlayTime) {
+                  myclick(currentPage.actions[1]); // Play
+                }
                 break;
               case 'MailBox':
               case 'MailBoxAd':
@@ -808,54 +868,57 @@ function start(params) { // exported start()
                     }
                     msgClicks++;
                     console.log('dbg: click First Mail button');
-                    rbm.click(config.points['RecvFirstMail']);
-                    rbm.sleep(config.animationMS);
+                    myclick(config.points['RecvFirstMail']);
+                    sleep(config.animationMS);
                   } else {
                     whyNotPoint(img, 'RecvFirstMail');
                     whyNotPoint(img, 'FirstMailGet');
                     console.log('dbg: click Back, got coins', gotCoins, 'in clicks:', msgClicks);
                     gotCoins = 0;
                     msgClicks = 0;
-                    rbm.click(currentPage.actions[0]);
+                    myclick(currentPage.actions[0]);
                   }
                 } else {
                   console.log('dbg: click Back');
-                  rbm.click(currentPage.actions[0]);
+                  myclick(currentPage.actions[0]);
                 }
                 break;
               case 'ReceiveGiftHeart':
               case 'PackagePage':
               case 'ReceiveGiftOther':
                 if (config.isRecvGift) {
-                  rbm.click(currentPage.actions[1]);
+                  myclick(currentPage.actions[1]); // OK/delete
                 } else {
-                  rbm.click(currentPage.actions[0]);
+                  myclick(currentPage.actions[0]); // Close/Cancel
                 }
                 break;
               case 'ChooseBonusItem':
                 if (config.isRecvGift) {
                   if (checkPoint(img, 'RedMail')) {
                     console.log('dbg: click Mail button');
-                    rbm.click(config.points['Mail']);
+                    myclick(config.points['Mail']);
                     break;
                   }
                 }
-                if (config.isPlay) {
+                if (config.isSendHeart && now > nextSendHeartTime) {
+                  myclick(currentPage.actions[0]);
+                } else if (config.isPlay && now > nextPlayTime) {
                   bonusState = getBonusState(img);
                   if (prevBonusState == bonusState) { // check two times
                     prevBonusState = -1;
                     if (clickBonus(bonusState) == 0) {
                       if (config.autoPlayCount == 0 ||
                           config.autoPlayCount > autoPlayCount) {
-                        rbm.log('dbg: bonus OK, click Start ', autoPlayCount);
-                        rbm.click(currentPage.actions[1]);
+                        mylog('dbg: bonus OK, click Start ', autoPlayCount);
+                        myclick(currentPage.actions[1]);
+                        playState = 1;
                         autoPlayCount++;
                       } else {
-                        rbm.log('dbg: hibernate');
+                        mylog('dbg: hibernate');
                         longSleep(config.hibernateMS);
                       }
                     } else {
-                      rbm.sleep(config.findPageMS);
+                      sleep(config.findPageMS);
                       lastFindPageTime = 0;
                       samePageCount = 0;
                     }
@@ -863,22 +926,24 @@ function start(params) { // exported start()
                     prevBonusState = bonusState;
                   }
                 } else {
-                  rbm.click(currentPage.actions[0]);
+                  myclick(currentPage.actions[0]);
                 }
                 break;
               case 'GamePause':
-                if (config.isPlay) {
-                  rbm.click(currentPage.actions[1]);
+                if (config.isSendHeart && now > nextSendHeartTime) {
+                  myclick(currentPage.actions[0]);
+                } else if (config.isPlay && now > nextPlayTime) {
+                  myclick(currentPage.actions[1]);
                 } else {
-                  rbm.click(currentPage.actions[0]);
+                  myclick(currentPage.actions[0]);
                 }
                 break;
               case 'TsumsMe':
               case 'TsumsOther':
-                rbm.click(currentPage.actions[0]);
+                myclick(currentPage.actions[0]);
                 break;
               default:
-                rbm.log('dbg: unknown page');
+                mylog('dbg: unknown page');
                 break;
             }
             break;
@@ -888,33 +953,41 @@ function start(params) { // exported start()
               case 'GamePlay2':
               case 'GamePlay3':
               case 'GamePlay4':
-                rbm.log('dbg: playing', samePageCount);
-                // longSleep(config.hibernateMS);
+                if (playState == 1) {
+                  mylog('dbg: play start', Date());
+                  playState = 2;
+                }
+                mylog('dbg: playing', samePageCount);
+                myPlay(img);
                 break;
               case 'FriendPage':
               case 'FriendPage2':
                 if (config.isRecvGift) {
                   if (checkPoint(img, 'RedMail')) {
                     console.log('dbg: click Mail button');
-                    rbm.click(config.points['Mail']);
+                    myclick(config.points['Mail']);
                     break;
                   }
                 }
-                if (config.isPlay) {
+                if (config.isSendHeart && now > nextSendHeartTime) {
+                  mylog('dbg:send heart');
+                } else if (config.isPlay && now > nextPlayTime) {
                   console.log('dbg: click play button');
-                  rbm.click(currentPage.actions[1]);
+                  myclick(currentPage.actions[1]); // Play
                 }
                 break;
               default:
-                rbm.log('dbg: unknown page');
+                mylog('dbg: unknown page');
                 break;
             }
             break;
         }
       }
     }
-    releaseImage(img);
     prevCaptureTime = mySleep(config.captureMS, prevCaptureTime);
+  }
+  if (img != undefined) {
+    releaseImage(img);
   }
   console.log('dbg: start() end');
 }

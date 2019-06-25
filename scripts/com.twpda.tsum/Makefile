@@ -16,8 +16,11 @@ index.html: head.html settings.js tail.html
 	  cat settings.js >> $@ ;\
 	fi
 	cat tail.html >> $@
-index.js: main.js $(RBM) $(COLORLIB)
-	cat $< $(RBM) $(COLORLIB) > $@
+#index.js: main.js $(RBM) $(COLORLIB)
+#	cat $< $(RBM) $(COLORLIB) > $@
+#	! which patchdbg || patchdbg $@
+index.js: main.js $(COLORLIB)
+	cat $< $(COLORLIB) > $@
 	! which patchdbg || patchdbg $@
 index2.js: index.js
 	cp $< $@
