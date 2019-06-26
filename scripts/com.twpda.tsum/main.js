@@ -16,7 +16,13 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   oriAppHeight: 1920 - 0, // Height - VirtualButtonHeight
   oriResizeFactor: 0.4, // original screen capture to smaller image
   resizeFactor: 0.4, // screen capture to smaller image
-  imageQuality: 80,
+  imageQuality: 100,
+  playResizeWidth: 200,
+  playResizeHeight: 200,
+  tsumWidth: 16,
+  // for draw different circles
+  groupColors: [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255], [255, 0, 255]],
+  runTimes: 0, // keep count of screenshots count
   /* runtime parameters from player's env
   screenWidth: 0,
   screenHeight: 0,
@@ -28,6 +34,12 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   // mapping from original to runtime screen ratio
   appWidthRatio: 1,
   appHeightRatio: 1,
+
+  playOffsetX,
+  playOffsetY,
+  playWidth,
+  playHeight,
+  storagePath,
   */
 
   // UI options in settings.js order
@@ -35,6 +47,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   isPlay: true,
   isRecvGift: true,
   isSendHeart: false,
+  debug: true,
 
   autoPlayCount: 1,
   isBonusScore: false,
@@ -425,6 +438,9 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
 
 
 function init(args) {
+  config.storagePath = getStoragePath();
+  execute('mkdir -p ' + config.storagePath + '/tmp');
+
   var size = getScreenSize();
   config.screenWidth = size.width;
   config.screenHeight = size.height;
@@ -437,6 +453,14 @@ function init(args) {
   config.appHeightRatio = config.appHeight / config.oriAppHeight;
   mylog('dbg: runtime screensize', size, 'virtualButtonHeight',
       config.virtualButtonHeight);
+  config.playOffsetX = 0;
+  config.playOffsetY = (config.appHeight - config.appWidth)/2;
+  config.playWidth = config.appWidth;
+  config.playHeight= config.appWidth;
+  config.tsumCount = 5;
+  if (config.isBonus5to4) {
+    config.tsumCount = 4;
+  }
 
   if (args !== undefined) {
     if (args.length != config.uiOptionCount) {
@@ -719,18 +743,208 @@ function longSleep(ms) {
   }
 };
 
-function myPlay() {
-  mylog('dbg: TODO play');
-  longSleep(config.hibernateMS);
+function myPlay(img) {
+  config.runTimes++;
+  longSleep(config.hibernateMS); // wait animation finished
+  scanBoard(img);
 }
-/* eslint no-unused-vars: ["error", { "vars": "local" }]*/
+
+function findTsums(img) {
+  mylog('dbg: findTsum start', Date());
+  var hsvImg = clone(img);
+  // ref: /usr/include/opencv4/opencv2/imgproc/imgproc.hpp for CV_BLUR
+  // ref: /usr/include/opencv4/opencv2/imgproc/types_c.h for CV_RGB2HSV
+  smooth(hsvImg, 1, 7); // CV_BLUR with size 7 filter
+  saveImage(hsvImg, config.storagePath + '/tmp/f1_blur.png');
+  convertColor(hsvImg, 40); // CV_BGR2HSV
+  saveImage(hsvImg, config.storagePath + '/tmp/f1_blur_bgrhsv.png');
+
+  // debug purpose begin
+  var hsvImg2 = clone(img);
+  var hsvImg3 = clone(img);
+  var hsvImg4 = clone(img);
+  smooth(hsvImg2, 1, 7); // CV_BLUR with size 7 filter
+  convertColor(hsvImg2, 41); // CV_RGB2HSV
+  saveImage(hsvImg2, config.storagePath + '/tmp/f1_blur_rgbrhsv.png');
+
+  smooth(hsvImg3, 2, 7); // CV_GAUSSIAN with size 7 filter
+  saveImage(hsvImg3, config.storagePath + '/tmp/f1_gaussian.png');
+  convertColor(hsvImg3, 40); // CV_BGR2HSV
+  saveImage(hsvImg3, config.storagePath + '/tmp/f1_gaussian_bgrhsv.png');
+
+  smooth(hsvImg4, 2, 7); // CV_GAUSSIAN with size 7 filter
+  convertColor(hsvImg4, 41); // CV_RGB2HSV
+  saveImage(hsvImg4, config.storagePath + '/tmp/f1_gaussian_rgbrhsv.png');
+  releaseImage(hsvImg2);
+  releaseImage(hsvImg3);
+  releaseImage(hsvImg4);
+  // debug purpose end
+
+  // H<80 or H>120,  S<160 or S>255, V<20 or V>210
+  var filter1 = outRange(hsvImg, 80, 160, 20, 0, 120, 255, 210, 255);
+  saveImage(filter1, config.storagePath + '/tmp/f2_filter1.png');
+  // H<80 or H>130,  S<100 or S>170, V<90 or V>190
+  var filter2 = outRange(filter1, 80, 100, 90, 0, 130, 170, 190, 255);
+  saveImage(filter2, config.storagePath + '/tmp/f3_filter2.png');
+  var mask = bgrToGray(filter2);
+  saveImage(mask, config.storagePath + '/tmp/f4_bgrtogray.png');
+
+  releaseImage(filter1);
+  releaseImage(filter2);
+
+  // method:(3 = CV_HOUGH_GRADIENT)
+  // dp:1 float, ratio between input image and input params.
+  // minDist:22 float, min distance between circles
+  // p1: 4 float, canny parameter
+  // p2: 7 float, canny parameter
+  // minR:8 int, min radius
+  // maxR:14 int, max radius
+  var points = houghCircles(mask, 3, 1, 22, 4, 7, 8, 14);
+  smooth(hsvImg, 1, 22); // smooth more
+  saveImage(mask, config.storagePath + '/tmp/f5_blurmore.png');
+  var circleImg = clone(img);
+  var results = [];
+  for (var k in points) {
+    var p = points[k];
+    drawCircle(circleImg, p.x, p.y, p.r, 255, 0, 0, 0); // draw red circle
+    var hsv1 = getImageColor(hsvImg, p.x, p.y);
+    var hsv2 = hsv1; var hsv3 = hsv1; var hsv4 = hsv1; var hsv5 = hsv1;
+    if (p.x - 1 >= 0) {
+      hsv2 = getImageColor(hsvImg, p.x - 1, p.y);
+    }
+    if (p.x + 1 < 200) {
+      hsv3 = getImageColor(hsvImg, p.x + 1, p.y);
+    }
+    if (p.y - 1 >= 0) {
+      hsv4 = getImageColor(hsvImg, p.x, p.y - 1);
+    }
+    if (p.y + 1 < 200) {
+      hsv5 = getImageColor(hsvImg, p.x, p.y + 1);
+    }
+    var avgb = (hsv1.b + hsv2.b + hsv3.b + hsv4.b + hsv5.b) / 5;
+    var avgg = (hsv1.g + hsv2.g + hsv3.g + hsv4.g + hsv5.g) / 5;
+    var avgr = (hsv1.r + hsv2.r + hsv3.r + hsv4.r + hsv5.r) / 5;
+    results.push({x: p.x, y: p.y, z: p.r, b: avgb, g: avgg, r: avgr});
+  }
+  saveImage(circleImg, config.storagePath + '/tmp/f6_found.png');
+
+  releaseImage(circleImg);
+  releaseImage(mask);
+  releaseImage(hsvImg);
+  mylog('dbg: findTsum end', Date());
+  return results;
+}
+
+// ref: https://stackoverflow.com/questions/35113979/calculate-distance-between-colors-in-hsv-space
+function distanceHSV(p1, p2) {
+  // Note: here the .b, .g, .r is HSV
+  var dh = Math.abs(p1.b - p2.b);
+  dh = Math.min(dh, 256-dh)*2; // hue range from 0~255, after min range in 0~128
+  var d = Math.sqrt(dh*dh + (p1.g-p2.g)*(p1.g-p2.g) + (p1.r-p2.r)*(p1.r-p2.r));
+  if (dh < 20) {
+    d -= 10;
+  }
+  if (Math.abs(p1.g - p2.g) < 20) {
+    d -= 10;
+  }
+  if (p1.r < 120 && p2.r < 120) {
+    d -= 20;
+  }
+  return d;
+}
+
+function classifyTsums(points) {
+  mylog('dbg: classifyTsum begin', Date());
+  var tcs = [];
+  if (points.length === 0) {
+    return tcs;
+  }
+  var p = points[0];
+  tcs.push({sumb: p.b, sumg: p.g, sumr: p.r, b: p.b, g: p.g, r: p.r, points: [p]});
+  for (var i = 1; i < points.length; i++) {
+    var p = points[i];
+    var isSame = false;
+    for (var j in tcs) {
+      var tc = tcs[j];
+      var d = distanceHSV(tc, p);
+      if (d < 15) {
+        var count = tc.points.length + 1;
+        isSame = true;
+        tc.sumb += p.b; tc.sumg += p.g; tc.sumr += p.r;
+        tc.b = tc.sumb/count; tc.g = tc.sumg/count; tc.r = tc.sumr/count;
+        tc.points.push(p);
+        break;
+      }
+    }
+    if (!isSame) {
+      tcs.push({sumb: p.b, sumg: p.g, sumr: p.r, b: p.b, g: p.g, r: p.r, points: [p]});
+    }
+  }
+  if (tcs.length > config.tsumCount) {
+    mylog('dbg: error for too many Tsum groups', tcs.length);
+    return [];
+  }
+  mylog('dbg: classifyTsum end', Date());
+  return tcs;
+}
+
+function scanBoard(img) {
+  var startTime = Date.now();
+  var playImg = cropImage(img, config.playOffsetX, config.playOffsetY,
+      config.playWidth, config.playHeight);
+  var srcImg = resizeImage(playImg, config.playResizeWidth,
+      config.playResizeHeight);
+  saveImage(img, config.storagePath + '/tmp/s0_full.png');
+  saveImage(playImg, config.storagePath + '/tmp/s1_play.png');
+  saveImage(srcImg, config.storagePath + '/tmp/s2_200.png');
+  releaseImage(playImg);
+
+  var points = findTsums(srcImg);
+  var tcs = classifyTsums(points);
+  tcs.sort(function(a, b) {
+    return a.points.length > b.points.length ? -1: 1;
+  });
+  var board = [];
+  for (var i in tcs) {
+    if (i >= config.tsumCount - 1) {
+      break;
+    }
+    var tc = tcs[i];
+    for (var j in tc.points) {
+      var p = tc.points[j];
+      board.push({tsumIdx: i, x: p.x - (config.tsumWidth / 2), y: p.y - (config.tsumWidth / 2)});
+      if (config.debug) {
+        drawCircle(srcImg, p.x, p.y, p.r, config.groupColors[i][0],
+            config.groupColors[i][1], config.groupColors[i][2], 0);
+      }
+    }
+  }
+  if (config.debug) {
+    saveImage(srcImg, config.storagePath + '/tmp/boardImg-' + config.runTimes + '.png');
+  }
+  releaseImage(srcImg);
+  mylog('dbg: board length', board.length);
+  sleep(30);
+  mylog('dbg: recognition Time', Date.now() - startTime);
+
+  if (this.isPause) {
+    this.sleep(Config.gameContinueDelay);
+    this.tap(Button.gameContinue);
+    this.sleep(Config.gameContinueDelay / 2);
+    this.tap(Button.gameContinue);
+    this.sleep(Config.gameContinueDelay / 2);
+  }
+
+  return board;
+};
+/* exported start */
 function start(params) { // exported start()
   if (!init(params)) {
     return;
   }
 
   if (config.isAutoLaunch) {
-    console.log('dbg: startApp');
+    mylog('dbg: startApp');
     var r = myStartApp(config.packageName, config.activityName);
     longSleep(3000);
   }
@@ -773,9 +987,9 @@ function start(params) { // exported start()
       var r = myCurrentApp();
       if (r.packageName !== config.packageName) {
         outOfGameCount++;
-        console.log('dbg: outOfGameCount', outOfGameCount, r.packageName);
+        mylog('dbg: outOfGameCount', outOfGameCount, r.packageName);
         if (outOfGameCount >= maxAppOffCount) {
-          console.log('dbg: hibernate', Date());
+          mylog('dbg: hibernate', Date());
           longSleep(config.hibernateMS);
           continue;
         }
@@ -785,7 +999,6 @@ function start(params) { // exported start()
       lastChkAppTime = now;
     }
 
-    // rbm.screenshot('tsum'+shotnum.toString()+'.png');
     // shotnum = (shotnum + 1) % 10;
     if (img !== undefined) { // prevent forgotting free when break/continue
       releaseImage(img);
@@ -801,7 +1014,7 @@ function start(params) { // exported start()
       lastFindPageTime = now;
     }
     if (prevPage.name != currentPage.name) {
-      console.log('dbg: prevPage:', prevPage.name, 'currentPage:', currentPage.name);
+      mylog('dbg: prevPage:', prevPage.name, 'currentPage:', currentPage.name);
       if (currentPage.name == '' && (prevPage.name === 'GamePlay1' || prevPage.name === 'GamePlay2' ||
          prevPage.name === 'GamePlay3' || prevPage.name === 'GamePlay4')) {
         whyNotPage(img, 'GamePlay1');
@@ -813,11 +1026,11 @@ function start(params) { // exported start()
     } else {
       samePageCount++;
       if (samePageCount >= minSamePageCount) {
-        // console.log('dbg: Page:', currentPage.name, 'samePageCount=', samePageCount);
+        // mylog('dbg: Page:', currentPage.name, 'samePageCount=', samePageCount);
         switch (currentPage.actions.length) {
           case 0:
             if (currentPage.name == '') {
-              // console.log('dbg: sleep 1 second for unknown page');
+              // mylog('dbg: sleep 1 second for unknown page');
               // sleep(5000);
               if (samePageCount > waitUnknownCount) {
                 clickUnknown(img);
@@ -839,10 +1052,10 @@ function start(params) { // exported start()
             switch (currentPage.name) {
               case 'RootDetection':
                 if (config.isPermitRootScan) {
-                  console.log('dbg: click next');
+                  mylog('dbg: click next');
                   myclick(currentPage.actions[1]);
                 } else {
-                  console.log('dbg: wait human action');
+                  mylog('dbg: wait human action');
                   longSleep(config.hibernateMS);
                 }
                 break;
@@ -853,7 +1066,7 @@ function start(params) { // exported start()
                 }
                 if (config.isRecvGift) {
                   if (checkPoint(img, 'RedMail')) {
-                    console.log('dbg: click Mail button');
+                    mylog('dbg: click Mail button');
                     myclick(config.points['Mail']);
                     state = 0;
                     break;
@@ -873,19 +1086,19 @@ function start(params) { // exported start()
                       gotCoins++;
                     }
                     msgClicks++;
-                    console.log('dbg: click First Mail button');
+                    mylog('dbg: click First Mail button');
                     myclick(config.points['RecvFirstMail']);
                     sleep(config.animationMS);
                   } else {
                     whyNotPoint(img, 'RecvFirstMail');
                     whyNotPoint(img, 'FirstMailGet');
-                    console.log('dbg: click Back, got coins', gotCoins, 'in clicks:', msgClicks);
+                    mylog('dbg: click Back, got coins', gotCoins, 'in clicks:', msgClicks);
                     gotCoins = 0;
                     msgClicks = 0;
                     myclick(currentPage.actions[0]);
                   }
                 } else {
-                  console.log('dbg: click Back');
+                  mylog('dbg: click Back');
                   myclick(currentPage.actions[0]);
                 }
                 break;
@@ -901,7 +1114,7 @@ function start(params) { // exported start()
               case 'ChooseBonusItem':
                 if (config.isRecvGift) {
                   if (checkPoint(img, 'RedMail')) {
-                    console.log('dbg: click Mail button');
+                    mylog('dbg: click Mail button');
                     myclick(config.points['Mail']);
                     break;
                   }
@@ -917,7 +1130,7 @@ function start(params) { // exported start()
                           config.autoPlayCount > autoPlayCount) {
                         mylog('dbg: bonus OK, click Start ', autoPlayCount);
                         myclick(currentPage.actions[1]);
-                        state = 21;
+                        state = 31;
                         autoPlayCount++;
                       } else {
                         mylog('dbg: hibernate');
@@ -959,9 +1172,9 @@ function start(params) { // exported start()
               case 'GamePlay2':
               case 'GamePlay3':
               case 'GamePlay4':
-                if (state == 21) {
+                if (state == 31) {
                   mylog('dbg: play start', Date());
-                  state = 22;
+                  state = 32;
                 }
                 mylog('dbg: playing', samePageCount);
                 myPlay(img);
@@ -970,15 +1183,19 @@ function start(params) { // exported start()
               case 'FriendPage2':
                 if (config.isRecvGift) {
                   if (checkPoint(img, 'RedMail')) {
-                    console.log('dbg: click Mail button');
+                    mylog('dbg: click Mail button');
                     myclick(config.points['Mail']);
                     break;
                   }
                 }
                 if (config.isSendHeart && now > nextSendHeartTime) {
                   mylog('dbg:send heart');
+                  if (state != 21) { // send0
+                    state = 21;
+                    // TODO: init send heart variables
+                  }
                 } else if (config.isPlay && now > nextPlayTime) {
-                  console.log('dbg: click play button');
+                  mylog('dbg: click play button');
                   myclick(currentPage.actions[1]); // Play
                 }
                 break;
@@ -995,14 +1212,15 @@ function start(params) { // exported start()
   if (img != undefined) {
     releaseImage(img);
   }
-  console.log('dbg: start() end');
+  mylog('dbg: start() end');
 }
 
-function stop() { // exported stop()
-  console.log('dbg: stop()');
+/* exported stop */
+function stop() {
+  mylog('dbg: stop()');
   config.isRunning = false;
   sleep(500); // wait other thread before release memory
   fini();
-  console.log('dbg: stop() end');
+  mylog('dbg: stop() end');
 }
 // vim:et sw=2 ts=2 ai
