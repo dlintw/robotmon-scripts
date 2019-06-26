@@ -19,9 +19,11 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   imageQuality: 100,
   playResizeWidth: 200,
   playResizeHeight: 200,
-  tsumWidth: 16,
+  // tsumWidth: 16,
+  tsumWidth: 25,
   // for draw different circles
-  groupColors: [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255], [255, 0, 255]],
+  groupColors: [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255],
+    [255, 0, 255], [255, 255, 0]],
   runTimes: 0, // keep count of screenshots count
   /* runtime parameters from player's env
   screenWidth: 0,
@@ -454,7 +456,7 @@ function init(args) {
   mylog('dbg: runtime screensize', size, 'virtualButtonHeight',
       config.virtualButtonHeight);
   config.playOffsetX = 0;
-  config.playOffsetY = (config.appHeight - config.appWidth)/2;
+  config.playOffsetY = (config.appHeight - config.appWidth)/2 + config.tsumWidth;
   config.playWidth = config.appWidth;
   config.playHeight= config.appWidth;
   config.tsumCount = 5;
@@ -746,20 +748,21 @@ function longSleep(ms) {
 function myPlay(img) {
   config.runTimes++;
   longSleep(config.hibernateMS); // wait animation finished
-  scanBoard(img);
+  if (!config.debug || config.runTimes == 1) {
+    scanBoard(img);
+  }
 }
 
 function findTsums(img) {
-  mylog('dbg: findTsum start', Date());
   var hsvImg = clone(img);
   // ref: /usr/include/opencv4/opencv2/imgproc/imgproc.hpp for CV_BLUR
   // ref: /usr/include/opencv4/opencv2/imgproc/types_c.h for CV_RGB2HSV
   smooth(hsvImg, 1, 7); // CV_BLUR with size 7 filter
-  saveImage(hsvImg, config.storagePath + '/tmp/f1_blur.png');
+  // saveImage(hsvImg, config.storagePath + '/tmp/f1_blur.png');
   convertColor(hsvImg, 40); // CV_BGR2HSV
-  saveImage(hsvImg, config.storagePath + '/tmp/f1_blur_bgrhsv.png');
+  // saveImage(hsvImg, config.storagePath + '/tmp/f1_blur_bgrhsv.png');
 
-  // debug purpose begin
+  /* debug purpose begin
   var hsvImg2 = clone(img);
   var hsvImg3 = clone(img);
   var hsvImg4 = clone(img);
@@ -779,17 +782,22 @@ function findTsums(img) {
   releaseImage(hsvImg3);
   releaseImage(hsvImg4);
   // debug purpose end
+  */
 
+  /*
   // H<80 or H>120,  S<160 or S>255, V<20 or V>210
   var filter1 = outRange(hsvImg, 80, 160, 20, 0, 120, 255, 210, 255);
   saveImage(filter1, config.storagePath + '/tmp/f2_filter1.png');
   // H<80 or H>130,  S<100 or S>170, V<90 or V>190
   var filter2 = outRange(filter1, 80, 100, 90, 0, 130, 170, 190, 255);
   saveImage(filter2, config.storagePath + '/tmp/f3_filter2.png');
-  var mask = bgrToGray(filter2);
-  saveImage(mask, config.storagePath + '/tmp/f4_bgrtogray.png');
-
   releaseImage(filter1);
+  */
+  var filter2 = outRange(hsvImg, 80, 100, 20, 0, 120, 255, 210, 255);
+  // saveImage(filter2, config.storagePath + '/tmp/f3_filter2.png');
+  var mask = bgrToGray(filter2);
+  // saveImage(mask, config.storagePath + '/tmp/f4_bgrtogray.png');
+
   releaseImage(filter2);
 
   // method:(3 = CV_HOUGH_GRADIENT)
@@ -801,7 +809,7 @@ function findTsums(img) {
   // maxR:14 int, max radius
   var points = houghCircles(mask, 3, 1, 22, 4, 7, 8, 14);
   smooth(hsvImg, 1, 22); // smooth more
-  saveImage(mask, config.storagePath + '/tmp/f5_blurmore.png');
+  // saveImage(mask, config.storagePath + '/tmp/f5_blurmore.png');
   var circleImg = clone(img);
   var results = [];
   for (var k in points) {
@@ -826,12 +834,13 @@ function findTsums(img) {
     var avgr = (hsv1.r + hsv2.r + hsv3.r + hsv4.r + hsv5.r) / 5;
     results.push({x: p.x, y: p.y, z: p.r, b: avgb, g: avgg, r: avgr});
   }
-  saveImage(circleImg, config.storagePath + '/tmp/f6_found.png');
+  if (config.debug) {
+    saveImage(circleImg, config.storagePath + '/tmp/f6_found.png');
+  }
 
   releaseImage(circleImg);
   releaseImage(mask);
   releaseImage(hsvImg);
-  mylog('dbg: findTsum end', Date());
   return results;
 }
 
@@ -854,7 +863,6 @@ function distanceHSV(p1, p2) {
 }
 
 function classifyTsums(points) {
-  mylog('dbg: classifyTsum begin', Date());
   var tcs = [];
   if (points.length === 0) {
     return tcs;
@@ -880,23 +888,29 @@ function classifyTsums(points) {
       tcs.push({sumb: p.b, sumg: p.g, sumr: p.r, b: p.b, g: p.g, r: p.r, points: [p]});
     }
   }
+  /*
   if (tcs.length > config.tsumCount) {
     mylog('dbg: error for too many Tsum groups', tcs.length);
     return [];
   }
-  mylog('dbg: classifyTsum end', Date());
+  */
   return tcs;
 }
 
 function scanBoard(img) {
   var startTime = Date.now();
-  var playImg = cropImage(img, config.playOffsetX, config.playOffsetY,
-      config.playWidth, config.playHeight);
+  var playImg = cropImage(img,
+      config.playOffsetX*config.resizeFactor,
+      config.playOffsetY*config.resizeFactor,
+      config.playWidth*config.resizeFactor,
+      config.playHeight*config.resizeFactor);
   var srcImg = resizeImage(playImg, config.playResizeWidth,
       config.playResizeHeight);
-  saveImage(img, config.storagePath + '/tmp/s0_full.png');
-  saveImage(playImg, config.storagePath + '/tmp/s1_play.png');
-  saveImage(srcImg, config.storagePath + '/tmp/s2_200.png');
+  if (config.debug) {
+    saveImage(img, config.storagePath + '/tmp/s0_full.png');
+    saveImage(playImg, config.storagePath + '/tmp/s1_play.png');
+    saveImage(srcImg, config.storagePath + '/tmp/s2_200.png');
+  }
   releaseImage(playImg);
 
   var points = findTsums(srcImg);
@@ -906,7 +920,7 @@ function scanBoard(img) {
   });
   var board = [];
   for (var i in tcs) {
-    if (i >= config.tsumCount - 1) {
+    if (i >= config.tsumCount) {
       break;
     }
     var tc = tcs[i];
@@ -914,7 +928,7 @@ function scanBoard(img) {
       var p = tc.points[j];
       board.push({tsumIdx: i, x: p.x - (config.tsumWidth / 2), y: p.y - (config.tsumWidth / 2)});
       if (config.debug) {
-        drawCircle(srcImg, p.x, p.y, p.r, config.groupColors[i][0],
+        drawCircle(srcImg, p.x, p.y, config.tsumWidth/2, config.groupColors[i][0],
             config.groupColors[i][1], config.groupColors[i][2], 0);
       }
     }
@@ -924,17 +938,7 @@ function scanBoard(img) {
   }
   releaseImage(srcImg);
   mylog('dbg: board length', board.length);
-  sleep(30);
   mylog('dbg: recognition Time', Date.now() - startTime);
-
-  if (this.isPause) {
-    this.sleep(Config.gameContinueDelay);
-    this.tap(Button.gameContinue);
-    this.sleep(Config.gameContinueDelay / 2);
-    this.tap(Button.gameContinue);
-    this.sleep(Config.gameContinueDelay / 2);
-  }
-
   return board;
 };
 /* exported start */
@@ -970,7 +974,7 @@ function start(params) { // exported start()
   var gotCoins = 0;
   var msgClicks = 0;
   // var shotnum = 0;
-  mylog('dbg:', nextSendHeartTime);
+  mylog('dbg:', Date(nextSendHeartTime));
   var img;
 
   if (!config.isSendHeart) {
@@ -1126,7 +1130,7 @@ function start(params) { // exported start()
                   if (prevBonusState == bonusState) { // check two times
                     prevBonusState = -1;
                     if (clickBonus(bonusState) == 0) {
-                      if (config.autoPlayCount == 0 ||
+                      if (autoPlayCount == 0 ||
                           config.autoPlayCount > autoPlayCount) {
                         mylog('dbg: bonus OK, click Start ', autoPlayCount);
                         myclick(currentPage.actions[1]);

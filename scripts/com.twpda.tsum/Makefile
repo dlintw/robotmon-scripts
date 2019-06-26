@@ -38,4 +38,6 @@ log2: # this will buffer output, but brief format
 	adb logcat | grep -P '.*GoLog(?!.*GrpcService)' \
 		| cut -d ' ' -f 2,8,9,10,11,12,13,14,15 | tr -s ' '
 cpimg:
-	adb pull -a /sdcard/Robotmon/scripts/com.twpda.tsum/images .
+	rm -rf tmp
+	adb pull -a /sdcard/Robotmon/tmp .
+	adb shell rm -f /sdcard/Robotmon/tmp/*
