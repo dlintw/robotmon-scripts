@@ -1,8 +1,36 @@
 'use strict;';
 
-var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
+var config = {
+  // UI options NOTE: keep the same order with settings.js and setupUIOptions()
+  isLangZhTW: false,
+  isRecvGift: true,
+  isSendHeart: true,
+  sendHeartMin: 30, // send heart period
+  isPlay: true,
+  autoPlayMin: 24*60, // auto play period
+  skillPlayMS: 1000,
+  debug: true,
+
+  isBonusScore: false,
+  isBonusCoin: false,
+  isBonusExp: false,
+  isBonusTime: false,
+  isBonusBubble: false,
+  isBonus5to4: false,
+
+  isAutoLaunch: true,
+  isPermitRootScan: true,
+  hibernateMS: 10000, // check app on per 10s
+  maxAppOffMS: 1000, // max 1s on other app switch to hibernate mode
+  appOnChkMS: 500, // check per 0.5s
+  findPageMS: 100, // call findPage() per 0.1s
+  waitUnknownMS: 1000, // wait 1 second before click on unknown page
+  captureMS: 50, // sleep per 0.05 second before capture screen
+
+  uiOptionCount: 22, // count of UI options
+
+  // globals (default value at compile time)
   appName: 'com.twpda.tsum',
-  // global for this game
   isRunning: false,
   bonusState: 0,
   packageName: 'com.linecorp.LGTMTMG',
@@ -19,57 +47,13 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   imageQuality: 100,
   playResizeWidth: 200,
   playResizeHeight: 200,
-  // tsumWidth: 16,
   tsumWidth: 25,
   // for draw different circles
   groupColors: [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255],
     [255, 0, 255], [255, 255, 0]],
   runTimes: 0, // keep count of screenshots count
-  /* runtime parameters from player's env
-  screenWidth: 0,
-  screenHeight: 0,
-  virtualButtonHeight: 0,
-  appWidth: 0,
-  appHeight: 0,
-  resizeAppWidth, 0,
-  resizeAppHeight, 0,
-  // mapping from original to runtime screen ratio
-  appWidthRatio: 1,
-  appHeightRatio: 1,
-
-  playOffsetX,
-  playOffsetY,
-  playWidth,
-  playHeight,
-  storagePath,
-  */
-
-  // UI options in settings.js order
-  isLangZhTW: false,
-  isPlay: true,
-  isRecvGift: true,
-  isSendHeart: false,
-  debug: false,
-
-  autoPlayCount: 1,
-  isBonusScore: false,
-  isBonusCoin: false,
-  isBonusExp: false,
-  isBonusTime: false,
-  isBonusBubble: false,
-  isBonus5to4: false,
-
-  isAutoLaunch: true,
-  isPermitRootScan: true,
-  hibernateMS: 10000, // check app on per 10s
-  maxAppOffMS: 1000, // max 1s on other app switch to hibernate mode
-  appOnChkMS: 500, // check per 0.5s
-  findPageMS: 100, // call findPage() per 0.1s
-  waitUnknownMS: 1000, // wait 1 second before click on unknown page
-  captureMS: 50, // sleep per 0.05 second before capture screen
-  sendHeartMin: 30, // send heart period
-
-  uiOptionCount: 20, // count of UI options
+  skillOnCount: 0,
+  snapCount: 6,
 
   points: {
     'RedMail': {x: 964, y: 311, r: 255, g: 32, b: 41}, // red number
@@ -86,6 +70,24 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
     'Close1': {x: 540, y: 1329, r: 247, g: 190, b: 16}, // yellow Close of PackageInfo
     'Close2': {x: 550, y: 1581, r: 238, g: 187, b: 10}, // yellow Close of MailBoxNoMessage
     'Close3': {x: 382, y: 1612, r: 239, g: 182, b: 8}, // yellow Close of OptionsPage
+    'SkillOn1': {x: 137, y: 1555, r: 255, g: 255, b: 247}, // white MyTsum button 11 clock part
+    'SkillOn2': {x: 137, y: 1555, r: 247, g: 219, b: 25}, // light yellow to dark MyTsum button 11 clock part
+    'HeartRed1': {x: 910, y: 700, r: 209, g: 60, b: 142}, // red first heart on friend page
+    'HeartRed2': {x: 910, y: 700+200, r: 209, g: 60, b: 142}, // red 2nd heart on friend page
+    'HeartRed3': {x: 910, y: 700+200*2, r: 209, g: 60, b: 142}, // red 3rd heart on friend page
+    'HeartRed4': {x: 910, y: 700+200*3, r: 209, g: 60, b: 142}, // red 4th heart on friend page
+    'HeartBlue1': {x: 910, y: 700, r: 3, g: 65, b: 140}, // blue first heart on friend page
+    'HeartBlue2': {x: 910, y: 700+200, r: 3, g: 65, b: 140}, // blue 2nd heart on friend page
+    'HeartBlue3': {x: 910, y: 700+200*2, r: 3, g: 65, b: 140}, // blue 3rd heart on friend page
+    'HeartBlue4': {x: 910, y: 700+200*3, r: 3, g: 65, b: 140}, // blue 4th heart on friend page
+    'ZeroScore1': {x: 550, y: 700, r: 55, g: 93, b: 140}, // blue zero score of 1st
+    'ZeroScore2': {x: 550, y: 700+200, r: 55, g: 93, b: 140}, // blue zero score of 2nd
+    'ZeroScore3': {x: 550, y: 700+200*2, r: 55, g: 93, b: 140}, // blue zero score of 3rd
+    'ZeroScore4': {x: 550, y: 700+200*3, r: 55, g: 93, b: 140}, // blue zero score of 4th
+    'HeartEnd1': {x: 550, y: 720, r: 22, g: 86, b: 203}, // 1st light blue frame of heart
+    'HeartEnd2': {x: 550, y: 720+200, r: 22, g: 86, b: 203}, // 2nd light blue frame of heart
+    'HeartEnd3': {x: 550, y: 720+200*2, r: 22, g: 86, b: 203}, // 3rd light blue frame of heart
+    'HeartEnd4': {x: 550, y: 720+200*3, r: 22, g: 86, b: 203}, // 4th light blue frame of heart
   },
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
@@ -366,19 +368,20 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
 
     name: 'FriendPage',
     colors: [
+      {x: 698, y: 464, r: 244, g: 249, b: 243, match: true, threshold: 60}, // left top of the ranking time
       {x: 187, y: 1599, r: 240, g: 218, b: 72, match: true, threshold: 60}, // top of the card button
       {x: 540, y: 1592, r: 246, g: 135, b: 17, match: true, threshold: 60}, // top of the start button
       {x: 799, y: 1653, r: 232, g: 170, b: 7, match: true, threshold: 60}, // left of the myTsum button
-      {x: 698, y: 464, r: 244, g: 249, b: 243, match: true, threshold: 60}, // left top of the ranking time
     ],
     actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 799, y: 1653}], // Card, Play, MyTsum
+    /*
   }, {
     name: 'FriendPage2+',
     colors: [
-      {x: 540, y: 1649, r: 175, g: 188, b: 197, match: true, threshold: 60}, // center of the Tsum Hades
-      {x: 187, y: 1599, r: 240, g: 218, b: 72, match: true, threshold: 60}, // top of the card button
-      {x: 799, y: 1653, r: 232, g: 170, b: 7, match: true, threshold: 60}, // left of the myTsum button
       {x: 698, y: 464, r: 244, g: 249, b: 243, match: true, threshold: 60}, // left top of the ranking time
+      {x: 187, y: 1599, r: 240, g: 218, b: 72, match: true, threshold: 60}, // top of the card button
+      {x: 540, y: 1649, r: 175, g: 188, b: 197, match: true, threshold: 60}, // center of the Tsum Hades
+      {x: 799, y: 1653, r: 232, g: 170, b: 7, match: true, threshold: 60}, // left of the myTsum button
     ],
     actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 799, y: 1653}], // Card, Play, MyTsum
   }, {
@@ -399,6 +402,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
       {x: 698, y: 464, r: 244, g: 249, b: 243, match: true, threshold: 80}, // left top of the ranking time
     ],
     actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 799, y: 1653}], // Card, Play, MyTsum
+    */
   }, {
     name: 'GamePlay1', // blue around MyTsum
     colors: [
@@ -438,6 +442,43 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   }],
 };
 
+function setupUIOptions(args) {
+  if (args.length != config.uiOptionCount) {
+    mylog('dbg: setupUIOptions length invalid', args.length);
+    return false;
+  }
+  var i=0;
+  config.isLangZhTW = args[i++];
+  config.isRecvGift = args[i++];
+  config.isSendHeart = args[i++];
+  config.sendHeartMin = args[i++];
+  config.isPlay = args[i++];
+  config.autoPlayMin = args[i++];
+  config.skillPlayMS = args[i++];
+  config.debug = args[i++];
+
+  config.isBonusScore = args[i++];
+  config.isBonusCoin = args[i++];
+  config.isBonusExp = args[i++];
+  config.isBonusTime = args[i++];
+  config.isBonusBubble = args[i++];
+  config.isBonus5to4 = args[i++];
+
+  config.isAutoLaunch = args[i++];
+  config.isPermitRootScan = args[i++];
+  config.hibernateMS = args[i++];
+  config.maxAppOffMS = args[i++];
+  config.appOnChkMS = args[i++];
+  config.findPageMS = args[i++];
+  config.waitUnknownMS = args[i++];
+  config.captureMS = args[i++];
+
+  if (i != config.uiOptionCount) {
+    mylog('dbg: setupUIOptions count invalid', config.uiOptionCount, i);
+    return false;
+  }
+  return true;
+};
 
 function init(args) {
   config.storagePath = getStoragePath();
@@ -456,42 +497,20 @@ function init(args) {
   mylog('dbg: runtime screensize', size, 'virtualButtonHeight',
       config.virtualButtonHeight);
   config.playOffsetX = 0;
-  config.playOffsetY = (config.appHeight - config.appWidth)/2 + config.tsumWidth;
+  config.playOffsetY = (config.appHeight - config.appWidth)/2 +
+    1.5*config.tsumWidth;
   config.playWidth = config.appWidth;
   config.playHeight= config.appWidth;
+  config.sendHeartCount = 0;
   config.tsumCount = 5;
   if (config.isBonus5to4) {
     config.tsumCount = 4;
   }
 
   if (args !== undefined) {
-    if (args.length != config.uiOptionCount) {
-      mylog('dbg: parameter length invalid', args.length);
+    if (!setupUIOptions(args)) {
       stop();
       return false;
-    } else {
-      var i=0;
-      config.isLangZhTW = args[i++];
-      config.isPlay = args[i++];
-      config.isRecvGift = args[i++];
-      config.isSendHeart = args[i++];
-
-      config.autoPlayCount = args[i++];
-      config.isBonusScore = args[i++];
-      config.isBonusCoin = args[i++];
-      config.isBonusExp = args[i++];
-      config.isBonusTime = args[i++];
-      config.isBonusBubble = args[i++];
-      config.isBonus5to4 = args[i++];
-
-      config.isAutoLaunch = args[i++];
-      config.isPermitRootScan = args[i++];
-      config.hibernateMS = args[i++];
-      config.maxAppOffMS = args[i++];
-      config.appOnChkMS = args[i++];
-      config.findPageMS = args[i++];
-      config.waitUnknownMS = args[i++];
-      config.captureMS = args[i++];
     }
   } else {
     mylog('dbg: no arguments of start(), use default');
@@ -506,7 +525,7 @@ function fini() {
 // remove RBM 0.0.3's log delay time
 // RBM.prototype.log = function() {
 function mylog() {
-  for (var i = 0; i < arguments.length; i++) {
+  for (var i in arguments) {
     if (typeof arguments[i] == 'object') {
       arguments[i] = JSON.stringify(arguments[i]);
     }
@@ -563,7 +582,7 @@ function findPage(img, pagePixels) {
   for (var p = 0; p < pagePixels.length; p++) {
     page = pagePixels[p];
     var i;
-    for (i = 0; i < page.colors.length; i++) {
+    for (i in page.colors) {
       var pcolor = page.colors[i];
       var pxcolor = getColor(img, pcolor);
       var diff = myDiffColor(pcolor, pxcolor);
@@ -601,8 +620,7 @@ function whyNotPage(img, pageName) {
     return;
   }
   mylog('dbg: whyNotPage:', pageName);
-  var i;
-  for (i = 0; i < page.colors.length; i++) {
+  for (var i in page.colors) {
     var pcolor = page.colors[i];
     var pxcolor = getColor(img, pcolor);
     var diff = myDiffColor(pcolor, pxcolor);
@@ -721,7 +739,7 @@ function clickUnknown(img) {
   // whyNotPage(img, 'ClosePage');
   // whyNotPage(img, 'ClosePage2');
   var buttons = ['Close1', 'Close2', 'Close3'];
-  for (var i=0; i< buttons.length; i++) {
+  for (var i in buttons) {
     if (checkPoint(img, buttons[i])) {
       mylog('dbg: click', buttons[i], r.packageName);
       myclick(config.points[buttons[i]]);
@@ -775,29 +793,39 @@ function clickLinks(paths) {
   return isBubble;
 };
 
+function checkSkillON(img) {
+  var result = false;
+  if (checkPoint(img, 'SkillOn1') || checkPoint(img, 'SkillOn2')) {
+    config.skillOnCount++;
+    if (config.skillOnCount > 2) {
+      result = true;
+    }
+  } else {
+    config.skillOnCount= 0;
+  }
+  return result;
+};
+
 function myPlay(img, currentPage) {
   config.runTimes++;
   // longSleep(config.hibernateMS); // wait animation finished
   // if (!config.debug || config.runTimes == 1) {
-  if (false) {
+  if (checkSkillON(img)) {
     myclick(currentPage.actions[1]); // click MyTsum to use skill
+    longSleep(config.skillPlayMS);
   } else {
     board = scanBoard(img);
     var paths = calculatePaths(board);
     if (paths.length > 3) {
       clickLinks(paths);
     } else {
+      // TODO: find bubbles, click bubbles, keep at most 2 bubbles.
       myclick(currentPage.actions[2]); // click Fan
       sleep(200);
       myclick(currentPage.actions[2]); // click Fan
       sleep(200);
     }
   }
-  /*
-      config.zeroPath++;
-    }
-    */
-  // }
 }
 
 function findTsums(img) {
@@ -854,14 +882,20 @@ function findTsums(img) {
   // p2: 7 float, canny parameter
   // minR:8 int, min radius
   // maxR:14 int, max radius
-  var points = houghCircles(mask, 3, 1, 22, 4, 7, 8, 14);
+  var points = houghCircles(mask, 3, 1, config.tsumWidth, 4, 7,
+      config.tsumWidth/2, config.tsumWidth);
   smooth(hsvImg, 1, 22); // smooth more
   // saveImage(mask, config.storagePath + '/tmp/f5_blurmore.png');
-  var circleImg = clone(img);
+  var circleImg=0;
+  if (config.debug && (config.runTimes % config.snapCount)==0) {
+    circleImg = clone(img);
+  }
   var results = [];
   for (var k in points) {
     var p = points[k];
-    drawCircle(circleImg, p.x, p.y, p.r, 255, 0, 0, 0); // draw red circle
+    if (config.debug && (config.runTimes % config.snapCount)==0) {
+      drawCircle(circleImg, p.x, p.y, p.r, 255, 0, 0, 0); // draw red circle
+    }
     var hsv1 = getImageColor(hsvImg, p.x, p.y);
     var hsv2 = hsv1; var hsv3 = hsv1; var hsv4 = hsv1; var hsv5 = hsv1;
     if (p.x - 1 >= 0) {
@@ -881,13 +915,74 @@ function findTsums(img) {
     var avgr = (hsv1.r + hsv2.r + hsv3.r + hsv4.r + hsv5.r) / 5;
     results.push({x: p.x, y: p.y, z: p.r, b: avgb, g: avgg, r: avgr});
   }
-  if (config.debug) {
-    saveImage(circleImg, config.storagePath + '/tmp/f6_found.png');
+  if (config.debug && (config.runTimes % config.snapCount)==0) {
+    saveImage(circleImg, config.storagePath + '/tmp/' + config.runTimes + '_found.png');
   }
-
-  releaseImage(circleImg);
+  if (circleImg !== 0) {
+    releaseImage(circleImg);
+  }
   releaseImage(mask);
   releaseImage(hsvImg);
+  return results;
+}
+
+function findBubbles(img) {
+  var grayImg = clone(img);
+  smooth(grayImg, 2, 7); // CV_GAUSSIAN with size 7 filter
+  var hsvImg = clone(grayIimg);
+  convertColor(grayImg, 6); // CV_BGR2GRAY
+  convertColor(hsvImg, 40); // CV_BGR2HSV
+  var points = houghCircles(mask, 3, 1, config.tsumWidth, 4, 7,
+      config.tsumWidth/2, config.tsumWidth);
+  var circleImg = 0;
+  if (config.debug && (config.runTimes % config.snapCount)==0) {
+    circleImg = clone(img);
+  }
+  var results = [];
+  for (var k in points) {
+    var p = points[k];
+    if (config.debug && (config.runTimes % config.snapCount)==0) {
+      drawCircle(circleImg, p.x, p.y, p.r, 255, 0, 0, 0); // draw red circle
+    }
+    // get 5 point avg color as
+    var rgb0 = getImageColor(img, p.x, p.y);
+    var hsv0 = getImageColor(hsvImg, p.x, p.y);
+    var rgbU = rgb0; var rgbD = rbg0; var rgbL = rgb0; var rgbR = rgb0;
+    var hsvU = hsv0; var hsvD = rbg0; var hsvL = hsv0; var hsvR = hsv0;
+    if (p.y >= 1) {
+      rgbU = getImageColor(img, p.x, p.y - 1);
+      hsvU = getImageColor(hsvImg, p.x, p.y - 1);
+    }
+    if (p.y + 1 < 200) {
+      rgbD = getImageColor(img, p.x, p.y + 1);
+      hsvD = getImageColor(hsvImg, p.x, p.y + 1);
+    }
+    if (p.x >= 1) {
+      rgbL = getImageColor(img, p.x - 1, p.y);
+      hsvL = getImageColor(hsvImg, p.x - 1, p.y);
+    }
+    if (p.x + 1 < 200) {
+      rgbR = getImageColor(img, p.x + 1, p.y);
+      hsvR = getImageColor(hsvImg, p.x + 1, p.y);
+    }
+    var result = {x: p.x, y: p.y, z: p.r,
+      r: (rgb0.r + rgbU.r + rgbD.r + rgbL.r + rgbR.r)/5,
+      g: (rgb0.g + rgbU.g + rgbD.g + rgbL.g + rgbR.g)/5,
+      b: (rgb0.b + rgbU.b + rgbD.b + rgbL.b + rgbR.b)/5,
+      r: (hsv0.r + hsvU.r + hsvD.r + hsvL.r + hsvR.r)/5,
+      g: (hsv0.g + hsvU.g + hsvD.g + hsvL.g + hsvR.g)/5,
+      b: (hsv0.b + hsvU.b + hsvD.b + hsvL.b + hsvR.b)/5};
+    mylog('dbg:', i, result);
+    results.push(result);
+  }
+  if (config.debug && (config.runTimes % config.snapCount)==0) {
+    saveImage(circleImg, config.storagePath + '/tmp/' + config.runTimes + '_bubble.png');
+  }
+  if (circleImg !== 0) {
+    releaseImage(circleImg);
+  }
+  releaseImage(hsvImg);
+  releaseImage(grayImg);
   return results;
 }
 
@@ -916,7 +1011,7 @@ function classifyTsums(points) {
   }
   var p = points[0];
   tcs.push({sumb: p.b, sumg: p.g, sumr: p.r, b: p.b, g: p.g, r: p.r, points: [p]});
-  for (var i = 1; i < points.length; i++) {
+  for (var i in points) {
     var p = points[i];
     var isSame = false;
     for (var j in tcs) {
@@ -935,12 +1030,9 @@ function classifyTsums(points) {
       tcs.push({sumb: p.b, sumg: p.g, sumr: p.r, b: p.b, g: p.g, r: p.r, points: [p]});
     }
   }
-  /*
   if (tcs.length > config.tsumCount) {
-    mylog('dbg: error for too many Tsum groups', tcs.length);
-    return [];
+    mylog('dbg: Tsum groups count:', tcs.length);
   }
-  */
   return tcs;
 }
 
@@ -1044,14 +1136,16 @@ function scanBoard(img) {
       config.playHeight*config.resizeFactor);
   var srcImg = resizeImage(playImg, config.playResizeWidth,
       config.playResizeHeight);
-  if (config.debug) {
-    saveImage(img, config.storagePath + '/tmp/s0_full.png');
-    saveImage(playImg, config.storagePath + '/tmp/s1_play.png');
-    saveImage(srcImg, config.storagePath + '/tmp/s2_200.png');
+  if (config.debug && (config.runTimes % config.snapCount)==0) {
+    saveImage(img, config.storagePath + '/tmp/' + config.runTimes + '_page.png');
+    saveImage(playImg, config.storagePath + '/tmp/' + config.runTimes + '_play.png');
+    saveImage(srcImg, config.storagePath + '/tmp/' + config.runTimes + '_200.png');
   }
   releaseImage(playImg);
 
   var points = findTsums(srcImg);
+  var points2 = findBubbles(srcImg);
+  mylog('dbg: Tsums:', points.length, 'Bubbles:', points2.length);
   var tcs = classifyTsums(points);
   tcs.sort(function(a, b) {
     return a.points.length > b.points.length ? -1: 1;
@@ -1065,20 +1159,60 @@ function scanBoard(img) {
     for (var j in tc.points) {
       var p = tc.points[j];
       board.push({tsumIdx: i, x: p.x - (config.tsumWidth / 2), y: p.y - (config.tsumWidth / 2)});
-      if (config.debug) {
-        drawCircle(srcImg, p.x, p.y, config.tsumWidth/2, config.groupColors[i][0],
+      if (config.debug && (config.runTimes % config.snapCount)==0) {
+        drawCircle(srcImg, p.x, p.y, p.z, /* config.tsumWidth/2, */
+            config.groupColors[i][0],
             config.groupColors[i][1], config.groupColors[i][2], 0);
       }
     }
   }
-  if (config.debug) {
-    saveImage(srcImg, config.storagePath + '/tmp/boardImg-' + config.runTimes + '.png');
+  if (config.debug && (config.runTimes % config.snapCount)==0) {
+    saveImage(srcImg, config.storagePath + '/tmp/' + config.runTimes + '_click.png');
   }
   releaseImage(srcImg);
   mylog('dbg: board length', board.length);
   mylog('dbg: recognition Time', Date.now() - startTime);
   return board;
 };
+
+function toTopFriendPage() {
+  var xy = mappingXY(config.points['HeartRed1']);
+  tapDown(xy.x, xy.y, 100);
+  moveTo(xy.x, 350000, 100);
+  tapUp(xy.x, 350000, 100);
+  longSleep(2500);
+}
+
+function toNextFriendPage() {
+  var xy = mappingXY(config.points['HeartRed4']);
+  tapDown(xy.x, xy.y, 100);
+  var xy2 = mappingXY(config.points['HeartRed3']);
+  var y2 = xy.y - (xy2.y-xy.y)*4;
+  moveTo(xy.x, y2, 100);
+  tapUp(xy.x, y2, 100);
+  longSleep(1000);
+}
+
+function sendHearts(img) { // return isEnd
+  var zeroCount = 0;
+  for (var i=4; i >=1; i--) {
+    if (checkPoint(img, 'HeartEnd'+i)) {
+      zeroCount++;
+    } else if (checkPoint(img, 'ZeroScore'+i)) {
+      zeroCount++;
+    } else if (checkPoint(img, 'HeartRed'+i)) {
+      myclick(config.points['HeartRed'+i]);
+      config.sendHeartCount++;
+      return false;
+    }
+  }
+  if (zeroCount == 0) {
+    toNextFriendPage();
+    return false;
+  }
+  return true;
+}
+
 /* exported start */
 function start(params) { // exported start()
   if (!init(params)) {
@@ -1099,14 +1233,15 @@ function start(params) { // exported start()
   var prevCaptureTime = Date.now();
   var nextSendHeartTime = prevCaptureTime;
   var nextPlayTime = prevCaptureTime;
+  var initPlayTime = prevCaptureTime;
+  var initSendHeartTime = prevCaptureTime;
   // state could be:
-  //   init(0) ->send0(21)->send1(22)->send2(23)->0,31
-  //           ->play0(31)->play1(32)->play2(33)->0,22
+  //   init(0) ->send0(21)->send1(22)->send2(23)->maybe 0,11,31
+  //           ->play0(31)->play1(32)->play2(33)->maybe 0,11,22
   var state = 0;
   var prevBonusState = -1;
   var bonusState;
   var waitUnknownCount = config.waitUnknownMS/config.captureMS; ;
-  var autoPlayCount = 0;
   var maxAppOffCount = config.maxAppOffMS / config.appOnChkMS;
   var minSamePageCount = 2 * config.findPageMS / config.captureMS;
   var gotCoins = 0;
@@ -1202,15 +1337,15 @@ function start(params) { // exported start()
                 }
                 break;
               case 'ScorePage':
-                if (state == 22) {
-                  mylog('dbg: play end', Date());
-                  state = 23;
+                if (state == 32) {
+                  mylog('dbg: play time(s):', (Date.now() - initPlayTime)/1000);
+                  state = 33;
+                  nextPlayTime = initPlayTime + config.autoPlayMin * 60 * 1000;
                 }
                 if (config.isRecvGift) {
                   if (checkPoint(img, 'RedMail')) {
                     mylog('dbg: click Mail button');
                     myclick(config.points['Mail']);
-                    state = 0;
                     break;
                   }
                 }
@@ -1261,23 +1396,17 @@ function start(params) { // exported start()
                     break;
                   }
                 }
-                if (config.isSendHeart && now > nextSendHeartTime) {
-                  myclick(currentPage.actions[0]);
-                } else if (config.isPlay && now > nextPlayTime) {
+                if (now > nextSendHeartTime) {
+                  myclick(currentPage.actions[0]); // back
+                } else if (now > nextPlayTime) {
                   bonusState = getBonusState(img);
                   if (prevBonusState == bonusState) { // check two times
                     prevBonusState = -1;
                     if (clickBonus(bonusState) == 0) {
-                      if (autoPlayCount == 0 ||
-                          config.autoPlayCount > autoPlayCount) {
-                        mylog('dbg: bonus OK, click Start ', autoPlayCount);
-                        myclick(currentPage.actions[1]);
-                        state = 31;
-                        autoPlayCount++;
-                      } else {
-                        mylog('dbg: hibernate');
-                        // longSleep(config.hibernateMS); // TODO: fix bug
-                      }
+                      mylog('dbg: bonus OK, click Start');
+                      myclick(currentPage.actions[1]);
+                      initPlayTime = now;
+                      state = 31;
                     } else {
                       sleep(config.findPageMS);
                       lastFindPageTime = 0;
@@ -1287,13 +1416,13 @@ function start(params) { // exported start()
                     prevBonusState = bonusState;
                   }
                 } else {
-                  myclick(currentPage.actions[0]);
+                  myclick(currentPage.actions[0]); // back
                 }
                 break;
               case 'GamePause':
-                if (config.isSendHeart && now > nextSendHeartTime) {
-                  myclick(currentPage.actions[0]);
-                } else if (config.isPlay && now > nextPlayTime) {
+                if (now > nextSendHeartTime) {
+                  myclick(currentPage.actions[0]); // back
+                } else if (now > nextPlayTime) {
                   myclick(currentPage.actions[1]);
                 } else {
                   myclick(currentPage.actions[0]);
@@ -1330,13 +1459,24 @@ function start(params) { // exported start()
                     break;
                   }
                 }
-                if (config.isSendHeart && now > nextSendHeartTime) {
-                  mylog('dbg:send heart');
-                  if (state != 21) { // send0
+                if (now > nextSendHeartTime) {
+                  if (state != 21 && state != 22) {
+                    mylog('dbg:send heart begin', Date());
                     state = 21;
-                    // TODO: init send heart variables
+                    config.sendHeartCount = 0;
+                    initSendHeartTime = now;
+                    toTopFriendPage();
                   }
-                } else if (config.isPlay && now > nextPlayTime) {
+                  if (sendHearts(img)) { // end
+                    state = 23;
+                    var s = (Date.now() - initSendHeartTime)/1000;
+                    mylog('dbg:send heart time(s):', s, 'hearts:',
+                        config.sendHeartCount, 'avg/min=',
+                        config.sendHeartCount / s * 60);
+                    nextSendHeartTime = initSendHeartTime +
+                      config.sendHeartMin * 60* 1000;
+                  }
+                } else if (now > nextPlayTime) {
                   mylog('dbg: click play button');
                   myclick(currentPage.actions[1]); // Play
                 }

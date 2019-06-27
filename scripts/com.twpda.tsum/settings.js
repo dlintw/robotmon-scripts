@@ -2,16 +2,21 @@
 
 var VERSION = 1;
 var storeKey = 'com.twpda.tsum.'+VERSION;
-var uiState = [
+var uiState = [ // UI options NOTE: keep the same order with main.js
   {label: 'Switch language:English(英文)',
     labelZh: '切換語言:中文(Chinese)', value: false}, // true for zh_TW
-  {label: 'Play game', labelZh: '玩遊戲', value: true},
   {label: 'Receive gift', labelZh: '收禮物', value: true},
   {label: 'Send hearts', labelZh: '送心', value: false},
+  {label: 'Send heart period(Min)', labelZh: '送心周期(分)',
+    value: 30, min: 10, max: 60000, step: 10},
+  {label: 'Play game', labelZh: '玩遊戲', value: true},
+  {label: 'Play period(Min)', labelZh: '自動玩週期(分)',
+    value: 1, min: 1, max: 2400, step: 1},
+  {label: 'skill play time(msec)', labelZh: '技能動畫時間(微秒)',
+    value: 1000, min: 0, max: 5000, step: 500},
+  {label: 'Debug', labelZh: '除錯', value: false},
+
   {label: '--- Bonus item switches', labelZh: '--- 遊戲寶物選項'},
-  {label: 'Auto play count:(0: forever)',
-    labelZh: '自動玩次數(0:永遠)',
-    value: 1, min: 0, max: 10, step: 1},
   {label: 'Score+10%', labelZh: '分數加10%', value: false},
   {label: 'Coin+', labelZh: '加金幣', value: false},
   {label: 'Exp+10%', labelZh: '經驗值加10%', value: false},
@@ -19,6 +24,7 @@ var uiState = [
   {label: 'Chain 6 tsum to generate Bubble', labelZh: '串6隻產生泡泡',
     value: false},
   {label: 'Reduce Tsum kind', labelZh: '減少種類', value: false},
+
   {label: '--- Misc options', labelZh: '--- 雜項'},
   {label: 'Auto launch Tsum app', labelZh: '自動開啟 Tsum App', value: false},
   {label: 'Permit ROOT scan', labelZh: '允許Root掃描', value: false},
@@ -36,8 +42,6 @@ var uiState = [
     value: 1000, min: 1000, max: 10000, step: 1000},
   {label: 'Capture period(msec)', labelZh: '擷取畫面周期(微秒)',
     value: 50, min: 50, max: 3000, step: 50},
-  {label: 'Send heart period(Min)', labelZh: '送心周期(秒)',
-    value: 30, min: 10, max: 60000, step: 10},
 ];
 
 function saveState() {
