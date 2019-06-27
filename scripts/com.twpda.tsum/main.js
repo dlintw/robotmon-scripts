@@ -49,7 +49,7 @@ var config = { // ref: DEFAULT_CONFIG in RBM-<version>.js
   isPlay: true,
   isRecvGift: true,
   isSendHeart: false,
-  debug: true,
+  debug: false,
 
   autoPlayCount: 1,
   isBonusScore: false,
@@ -735,6 +735,9 @@ function clickUnknown(img) {
 function longSleep(ms) {
   var maxSleepMS = 500; ;
   while (ms > 0) {
+    if (!config.isRunning) {
+      break;
+    }
     if (ms >= maxSleepMS) {
       sleep(maxSleepMS);
       ms -= maxSleepMS;
@@ -745,12 +748,56 @@ function longSleep(ms) {
   }
 };
 
-function myPlay(img) {
-  config.runTimes++;
-  longSleep(config.hibernateMS); // wait animation finished
-  if (!config.debug || config.runTimes == 1) {
-    scanBoard(img);
+function linkTsums(path) {
+  for (var j in path) {
+    var point = path[j];
+    var x = Math.floor(config.playOffsetX + (point.x + config.tsumWidth / 2) * config.playWidth / config.playResizeWidth);
+    var y = Math.floor(config.playOffsetY + (point.y + config.tsumWidth / 2) * config.playHeight / config.playResizeHeight);
+    if (j == 0) {
+      tapDown(x, y, 10);
+    }
+    moveTo(x, y, 10);
+    if (j == path.length - 1) {
+      tapUp(x, y, 10);
+    }
   }
+};
+
+function clickLinks(paths) {
+  var isBubble = false;
+  for (var i in paths) {
+    var path = paths[i];
+    if (path.length > 7) {
+      isBubble = true;
+    }
+    linkTsums(path);
+  }
+  return isBubble;
+};
+
+function myPlay(img, currentPage) {
+  config.runTimes++;
+  // longSleep(config.hibernateMS); // wait animation finished
+  // if (!config.debug || config.runTimes == 1) {
+  if (false) {
+    myclick(currentPage.actions[1]); // click MyTsum to use skill
+  } else {
+    board = scanBoard(img);
+    var paths = calculatePaths(board);
+    if (paths.length > 3) {
+      clickLinks(paths);
+    } else {
+      myclick(currentPage.actions[2]); // click Fan
+      sleep(200);
+      myclick(currentPage.actions[2]); // click Fan
+      sleep(200);
+    }
+  }
+  /*
+      config.zeroPath++;
+    }
+    */
+  // }
 }
 
 function findTsums(img) {
@@ -895,6 +942,97 @@ function classifyTsums(points) {
   }
   */
   return tcs;
+}
+
+function getDistance(t1, t2) {
+  // return Math.sqrt((t1.x - t2.x) * (t1.x - t2.x) + (t1.y - t2.y) * (t1.y - t2.y));
+  return (t1.x - t2.x) * (t1.x - t2.x) + (t1.y - t2.y) * (t1.y - t2.y);
+}
+
+function findNearTsum(tsum, tsums) {
+  var minDis = 99999;
+  var minTsum = null;
+  var idx = -1;
+  for (var i in tsums) {
+    var dis = getDistance(tsum, tsums[i]);
+    if (dis < minDis) {
+      minDis = dis;
+      minTsum = tsums[i];
+      idx = i;
+    }
+  }
+  minDis = Math.sqrt(minDis);
+  return {dis: minDis, tsum: minTsum, idx: idx};
+}
+
+function calculateNearTsumPaths(tsum, ts) {
+  var path = [];
+  var tsums = ts.slice(); // copy array
+  while (true) {
+    var result = findNearTsum(tsum, tsums);
+    var minDis = result.dis;
+    var minTsum = result.tsum;
+    var minIdx = result.idx;
+    if (minIdx == -1 || minDis > config.tsumWidth * 2.8) {
+      break;
+    }
+    tsum = minTsum;
+    tsums.splice(minIdx, 1);
+    path.push(tsum);
+  }
+  return path;
+}
+
+function calculatePathCenter(path) {
+  var cx = 0;
+  var cy = 0;
+  for (var i in path) {
+    cx += path[i].x;
+    cy += path[i].y;
+  }
+  return {x: Math.floor(cx / path.length), y: Math.floor(cy / path.length)};
+}
+
+function calculatePaths(board) {
+  var tsums = {};
+  for (var i in board) {
+    var tsum = board[i];
+    if (tsums[tsum.tsumIdx] == undefined) { // Why?
+      tsums[tsum.tsumIdx] = [];
+    }
+    tsums[tsum.tsumIdx].push(tsum);
+  }
+
+  var centers = {};
+  var paths = [];
+
+  for (var tsumIdx in tsums) {
+    for (var i = 0; i < tsums[tsumIdx].length; i++) {
+      var path = calculateNearTsumPaths(tsums[tsumIdx][i], tsums[tsumIdx]);
+      if (path.length > 2) {
+        var c = calculatePathCenter(path);
+        if (centers[c.x] == c.y) {
+          // path already exists
+        } else {
+          centers[c.x] = c.y;
+          paths.push(path);
+          // console.log(runTimes, tsumIdx, path.length, c.x, c.y, JSON.stringify(path));
+        }
+      } else {
+        tsums[tsumIdx].splice(i, 1);
+        i--;
+      }
+    }
+  }
+
+  paths.sort(function(a, b) {
+    if (a.length < b.length) {
+      return 1;
+    }
+    return -1;
+  });
+  mylog('dbg: paths.length=', paths.length);
+  return paths;
 }
 
 function scanBoard(img) {
@@ -1138,7 +1276,7 @@ function start(params) { // exported start()
                         autoPlayCount++;
                       } else {
                         mylog('dbg: hibernate');
-                        longSleep(config.hibernateMS);
+                        // longSleep(config.hibernateMS); // TODO: fix bug
                       }
                     } else {
                       sleep(config.findPageMS);
@@ -1181,7 +1319,7 @@ function start(params) { // exported start()
                   state = 32;
                 }
                 mylog('dbg: playing', samePageCount);
-                myPlay(img);
+                myPlay(img, currentPage);
                 break;
               case 'FriendPage':
               case 'FriendPage2':
