@@ -41,3 +41,5 @@ cpimg:
 	rm -rf tmp
 	adb pull -a /sdcard/Robotmon/tmp .
 	adb shell rm -f /sdcard/Robotmon/tmp/*
+test: all
+	./test.sh

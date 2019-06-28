@@ -35,7 +35,7 @@ var config = {
   bonusState: 0,
   packageName: 'com.linecorp.LGTMTMG',
   activityName: '.TsumTsum',
-  animationMS: 1000,
+  animationMS: 500,
   during: 200, // human can click only about 3~4 clicks, this is 5 clicks
   oriScreenWidth: 1080,
   oriScreenHeight: 1920,
@@ -1196,6 +1196,25 @@ function scanBoard(img) {
   return board;
 };
 
+// exported keepImgLog keep count images per 0.5 seconds
+// eg. keepImgLog('dbg:','f', 2) -> mmss.sss.name.1.png, mmss.sss.name.2.png
+function keepImgLog(srcLineNo, name, count) {
+  for (var i=1; i<=count; i++) {
+    var now=Date.now();
+    var d=new Date(now);
+    var filename= config.storagePath + '/tmp/' +
+      ('0' + d.getMinutes()).slice(-2) + ('0' + d.getSeconds()).slice(-2) +
+      '.' + ('000' + now % 1000).slice(-3) + '.' + name + '.' + i + '.png';
+    var img = getScreenshotModify(0, 0, config.appWidth, config.appHeight,
+        config.resizeAppWidth, config.resizeAppHeight, config.imageQuality);
+    saveImage(img, filename);
+    mylog(srcLineNo, 'keepImgLog:', filename);
+    if (count > 1) {
+      sleep(500);
+    }
+  }
+}
+
 function toTopFriendPage() {
   mylog('dbg: to top friend page');
   var xy = mappingXY(config.points['HeartRed1']);
@@ -1203,15 +1222,16 @@ function toTopFriendPage() {
   moveTo(xy.x, xy.y, 100);
   moveTo(xy.x, 350000, 100);
   tapUp(xy.x, 350000, 100);
-  longSleep(2500);
-
+  longSleep(1500);
   mylog('dbg: adjust 1/4 grid height');
   tapDown(xy.x, xy.y, 100);
   var xy2 = mappingXY(config.points['HeartRed2']);
   var y2 = xy.y-(xy2.y - xy.y)/4;
   moveTo(xy.x, y2, 100);
   tapUp(xy.x, y2, 100);
-  longSleep(2500);
+  sleep(500);
+  keepImgLog('dbg:', 'f', 5);
+  mylog(time); // for stop
 }
 
 function toNextFriendPage() {
@@ -1364,6 +1384,7 @@ function start(params) { // exported start()
           case 1:
             myclick(currentPage.actions[0]);
             if (currentPage.name == 'Received') {
+              keepImgLog('dbg:', 'r', 4);
               sleep(config.animationMS);
             } else if (currentPage.name == 'MailBoxNoMessage') {
               mylog('dbg: gotCoins:', gotCoins, 'in clicks:', msgClicks);
@@ -1426,6 +1447,7 @@ function start(params) { // exported start()
               case 'ReceiveGiftHeart':
               case 'PackagePage':
               case 'ReceiveGiftOther':
+                keepImgLog('dbg:', 'r2', 4);
                 if (config.isRecvGift || config.isSendHeart) {
                   myclick(currentPage.actions[1]); // OK/delete
                 } else {
