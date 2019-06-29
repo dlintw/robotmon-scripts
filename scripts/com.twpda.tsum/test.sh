@@ -1,15 +1,20 @@
 #!/bin/bash
 set -ex
+RUN_TIME=40
 PACKAGE_NAME=com.linecorp.LGTMTMG
 ACTIVITY_NAME=.TsumTsum
+TEST_LOG=test.log
 STORAGE_PATH=/sdcard/Robotmon
-RUN_TIME=30
-IP=$(ip r|grep default| cut -d' ' -f3)
+RUN_SCRIPT_TIME=${RUN_TIME}s
+APP_START_TIME=5
+if [[ -z "$IP" ]]; then
+  IP=$(ip r|grep default| cut -d' ' -f3)
+fi
 PORT=8081
 
 mystop() {
   if adb shell am force-stop $PACKAGE_NAME; then
-    sleep 5
+    sleep 1
   fi
   true
 }
@@ -19,9 +24,17 @@ mysleep() {
   while [[ $i -lt $n ]]; do
     sleep 1
     i=$((i+1))
-    echo "sleep $i"
+    echo "$(date): mysleep i=$i"
   done
   set -x
+}
+mystart() {
+  echo "$(date) mystart"
+  adb shell am start -n $PACKAGE_NAME/$ACTIVITY_NAME
+  sleep "$APP_START_TIME"
+  rbmcmd "$IP:$PORT" tap 200 200 1 100ms # skip Line animation
+  sleep 0.1
+  rbmcmd "$IP:$PORT" tap 200 200 1 100ms # skip Tsum animation
 }
 
 # stop & clean phone side
@@ -30,18 +43,19 @@ mystop
 adb shell mkdir -p $STORAGE_PATH/tmp
 adb shell rm -rf $STORAGE_PATH/tmp/*
 
-# start app
-adb shell am start -n $PACKAGE_NAME/$ACTIVITY_NAME
-sleep 5
-rbmcmd "$IP:$PORT" runscript index2.js || true
+mystart
+# start script
+echo "$(date) runscript"
+rbmcmd -t "$RUN_SCRIPT_TIME" "$IP:$PORT" runscript index2.js & bgcmd=$! || true
+rbmcmd -t "$RUN_SCRIPT_TIME" -f "$TEST_LOG" "$IP:$PORT" logs & bglog=$!
 
 mysleep $RUN_TIME
 
 # stop & backup image
-rm -rf tmp
+kill $bgcmd $bglog
+rm -rf tmp/*
 adb pull -a $STORAGE_PATH/tmp .
-sleep 5
-adb shell rm -f $STORAGE_PATH/tmp/*
+gthumb tmp&
 mystop
 
 echo "done"

@@ -4,9 +4,10 @@ ESLINT=../../node_modules/.bin/eslint
 RBM=../../libs/RBM-0.0.3.js
 COLORLIB=../../libs/framework/colors.js
 
-all:  lint index.html index2.js
-lint: $(ESLINT) $(JSSRC)
+all:  lint.tag  index.html index2.js
+lint.tag: $(ESLINT) $(JSSRC)
 	$(ESLINT) --fix $(JSSRC)
+	touch lint.tag
 zip: index.zip
 index.html: head.html settings.js tail.html
 	cp head.html $@

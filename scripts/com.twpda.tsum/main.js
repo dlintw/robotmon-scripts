@@ -582,6 +582,7 @@ function isSameColor(c1, c2, diff) {
   return true;
 }
 
+/* exported whyNotPoint */
 function whyNotPoint(img, pointName) {
   var pcolor = config.points[pointName];
   var pxcolor = getColor(img, pcolor);
@@ -623,6 +624,7 @@ function findPage(img, pagePixels) {
   return {name: '', actions: []};
 };
 
+/* exported whyNotPage */
 function whyNotPage(img, pageName) {
   var page;
   var p;
@@ -756,7 +758,7 @@ function clickUnknown(img) {
   // whyNotPage(img, 'RootDetection');
   // whyNotPage(img, 'ClosePage');
   // whyNotPage(img, 'ClosePage2');
-  whyNotPage(img, 'FriendPage');
+  // whyNotPage(img, 'FriendPage');
   // whyNotPage(img, 'ChooseBonusItem');
   var buttons = ['Close1', 'Close2', 'Close3'];
   for (var i in buttons) {
@@ -1196,8 +1198,9 @@ function scanBoard(img) {
   return board;
 };
 
-// exported keepImgLog keep count images per 0.5 seconds
+// keepImgLog keep count images per 0.5 seconds
 // eg. keepImgLog('dbg:','f', 2) -> mmss.sss.name.1.png, mmss.sss.name.2.png
+/* exported keepImgLog */
 function keepImgLog(srcLineNo, name, count) {
   for (var i=1; i<=count; i++) {
     var now=Date.now();
