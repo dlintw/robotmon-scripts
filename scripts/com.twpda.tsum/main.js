@@ -4,9 +4,9 @@ var config = {
   // UI options NOTE: keep the same order with settings.js and setupUIOptions()
   isLangZhTW: false,
   isRecvGift: false,
-  isSendHeart: true,
+  isSendHeart: false,
   sendHeartMin: 30, // send heart period
-  isPlay: false,
+  isPlay: true,
   autoPlayMin: 24*60, // auto play period
   skillPlayMS: 1000,
   debug: true,
@@ -20,8 +20,8 @@ var config = {
 
   isAutoLaunch: false,
   isPermitRootScan: true,
-  hibernateMS: 10000, // check app on per 10s
-  maxAppOffMS: 1000, // max 1s on other app switch to hibernate mode
+  hibernateSec: 10, // check app on per 10s
+  maxOutOfGameSec: 3000, // if out of game for 3s, switch to hibernate mode
   appOnChkMS: 500, // check per 0.5s
   findPageMS: 100, // call findPage() per 0.1s
   waitUnknownMS: 1000, // wait 1 second before click on unknown page
@@ -55,6 +55,38 @@ var config = {
   skillOnCount: 0,
   snapCount: 6,
   friendGridHeight: 196,
+
+  nextChkAppOnTime: 0,
+  outOfGameCount: 0,
+  firstOutOfGameTime: 0,
+  lastAppOnStatus: false,
+  prevPage: {name: '', actions: []},
+  currentPage: {name: '', actions: []},
+  diffScore: 0.9,
+  nextRecvTime: 0,
+  nextSendTime: 0,
+  nextPlayTime: 0,
+
+
+  lastFindPageTime: 0,
+  samePageCount: 0,
+  prevCaptureTime: 0,
+  nextSendHeartTime: 0,
+  nextPlayTime: 0,
+  initPlayTime: 0,
+  initSendHeartTime: 0,
+  // state could be:
+  //   init(0) ->send0(21)->send1(22)->send2(23)->maybe 0,11,31
+  //           ->play0(31)->play1(32)->play2(33)->maybe 0,11,22
+  state: 0,
+  prevBonusState: -1,
+  bonusState: undefined,
+  waitUnknownCount: 0,
+  minSamePageCount: 0,
+  gotCoins: 0,
+  msgClicks: 0,
+  prevImg: 0,
+  img: 0,
 
   points: {
     'RedMail': {x: 964, y: 311, r: 255, g: 32, b: 41}, // red number
@@ -467,8 +499,8 @@ function setupUIOptions(args) {
 
   config.isAutoLaunch = args[i++];
   config.isPermitRootScan = args[i++];
-  config.hibernateMS = args[i++];
-  config.maxAppOffMS = args[i++];
+  config.hibernateSec = args[i++];
+  config.maxOutOfGameSec = args[i++];
   config.appOnChkMS = args[i++];
   config.findPageMS = args[i++];
   config.waitUnknownMS = args[i++];
@@ -521,6 +553,14 @@ function init(args) {
 };
 
 function fini() {
+  if (config.img !== 0) {
+    releaseImage(config.img);
+    config.img = 0;
+  }
+  if (config.prevImg !== 0) {
+    releaseImage(config.prevImg);
+    config.prevImg = 0;
+  }
 }
 
 // remove RBM 0.0.3's log delay time
@@ -538,7 +578,7 @@ function mylog() {
 // patch for BOOTCLASSPATH of RBM 0.0.3
 function myStartApp(packageName, activityName) {
   var path = 'BOOTCLASSPATH=/system/framework/core.jar:/system/framework/conscrypt.jar:/system/framework/okhttp.jar:/system/framework/core-junit.jar:/system/framework/bouncycastle.jar:/system/framework/ext.jar:/system/framework/framework.jar:/system/framework/framework2.jar:/system/framework/telephony-common.jar:/system/framework/voip-common.jar:/system/framework/mms-common.jar:/system/framework/android.policy.jar:/system/framework/services.jar:/system/framework/apache-xml.jar:/system/framework/webviewchromium.jar';
-  execute(path + ' am start -n ' + packageName + '/' + activityName);
+  return execute(path + ' am start -n ' + packageName + '/' + activityName);
   // monkey -p com.linecorp.LGTMTMG -c android.intent.category.LAUNCHER 1
 };
 
@@ -728,22 +768,6 @@ function clickBonus(bonusState) {
   return clickCount;
 };
 
-// rbm.CurrentApp() exist bug when screenlock, so use com.r2studio.Tsum index.js
-function myCurrentApp() {
-  var result = execute('dumpsys window windows').split('mCurrentFocus');
-  if (result.length >= 2) {
-    result = result[1].split(' ');
-    if (result.length >= 3) {
-      result = result[2].split('/');
-      if (result.length >= 2) {
-        var packageName = result[0];
-        return {packageName: packageName};
-      }
-    }
-  }
-  return {packageName: ''};
-};
-
 function clickUnknown(img) {
   var r = myCurrentApp();
   if (r.packageName !== config.packageName) {
@@ -768,7 +792,7 @@ function clickUnknown(img) {
       return;
     }
   }
-  longSleep(config.hibernateMS);
+  longSleep(config.hibernateSec);
   mylog('dbg: click center of screen', r.packageName);
   myclick({x: config.oriScreenWidth/2, y: config.oriScreenHeight/2});
 };
@@ -831,7 +855,7 @@ function checkSkillON(img) {
 
 function myPlay(img, currentPage) {
   config.runTimes++;
-  // longSleep(config.hibernateMS); // wait animation finished
+  // longSleep(config.hibernateSec); // wait animation finished
   // if (!config.debug || config.runTimes == 1) {
   if (checkSkillON(img)) {
     myclick(currentPage.actions[1]); // click MyTsum to use skill
@@ -1278,8 +1302,48 @@ function sendHearts(img) { // return isEnd
   return true;
 }
 
+// check app on focus window, if yes, return true
+function chkAppOn(now) {
+  if (now > config.nextChkAppOnTime) {
+    var packageName='';
+    while (true) {
+      var result = execute('dumpsys window windows').split('mCurrentFocus');
+      if (result.length >= 2) {
+        result = result[1].split(' ');
+        if (result.length >= 3) {
+          result = result[2].split('/');
+          if (result.length >= 2) {
+            packageName = result[0];
+            break;
+          }
+        }
+      }
+    }
+    config.lastAppOnStatus = (packageName == config.packageName);
+    if (config.lastAppOnStatus) {
+      config.outOfGameCount = 0;
+    } else {
+      if (config.outOfGameCount == 0) {
+        config.firstOutOfGameTime = now;
+      }
+      config.outOfGameCount++;
+      mylog('dbg: outOfGameCount', outOfGameCount, packageName);
+      if (now - config.firstOutOfGameTime > config.maxOutOfGameSec) {
+        config.nextChkAppOnTime = now + config.hibernateSec*1000;
+        longSleep(config.hibernateSec*1000);
+      } else {
+        config.nextChkAppOnTime = now + config.appOnChkMS;
+        longSleep(config.appOnChkMS);
+      }
+    }
+  }
+  return config.lastAppOnStatus;
+}
+
+
 /* exported start */
-function start(params) { // exported start()
+function start(params) {
+  mylog('dbg: start() begin');
   if (!init(params)) {
     return;
   }
@@ -1287,283 +1351,253 @@ function start(params) { // exported start()
   if (config.isAutoLaunch) {
     mylog('dbg: startApp');
     var r = myStartApp(config.packageName, config.activityName);
+    mylog('dbg: result', r);
     longSleep(3000);
   }
-  var lastChkAppTime = 0;
-  var outOfGameCount = 0;
-  var prevPage = {name: '', actions: []};
-  var currentPage = prevPage;
-  var lastFindPageTime = 0;
-  var samePageCount = 0;
-  var prevCaptureTime = Date.now();
-  var nextSendHeartTime = prevCaptureTime;
-  var nextPlayTime = prevCaptureTime;
-  var initPlayTime = prevCaptureTime;
-  var initSendHeartTime = prevCaptureTime;
-  // state could be:
-  //   init(0) ->send0(21)->send1(22)->send2(23)->maybe 0,11,31
-  //           ->play0(31)->play1(32)->play2(33)->maybe 0,11,22
-  var state = 0;
-  var prevBonusState = -1;
-  var bonusState;
-  var waitUnknownCount = config.waitUnknownMS/config.captureMS; ;
-  var maxAppOffCount = config.maxAppOffMS / config.appOnChkMS;
-  var minSamePageCount = 2 * config.findPageMS / config.captureMS;
-  var gotCoins = 0;
-  var msgClicks = 0;
-  // var shotnum = 0;
-  mylog('dbg:', Date(nextSendHeartTime));
-  var img;
 
+  waitUnknownCount = config.waitUnknownMS/config.captureMS;
+  minSamePageCount = 2 * config.findPageMS / config.captureMS;
+  var now = Date.now();
+  if (!config.isRecvGift) {
+    config.nextRecvTime = now + 365*24*60*60*1000;
+  }
   if (!config.isSendHeart) {
-    nextSendHeartTime += 24*60*60*365; // next year
+    config.nextSendTime = now + 365*24*60*60*1000;
   }
   if (!config.isPlay) {
-    nextPlayTime += 24*60*60*365; // next year
+    config.nextPlayTime = now + 365*24*60*60*1000;
   }
+
   while (config.isRunning) {
-    // if focus window not in game and continue for config.maxAppOffMS
-    // wait config.hibernateMS before check again
-    var now = Date.now();
-    if (now - lastChkAppTime > config.appOnChkMS) {
-      var r = myCurrentApp();
-      if (r.packageName !== config.packageName) {
-        outOfGameCount++;
-        mylog('dbg: outOfGameCount', outOfGameCount, r.packageName);
-        if (outOfGameCount >= maxAppOffCount) {
-          mylog('dbg: hibernate', Date());
-          longSleep(config.hibernateMS);
-          continue;
-        }
-      } else {
-        outOfGameCount = 0;
-      }
-      lastChkAppTime = now;
+    now = Date.now();
+    if (chkAppOn(now)) {
+      continue;
     }
-
-    // shotnum = (shotnum + 1) % 10;
-    if (img !== undefined) { // prevent forgotting free when break/continue
-      releaseImage(img);
+    if (config.prevImg !== 0) {
+      releaseImage(config.prevImg);
     }
-    img = getScreenshotModify(0, 0, config.appWidth, config.appHeight,
+    if (config.img !== 0) {
+      config.prevImg = config.img;
+    }
+    config.img = getScreenshotModify(0, 0, config.appWidth, config.appHeight,
         config.resizeAppWidth, config.resizeAppHeight, config.imageQuality);
-
-    // check current page
-    if (now - lastFindPageTime > config.findPageMS) {
-      prevPage = currentPage;
-      currentPage = findPage(img, config.pagePixels);
-      // mylog('dbg: page=', currentPage);
-      lastFindPageTime = now;
+    if (config.prevImg == 0) {
+      longSleep(config.captureMS);
+      continue;
     }
-    if (prevPage.name != currentPage.name) {
-      mylog('dbg: prevPage:', prevPage.name, 'currentPage:', currentPage.name);
-      /*
-      if (currentPage.name == '' && (prevPage.name === 'GamePlay1' || prevPage.name === 'GamePlay2' ||
-         prevPage.name === 'GamePlay3' || prevPage.name === 'GamePlay4')) {
-        whyNotPage(img, 'GamePlay1');
-        whyNotPage(img, 'GamePlay2');
-        whyNotPage(img, 'GamePlay3');
-        whyNotPage(img, 'GamePlay4');
+    var score = getIdentityScore(img1, img2);
+    mylog('dbg: score=', score);
+    if (score < config.diffScore) {
+      longSleep(config.captureMS);
+      continue;
+    }
+    config.prevPage = config.currentPage;
+    config.currentPage = findPage(img, config.pagePixels);
+    isRedMail = checkPoint(img, 'RedMail');
+    // var action;
+    if (now > nextRecvTime) {
+      if (isRedMail) {
+        mylog('dbg: Recv');
+      } else if (now > nextSendTime) {
+        mylog('dbg: Send');
+      } else if (now > nextPlayTime) {
+        mylog('dbg: Play');
       }
-      */
-      samePageCount = 1;
-    } else {
-      samePageCount++;
-      if (samePageCount >= minSamePageCount) {
-        // mylog('dbg: Page:', currentPage.name, 'samePageCount=', samePageCount);
-        switch (currentPage.actions.length) {
-          case 0:
-            if (currentPage.name === '') {
-              // mylog('dbg: sleep 1 second for unknown page');
-              // sleep(5000);
-              if (samePageCount > waitUnknownCount) {
-                clickUnknown(img);
+    } else if (now > nextSendTime) {
+      mylog('dbg: Send');
+    } else if (now > nextPlayTime) {
+      mylog('dbg: Play');
+    }
+    mySleep(config.captureMS);
+  }
+  fini();
+  mylog('dbg: start() end');
+  return;
+  switch (currentPage.actions.length) {
+    case 0:
+      if (currentPage.name === '') {
+        // mylog('dbg: sleep 1 second for unknown page');
+        // sleep(5000);
+        if (samePageCount > waitUnknownCount) {
+          clickUnknown(img);
+          sleep(config.findPageMS);
+          lastFindPageTime = 0;
+          samePageCount = 0;
+        }
+      }
+      break;
+    case 1:
+      myclick(currentPage.actions[0]);
+      if (currentPage.name == 'Received') {
+        keepImgLog('dbg:', 'r', 4);
+        sleep(config.animationMS);
+      } else if (currentPage.name == 'MailBoxNoMessage') {
+        mylog('dbg: gotCoins:', gotCoins, 'in clicks:', msgClicks);
+      }
+      break;
+    case 2:
+      switch (currentPage.name) {
+        case 'RootDetection':
+          if (config.isPermitRootScan) {
+            mylog('dbg: click next');
+            myclick(currentPage.actions[1]);
+          } else {
+            mylog('dbg: wait human action');
+            longSleep(config.hibernateSec);
+          }
+          break;
+        case 'ScorePage':
+          if (state == 32) {
+            mylog('dbg: play time(s):', (Date.now() - initPlayTime)/1000);
+            state = 33;
+            nextPlayTime = initPlayTime + config.autoPlayMin * 60 * 1000;
+          }
+          if (config.isRecvGift) {
+            if (checkPoint(img, 'RedMail')) {
+              mylog('dbg: click Mail button');
+              myclick(config.points['Mail']);
+              break;
+            }
+          }
+          if (now > nextSendHeartTime) {
+            myclick(currentPage.actions[0]); // Close
+          } else if (now > nextPlayTime) {
+            myclick(currentPage.actions[1]); // Play
+          }
+          break;
+        case 'MailBox':
+        case 'MailBoxAd':
+          if (config.isRecvGift) {
+            if (checkPoint(img, 'RecvFirstMail')) {
+              if (checkPoint(img, 'FirstMailGet')) {
+                gotCoins++;
+              }
+              msgClicks++;
+              mylog('dbg: click First Mail button');
+              myclick(config.points['RecvFirstMail']);
+              sleep(config.animationMS);
+            } else {
+              whyNotPoint(img, 'RecvFirstMail');
+              whyNotPoint(img, 'FirstMailGet');
+              mylog('dbg: click Back, got coins', gotCoins, 'in clicks:', msgClicks);
+              gotCoins = 0;
+              msgClicks = 0;
+              myclick(currentPage.actions[0]);
+            }
+          } else {
+            mylog('dbg: click Back');
+            myclick(currentPage.actions[0]);
+          }
+          break;
+        case 'ReceiveGiftHeart':
+        case 'PackagePage':
+        case 'ReceiveGiftOther':
+          keepImgLog('dbg:', 'r2', 4);
+          if (config.isRecvGift || config.isSendHeart) {
+            myclick(currentPage.actions[1]); // OK/delete
+          } else {
+            myclick(currentPage.actions[0]); // Close/Cancel
+          }
+          sleep(1000); // skip animation
+          break;
+        case 'ChooseBonusItem':
+          if (config.isRecvGift) {
+            if (checkPoint(img, 'RedMail')) {
+              mylog('dbg: click Mail button');
+              myclick(config.points['Mail']);
+              break;
+            }
+          }
+          if (now > nextSendHeartTime) {
+            myclick(currentPage.actions[0]); // back
+          } else if (now > nextPlayTime) {
+            bonusState = getBonusState(img);
+            if (prevBonusState == bonusState) { // check two times
+              prevBonusState = -1;
+              if (clickBonus(bonusState) == 0) {
+                mylog('dbg: bonus OK, click Start');
+                myclick(currentPage.actions[1]);
+                initPlayTime = now;
+                state = 31;
+              } else {
                 sleep(config.findPageMS);
                 lastFindPageTime = 0;
                 samePageCount = 0;
               }
+            } else {
+              prevBonusState = bonusState;
             }
-            break;
-          case 1:
+          } else {
+            myclick(currentPage.actions[0]); // back
+          }
+          break;
+        case 'GamePause':
+          if (now > nextSendHeartTime) {
+            myclick(currentPage.actions[0]); // back
+          } else if (now > nextPlayTime) {
+            myclick(currentPage.actions[1]);
+          } else {
             myclick(currentPage.actions[0]);
-            if (currentPage.name == 'Received') {
-              keepImgLog('dbg:', 'r', 4);
-              sleep(config.animationMS);
-            } else if (currentPage.name == 'MailBoxNoMessage') {
-              mylog('dbg: gotCoins:', gotCoins, 'in clicks:', msgClicks);
-            }
-            break;
-          case 2:
-            switch (currentPage.name) {
-              case 'RootDetection':
-                if (config.isPermitRootScan) {
-                  mylog('dbg: click next');
-                  myclick(currentPage.actions[1]);
-                } else {
-                  mylog('dbg: wait human action');
-                  longSleep(config.hibernateMS);
-                }
-                break;
-              case 'ScorePage':
-                if (state == 32) {
-                  mylog('dbg: play time(s):', (Date.now() - initPlayTime)/1000);
-                  state = 33;
-                  nextPlayTime = initPlayTime + config.autoPlayMin * 60 * 1000;
-                }
-                if (config.isRecvGift) {
-                  if (checkPoint(img, 'RedMail')) {
-                    mylog('dbg: click Mail button');
-                    myclick(config.points['Mail']);
-                    break;
-                  }
-                }
-                if (now > nextSendHeartTime) {
-                  myclick(currentPage.actions[0]); // Close
-                } else if (now > nextPlayTime) {
-                  myclick(currentPage.actions[1]); // Play
-                }
-                break;
-              case 'MailBox':
-              case 'MailBoxAd':
-                if (config.isRecvGift) {
-                  if (checkPoint(img, 'RecvFirstMail')) {
-                    if (checkPoint(img, 'FirstMailGet')) {
-                      gotCoins++;
-                    }
-                    msgClicks++;
-                    mylog('dbg: click First Mail button');
-                    myclick(config.points['RecvFirstMail']);
-                    sleep(config.animationMS);
-                  } else {
-                    whyNotPoint(img, 'RecvFirstMail');
-                    whyNotPoint(img, 'FirstMailGet');
-                    mylog('dbg: click Back, got coins', gotCoins, 'in clicks:', msgClicks);
-                    gotCoins = 0;
-                    msgClicks = 0;
-                    myclick(currentPage.actions[0]);
-                  }
-                } else {
-                  mylog('dbg: click Back');
-                  myclick(currentPage.actions[0]);
-                }
-                break;
-              case 'ReceiveGiftHeart':
-              case 'PackagePage':
-              case 'ReceiveGiftOther':
-                keepImgLog('dbg:', 'r2', 4);
-                if (config.isRecvGift || config.isSendHeart) {
-                  myclick(currentPage.actions[1]); // OK/delete
-                } else {
-                  myclick(currentPage.actions[0]); // Close/Cancel
-                }
-                sleep(1000); // skip animation
-                break;
-              case 'ChooseBonusItem':
-                if (config.isRecvGift) {
-                  if (checkPoint(img, 'RedMail')) {
-                    mylog('dbg: click Mail button');
-                    myclick(config.points['Mail']);
-                    break;
-                  }
-                }
-                if (now > nextSendHeartTime) {
-                  myclick(currentPage.actions[0]); // back
-                } else if (now > nextPlayTime) {
-                  bonusState = getBonusState(img);
-                  if (prevBonusState == bonusState) { // check two times
-                    prevBonusState = -1;
-                    if (clickBonus(bonusState) == 0) {
-                      mylog('dbg: bonus OK, click Start');
-                      myclick(currentPage.actions[1]);
-                      initPlayTime = now;
-                      state = 31;
-                    } else {
-                      sleep(config.findPageMS);
-                      lastFindPageTime = 0;
-                      samePageCount = 0;
-                    }
-                  } else {
-                    prevBonusState = bonusState;
-                  }
-                } else {
-                  myclick(currentPage.actions[0]); // back
-                }
-                break;
-              case 'GamePause':
-                if (now > nextSendHeartTime) {
-                  myclick(currentPage.actions[0]); // back
-                } else if (now > nextPlayTime) {
-                  myclick(currentPage.actions[1]);
-                } else {
-                  myclick(currentPage.actions[0]);
-                }
-                break;
-              case 'TsumsMe':
-              case 'TsumsOther':
-                myclick(currentPage.actions[0]);
-                break;
-              default:
-                mylog('dbg: unknown page');
-                break;
-            }
-            break;
-          default: // more than 2 actions
-            switch (currentPage.name) {
-              case 'GamePlay1':
-              case 'GamePlay2':
-              case 'GamePlay3':
-              case 'GamePlay4':
-                if (state == 31) {
-                  mylog('dbg: play start', Date());
-                  state = 32;
-                }
-                mylog('dbg: playing', samePageCount);
-                myPlay(img, currentPage);
-                break;
-              case 'FriendPage':
-              case 'FriendPage2':
-                if (config.isRecvGift) {
-                  if (checkPoint(img, 'RedMail')) {
-                    mylog('dbg: click Mail button');
-                    myclick(config.points['Mail']);
-                    break;
-                  }
-                }
-                if (now > nextSendHeartTime) {
-                  if (state != 21 && state != 22) {
-                    mylog('dbg: send heart begin', Date());
-                    state = 21;
-                    config.sendHeartCount = 0;
-                    initSendHeartTime = now;
-                    toTopFriendPage();
-                  } else if (sendHearts(img)) { // end
-                    state = 23;
-                    var s = (Date.now() - initSendHeartTime)/1000;
-                    mylog('dbg:send heart time(s):', s, 'hearts:',
-                        config.sendHeartCount, 'avg/min=',
-                        config.sendHeartCount / s * 60);
-                    nextSendHeartTime = initSendHeartTime +
-                      config.sendHeartMin * 60* 1000;
-                  }
-                } else if (now > nextPlayTime) {
-                  mylog('dbg: click play button');
-                  myclick(currentPage.actions[1]); // Play
-                }
-                break;
-              default:
-                mylog('dbg: unknown page');
-                break;
-            }
-            break;
-        }
+          }
+          break;
+        case 'TsumsMe':
+        case 'TsumsOther':
+          myclick(currentPage.actions[0]);
+          break;
+        default:
+          mylog('dbg: unknown page');
+          break;
       }
-    }
-    prevCaptureTime = mySleep(config.captureMS, prevCaptureTime);
+      break;
+    default: // more than 2 actions
+      switch (currentPage.name) {
+        case 'GamePlay1':
+        case 'GamePlay2':
+        case 'GamePlay3':
+        case 'GamePlay4':
+          if (state == 31) {
+            mylog('dbg: play start', Date());
+            state = 32;
+          }
+          mylog('dbg: playing', samePageCount);
+          myPlay(img, currentPage);
+          break;
+        case 'FriendPage':
+        case 'FriendPage2':
+          if (config.isRecvGift) {
+            if (checkPoint(img, 'RedMail')) {
+              mylog('dbg: click Mail button');
+              myclick(config.points['Mail']);
+              break;
+            }
+          }
+          if (now > nextSendHeartTime) {
+            if (state != 21 && state != 22) {
+              mylog('dbg: send heart begin', Date());
+              state = 21;
+              config.sendHeartCount = 0;
+              initSendHeartTime = now;
+              toTopFriendPage();
+            } else if (sendHearts(img)) { // end
+              state = 23;
+              var s = (Date.now() - initSendHeartTime)/1000;
+              mylog('dbg:send heart time(s):', s, 'hearts:',
+                  config.sendHeartCount, 'avg/min=',
+                  config.sendHeartCount / s * 60);
+              nextSendHeartTime = initSendHeartTime +
+                      config.sendHeartMin * 60* 1000;
+            }
+          } else if (now > nextPlayTime) {
+            mylog('dbg: click play button');
+            myclick(currentPage.actions[1]); // Play
+          }
+          break;
+        default:
+          mylog('dbg: unknown page');
+          break;
+      }
+      break;
   }
-  if (img != undefined) {
-    releaseImage(img);
-  }
-  mylog('dbg: start() end');
 }
 
 /* exported stop */

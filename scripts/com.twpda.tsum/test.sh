@@ -12,6 +12,14 @@ if [[ -z "$IP" ]]; then
 fi
 PORT=8081
 
+if ! nc -vz "$IP" $PORT; then
+  echo "Err: $IP:$PORT not open, does robotmon service started?"
+  exit 1
+fi
+if ! ping -c 1 "$IP"; then
+  echo "Err: wrong IP=$IP, can not ping"
+  exit 1
+fi
 mystop() {
   if adb shell am force-stop $PACKAGE_NAME; then
     sleep 1
