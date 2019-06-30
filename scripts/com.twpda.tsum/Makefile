@@ -33,6 +33,8 @@ clean:
 cp: all
 	adb shell mkdir -p /sdcard/Robotmon/scripts/com.twpda.tsum
 	adb push index.html index.js /sdcard/Robotmon/scripts/com.twpda.tsum
+cpdata:
+	adb push -a testdata /sdcard/Robotmon/
 log: # this won't buffer, because the adb logcat output much more lines
 	adb logcat | grep -P '.*GoLog(?!.*GrpcService)'
 log2: # this will buffer output, but brief format
@@ -43,4 +45,8 @@ cpimg:
 	adb pull -a /sdcard/Robotmon/tmp .
 	adb shell rm -f /sdcard/Robotmon/tmp/*
 test: all
+	./test.sh
+test2: all
+	cp index.js index2.js
+	echo "testMain();" >> index2.js
 	./test.sh

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -ex
-RUN_TIME=40
+RUN_TIME=$((5*60))
 PACKAGE_NAME=com.linecorp.LGTMTMG
 ACTIVITY_NAME=.TsumTsum
 TEST_LOG=test.log
@@ -21,6 +21,7 @@ if ! ping -c 1 "$IP"; then
   exit 1
 fi
 mystop() {
+  pkill rbmcmd || true
   if adb shell am force-stop $PACKAGE_NAME; then
     sleep 1
   fi
@@ -65,6 +66,7 @@ rm -rf tmp/*
 adb pull -a $STORAGE_PATH/tmp .
 gthumb tmp&
 mystop
+pkill rbmcmd || true
 
 echo "done"
 # vim:et sw=2 ts=2 ai nocp sta

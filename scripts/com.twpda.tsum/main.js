@@ -4,12 +4,12 @@ var config = {
   // UI options NOTE: keep the same order with settings.js and setupUIOptions()
   isLangZhTW: false,
   isRecvGift: false,
-  isSendHeart: false,
+  isSendHeart: true,
   sendHeartMin: 30, // send heart period
-  isPlay: true,
+  isPlay: false,
   autoPlayMin: 24*60, // auto play period
   skillPlayMS: 1000,
-  debug: true,
+  debug: false,
 
   isBonusScore: false,
   isBonusCoin: false,
@@ -26,8 +26,8 @@ var config = {
   findPageMS: 100, // call findPage() per 0.1s
   waitUnknownMS: 1000, // wait 1 second before click on unknown page
   captureMS: 50, // sleep per 0.05 second before capture screen
-
-  uiOptionCount: 22, // count of UI options
+  testFile: '', // test file which can't assigned by UI
+  uiOptionCount: 23, // count of UI options
 
   // globals (default value at compile time)
   appName: 'com.twpda.tsum',
@@ -55,6 +55,7 @@ var config = {
   skillOnCount: 0,
   snapCount: 6,
   friendGridHeight: 196,
+  state: 0,
 
   nextChkAppOnTime: 0,
   outOfGameCount: 0,
@@ -66,24 +67,13 @@ var config = {
   nextRecvTime: 0,
   nextSendTime: 0,
   nextPlayTime: 0,
-
-
-  lastFindPageTime: 0,
-  samePageCount: 0,
-  prevCaptureTime: 0,
-  nextSendHeartTime: 0,
-  nextPlayTime: 0,
-  initPlayTime: 0,
   initSendHeartTime: 0,
+  initPlayTime: 0,
+  gotCoins: 0,
   // state could be:
   //   init(0) ->send0(21)->send1(22)->send2(23)->maybe 0,11,31
   //           ->play0(31)->play1(32)->play2(33)->maybe 0,11,22
   state: 0,
-  prevBonusState: -1,
-  bonusState: undefined,
-  waitUnknownCount: 0,
-  minSamePageCount: 0,
-  gotCoins: 0,
   msgClicks: 0,
   prevImg: 0,
   img: 0,
@@ -105,22 +95,23 @@ var config = {
     'Close3': {x: 382, y: 1612, r: 239, g: 182, b: 8}, // yellow Close of OptionsPage
     'SkillOn1': {x: 137, y: 1555, r: 255, g: 255, b: 247}, // white MyTsum button 11 clock part
     'SkillOn2': {x: 137, y: 1555, r: 247, g: 219, b: 25}, // light yellow to dark MyTsum button 11 clock part
+    'HeartYellow1': {x: 910, y: 689, r: 239, g: 189, b: 16}, // yellow first heart on friend page
     'HeartRed1': {x: 910, y: 689, r: 255, g: 105, b: 140}, // red first heart on friend page
-    'HeartRed2': {x: 910, y: 689+196, r: 255, g: 105, b: 140}, // red 2nd heart on friend page
-    'HeartRed3': {x: 910, y: 689+196*2, r: 255, g: 105, b: 140}, // red 3rd heart on friend page
-    'HeartRed4': {x: 910, y: 689+196*3, r: 255, g: 105, b: 140}, // red 4th heart on friend page
-    'HeartBlue1': {x: 910, y: 689, r: 3, g: 69, b: 148}, // blue first heart on friend page
-    'HeartBlue2': {x: 910, y: 689+196, r: 3, g: 69, b: 148}, // blue 2nd heart on friend page
-    'HeartBlue3': {x: 910, y: 689+196*2, r: 3, g: 69, b: 148}, // blue 3rd heart on friend page
-    'HeartBlue4': {x: 910, y: 689+196*3, r: 3, g: 69, b: 148}, // blue 4th heart on friend page
-    'ZeroScore1': {x: 550, y: 700, r: 55, g: 93, b: 140}, // blue zero score of 1st
-    'ZeroScore2': {x: 550, y: 700+196, r: 55, g: 93, b: 140}, // blue zero score of 2nd
-    'ZeroScore3': {x: 550, y: 700+196*2, r: 55, g: 93, b: 140}, // blue zero score of 3rd
-    'ZeroScore4': {x: 550, y: 700+196*3, r: 55, g: 93, b: 140}, // blue zero score of 4th
-    'HeartEnd1': {x: 550, y: 720, r: 33, g: 117, b: 197}, // 1st light blue frame of heart
-    'HeartEnd2': {x: 550, y: 720+196, r: 33, g: 117, b: 197}, // 2nd light blue frame of heart
-    'HeartEnd3': {x: 550, y: 720+196*2, r: 33, g: 117, b: 197}, // 3rd light blue frame of heart
-    'HeartEnd4': {x: 550, y: 720+196*3, r: 33, g: 117, b: 197}, // 4th light blue frame of heart
+    'HeartBlue1': {x: 910, y: 689, r: 41, g: 69, b: 115}, // blue first heart on friend page
+    'HeartEnd1': {x: 550, y: 689, r: 33, g: 117, b: 197}, // 1st light blue frame of heart
+    'ZeroScore1': {x: 550, y: 689+196/3, r: 55, g: 93, b: 140}, // blue zero score of 1st
+    // 'HeartRed2': {x: 910, y: 689+196, r: 255, g: 105, b: 140}, // red 2nd heart on friend page
+    // 'HeartRed3': {x: 910, y: 689+196*2, r: 255, g: 105, b: 140}, // red 3rd heart on friend page
+    // 'HeartRed4': {x: 910, y: 689+196*3, r: 255, g: 105, b: 140}, // red 4th heart on friend page
+    // 'HeartBlue2': {x: 910, y: 689+196, r: 3, g: 69, b: 148}, // blue 2nd heart on friend page
+    // 'HeartBlue3': {x: 910, y: 689+196*2, r: 3, g: 69, b: 148}, // blue 3rd heart on friend page
+    // 'HeartBlue4': {x: 910, y: 689+196*3, r: 3, g: 69, b: 148}, // blue 4th heart on friend page
+    // 'ZeroScore2': {x: 550, y: 700+196, r: 55, g: 93, b: 140}, // blue zero score of 2nd
+    // 'ZeroScore3': {x: 550, y: 700+196*2, r: 55, g: 93, b: 140}, // blue zero score of 3rd
+    // 'ZeroScore4': {x: 550, y: 700+196*3, r: 55, g: 93, b: 140}, // blue zero score of 4th
+    // 'HeartEnd2': {x: 550, y: 720+196, r: 33, g: 117, b: 197}, // 2nd light blue frame of heart
+    // 'HeartEnd3': {x: 550, y: 720+196*2, r: 33, g: 117, b: 197}, // 3rd light blue frame of heart
+    // 'HeartEnd4': {x: 550, y: 720+196*3, r: 33, g: 117, b: 197}, // 4th light blue frame of heart
   },
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
@@ -505,6 +496,7 @@ function setupUIOptions(args) {
   config.findPageMS = args[i++];
   config.waitUnknownMS = args[i++];
   config.captureMS = args[i++];
+  config.testFile = args[i++];
 
   if (i != config.uiOptionCount) {
     mylog('dbg: setupUIOptions count invalid', config.uiOptionCount, i);
@@ -622,28 +614,16 @@ function isSameColor(c1, c2, diff) {
   return true;
 }
 
-/* exported whyNotPoint */
-function whyNotPoint(img, pointName) {
-  var pcolor = config.points[pointName];
-  var pxcolor = getColor(img, pcolor);
-  var diff = myDiffColor(pcolor, pxcolor);
-  if (diff < 60) {
-    mylog('dbg: v', diff, pointName, pcolor, pxcolor);
-  } else {
-    mylog('dbg: x', diff, pointName, pcolor, pxcolor);
-  }
-};
-
-function findPage(img, pagePixels) {
+function findPage() {
   var result = [];
   var names = [];
   var page;
-  for (var p = 0; p < pagePixels.length; p++) {
-    page = pagePixels[p];
+  for (var p = 0; p < config.pagePixels.length; p++) {
+    page = config.pagePixels[p];
     var i;
     for (i=0; i<page.colors.length; i++) {
       var pcolor = page.colors[i];
-      var pxcolor = getColor(img, pcolor);
+      var pxcolor = getColor(config.img, pcolor);
       var diff = myDiffColor(pcolor, pxcolor);
       if ((pcolor.match && diff >= pcolor.threshold) ||
         (!pcolor.match && diff < pcolor.threshold)) {
@@ -662,42 +642,6 @@ function findPage(img, pagePixels) {
     mylog('dbg: too many page:', names);
   }
   return {name: '', actions: []};
-};
-
-/* exported whyNotPage */
-function whyNotPage(img, pageName) {
-  var page;
-  var p;
-  var pagePixels = config.pagePixels;
-  for (p = 0; p < pagePixels.length; p++) {
-    page = pagePixels[p];
-    if (page.name == pageName) {
-      break;
-    }
-  }
-  if (p == pagePixels.length) {
-    mylog('dbg: pageName invalid:', pageName);
-    return;
-  }
-  mylog('dbg: whyNotPage:', pageName);
-  for (var i in page.colors) {
-    var pcolor = page.colors[i];
-    var pxcolor = getColor(img, pcolor);
-    var diff = myDiffColor(pcolor, pxcolor);
-    if (pcolor.match) {
-      if (diff >= pcolor.threshold) {
-        mylog('dbg: x match', diff, 'img', pxcolor, 'page', pcolor);
-      } else {
-        mylog('dbg: v match', diff, 'img', pxcolor, 'page', pcolor);
-      }
-    } else {
-      if (diff < pcolor.threshold) {
-        mylog('dbg: x notmatch', diff, 'img', pxcolor, 'page', pcolor);
-      } else {
-        mylog('dbg: v notmatch', diff, 'img', pxcolor, 'page', pcolor);
-      }
-    }
-  }
 };
 
 function mySleep(t, prevMS) {
@@ -765,36 +709,34 @@ function clickBonus(bonusState) {
     myclick(config.points['Bonus5to4']);
     clickCount++;
   };
+  if (clickCount > 0) {
+    sleep(config.animationMS);
+  }
   return clickCount;
 };
 
-function clickUnknown(img) {
-  var r = myCurrentApp();
-  if (r.packageName !== config.packageName) {
-    mylog('dbg: not in currentApp', r.packageName);
+function clickUnknown() {
+  config.nextChkAppOnTime = 0; // force check again
+  longSleep(config.animationMS);
+  if (!chkAppOn()) {
+    mylog('dbg: out of game');
     return;
   }
-  // whyNotPage(img, 'GamePlay1');
-  // whyNotPage(img, 'GamePlay2');
-  // whyNotPage(img, 'GamePlay3');
-  // whyNotPage(img, 'GamePlay4');
   // whyNotPage(img, 'ChooseBonusItem');
-  // whyNotPage(img, 'RootDetection');
-  // whyNotPage(img, 'ClosePage');
-  // whyNotPage(img, 'ClosePage2');
-  // whyNotPage(img, 'FriendPage');
-  // whyNotPage(img, 'ChooseBonusItem');
+
+  mylog('dbg: try click yellow button if found');
   var buttons = ['Close1', 'Close2', 'Close3'];
   for (var i in buttons) {
-    if (checkPoint(img, buttons[i])) {
-      mylog('dbg: click', buttons[i], r.packageName);
+    if (checkPoint(config.img, buttons[i])) {
+      mylog('dbg: click Close'+(i+1), buttons[i]);
       myclick(config.points[buttons[i]]);
+      sleep(config.animationMS);
       return;
     }
   }
-  longSleep(config.hibernateSec);
-  mylog('dbg: click center of screen', r.packageName);
+  mylog('dbg: click screen center');
   myclick({x: config.oriScreenWidth/2, y: config.oriScreenHeight/2});
+  longSleep(config.animationMS);
 };
 
 function longSleep(ms) {
@@ -853,25 +795,151 @@ function checkSkillON(img) {
   return result;
 };
 
-function myPlay(img, currentPage) {
-  config.runTimes++;
-  // longSleep(config.hibernateSec); // wait animation finished
-  // if (!config.debug || config.runTimes == 1) {
-  if (checkSkillON(img)) {
-    myclick(currentPage.actions[1]); // click MyTsum to use skill
-    longSleep(config.skillPlayMS);
-  } else {
-    board = scanBoard(img);
-    var paths = calculatePaths(board);
-    if (paths.length > 3) {
-      clickLinks(paths);
+function myRecv(now) {
+  mylog('dbg: myRecv');
+  if (config.isRecvGift) {
+    if (checkPoint(config.img, 'RecvFirstMail')) {
+      if (checkPoint(config.img, 'FirstMailGet')) {
+        config.gotCoins++;
+      }
+      config.msgClicks++;
+      mylog('dbg: click First Mail button');
+      myclick(config.points['RecvFirstMail']);
+      sleep(config.animationMS);
     } else {
-      // TODO: find bubbles, click bubbles, keep at most 2 bubbles.
-      myclick(currentPage.actions[2]); // click Fan
-      sleep(200);
-      myclick(currentPage.actions[2]); // click Fan
-      sleep(200);
+      whyNotPoint(config.img, 'RecvFirstMail');
+      whyNotPoint(config.img, 'FirstMailGet');
+      mylog('dbg: click Back, got coins', gotCoins, 'in clicks:', config.msgClicks);
+      config.gotCoins = 0;
+      config.msgClicks = 0;
+      myclick(config.currentPage.actions[0]);
     }
+  } else {
+    mylog('dbg: click Back');
+    myclick(config.currentPage.actions[0]);
+  }
+}
+
+function mySend(now) {
+  mylog('dbg: mySend');
+  switch (config.currentPage.name) {
+    case 'MailBox':
+    case 'MailBoxAd':
+      myRecv(now);
+      break;
+    case 'FriendPage':
+      if (config.state != 21 && config.state != 22) {
+        mylog('dbg: send heart begin', Date());
+        config.state = 21;
+        config.sendHeartCount = 0;
+        config.initSendHeartTime = now;
+        toTopFriendPage();
+      } else if (sendHearts(config.img)) { // end
+        state = 23;
+        var s = (Date.now() - config.initSendHeartTime)/1000;
+        mylog('dbg:send heart time(s):', s, 'hearts:',
+            config.sendHeartCount, 'avg/min=',
+            config.sendHeartCount / s * 60);
+        config.nextSendTime = config.initSendHeartTime +
+              config.sendHeartMin * 60* 1000;
+      }
+      break;
+    case 'PackagePage':
+    case 'ReceiveGiftHeart':
+    case 'ReceiveGiftOther':
+      myclick(config.currentPage.actions[1]); // OK/delete
+      sleep(config.animationMS);
+      break;
+    default:
+      mylog('dbg: invalid logic');
+      keepImgLog('dbg:', 'send', 1);
+      sleep(config.hibernateSec*1000);
+      config.state = 0;
+      break;
+  }
+}
+
+function myPlay(now) {
+  mylog('dbg: myPlay');
+  switch (config.currentPage.name) {
+    case 'MailBox':
+    case 'MailBoxAd':
+      myRecv(now);
+      break;
+    case 'FriendPage':
+      mylog('dbg: click play button');
+      myclick(config.currentPage.actions[1]); // Play
+      sleep(config.animationMS);
+      break;
+    case 'ChooseBonusItem':
+      var bonusState = getBonusState(config.img);
+      if (clickBonus(bonusState) == 0) {
+        mylog('dbg: bonus OK, click Start');
+        myclick(config.currentPage.actions[1]);
+        sleep(time.animationMS);
+        config.initPlayTime = now;
+        config.state = 31;
+      }
+      break;
+    case 'GamePlay1':
+    case 'GamePlay2':
+    case 'GamePlay3':
+    case 'GamePlay4':
+      if (config.state == 31) {
+        mylog('dbg: play start', Date());
+        config.state = 32;
+      }
+      config.runTimes++;
+      if (checkSkillON(img)) {
+        myclick(currentPage.actions[1]); // click MyTsum to use skill
+        longSleep(config.skillPlayMS);
+      } else {
+        board = scanBoard(img);
+        var paths = calculatePaths(board);
+        if (paths.length > 3) {
+          clickLinks(paths);
+        } else {
+          // TODO: find bubbles, click bubbles, keep at most 2 bubbles.
+          myclick(currentPage.actions[2]); // click Fan
+          sleep(config.animationMS);
+          myclick(currentPage.actions[2]); // click Fan
+          sleep(config.animationMS);
+        }
+      }
+      break;
+    case 'ScorePage':
+      mylog('dbg: play end', Date());
+      if (state == 32) {
+        mylog('dbg: play time(s):', (Date.now() - initPlayTime)/1000);
+        config.state = 33;
+        config.nextPlayTime = config.initPlayTime + config.autoPlayMin * 60 * 1000;
+      }
+      // TODO: if want to crazy play, click play
+      myclick(config.currentPage.actions[0]); // Close
+      // myclick(config.currentPage.actions[1]); // Play
+      sleep(config.animationMS);
+      break;
+    case 'GamePause':
+      mylog('dbg: wait human click continue or retry');
+      sleep(config.hibernateSec*1000);
+      // myclick(config.currentPage.actions[1]); // continue play
+      break;
+    case 'GamePause':
+    case 'PackagePage':
+    case 'ReceiveGiftHeart':
+    case 'ReceiveGiftOther':
+    case 'TsumsMe':
+    case 'TsumsOther':
+      mylog('dbg: click Back');
+      myclick(config.currentPage.actions[0]);
+      sleep(config.animationMS);
+      break;
+    default:
+      mylog('dbg: invalid logic');
+      keepImgLog('dbg:', 'play', 1);
+      sleep(config.hibernateSec*1000);
+      config.state = 0;
+      break;
   }
 }
 
@@ -1250,6 +1318,7 @@ function toTopFriendPage() {
   moveTo(xy.x, 350000, 100);
   tapUp(xy.x, 350000, 100);
   longSleep(1500);
+  /*
   mylog('dbg: adjust 1/4 grid height');
   tapDown(xy.x, xy.y, 100);
   var xy2 = mappingXY(config.points['HeartRed2']);
@@ -1259,6 +1328,7 @@ function toTopFriendPage() {
   sleep(500);
   keepImgLog('dbg:', 'f', 5);
   mylog(time); // for stop
+  */
 }
 
 function toNextFriendPage() {
@@ -1275,9 +1345,88 @@ function toNextFriendPage() {
   longSleep(1000);
 }
 
+// return offY if it is similar color from (x,y+dy)~(x,y+dy+offY)
+// otherwise return -1
+// if isMatch is true, then return first match point offset
+// if isMatch is false, then return first NOT match point offset
+function chkDownPoints(pointName, dy, offY, isMatch) {
+  var pcolor = config.points[pointName];
+  var rxy = mappingResizeXY(pcolor);
+  for (var y=0; y<offY; y++) {
+    var pxcolor = getImageColor(config.img, rxy.x, rxy.y+dy+y);
+    var diff = myDiffColor(pcolor, pxcolor);
+    if (isMatch) {
+      if (diff < 60) {
+        return y;
+      }
+    } else {
+      if (diff >= 60) {
+        return y;
+      }
+    }
+  }
+  return -1;
+}
+
+// return true, if it is similar color from (x,y+dy)~(x-offX,y+dy)
+/* exported chkLeftColorLine */
+function chkLeftColorLine(pointName, dy, offX) {
+  var pcolor = config.points[pointName];
+  var rxy = mappingResizeXY(pcolor);
+  for (var x=0; x<offX; x++) {
+    var pxcolor = getImageColor(config.img, rxy.x-x, rxy.y+dy);
+    var diff = myDiffColor(pcolor, pxcolor);
+    if (diff > 60) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// click at pointName with dx,dy offset
+/* exported clickDeltaPoint */
+function clickDeltaPoint(pointName, dx, dy) {
+  var pcolor = config.points[pointName];
+  var nx = Math.round((pcolor.x + dx/config.resizeFactor) *
+    config.appWidthRatio);
+  var ny = Math.round((pcolor.y + dy/config.resizeFactor) *
+    config.appHeightRatio);
+  tap(nx, ny, config.during);
+}
+
 function sendHearts(img) { // return isEnd
   var zeroCount = 0;
-  for (var i=4; i >= 1; i--) {
+  var dyGrid = config.friendGridHeight*config.resizeFactor;
+  var offY = dyGrid/3;
+  var offX = dyGrid;
+  var redDy = [];
+  for (var i=0; i <4; i++) {
+    dy = chkDownPoints('HeartYellow1', i*dyGrid, offY, true);
+    mylog('dbg: yellow i=', i, 'dy=', dy);
+    if (dy>=0) {
+      continue; // skip self
+    }
+    dy = chkDownPoints('HeartRed1', i*dyGrid, offY, true);
+    mylog('dbg: red i=', i, 'dy=', dy);
+    if (dy >= 0) {
+      if (chkLeftColorLine('HeartRed1', i*dyGrid+dy, offX)) {
+        zeroCount++;
+        mylog('dbg: zerocount', zerocount);
+      } else {
+        redDy.push(Math.round(i*dyGrid+dy));
+      }
+      continue;
+    }
+    dy = chkDownPoints('HeartBlue1', i*dyGrid, offY, false);
+    mylog('dbg: blue i=', i, 'dy=', dy);
+    if (dy < 0) {
+      zeroCount++;
+      continue;
+    }
+    dy = chkDownPoints('HeartEnd1', i*dyGrid, offY, true);
+    mylog('dbg: end i=', i, 'dy=', dy);
+    /*
+    if (chkDownPoints('HeartYellow1')'
     if (checkPoint(img, 'HeartEnd'+i)) {
       mylog('dbg: zero, i=', i);
       zeroCount++;
@@ -1292,6 +1441,12 @@ function sendHearts(img) { // return isEnd
     } else {
       mylog('dbg: HeartBlue, i=', i);
     }
+    */
+  }
+  mylog('dbg: zeroCount=', zeroCount, 'redDy=', redDy);
+  longSleep(config.hibernateSec*1000);
+  if (redDy.length > 0) {
+    return false;
   }
   if (zeroCount == 0) {
     mylog('dbg: toNextFriendPage');
@@ -1318,21 +1473,26 @@ function chkAppOn(now) {
           }
         }
       }
+      break;
     }
     config.lastAppOnStatus = (packageName == config.packageName);
     if (config.lastAppOnStatus) {
+      // mylog('dbg: in app', packageName);
       config.outOfGameCount = 0;
     } else {
       if (config.outOfGameCount == 0) {
         config.firstOutOfGameTime = now;
       }
       config.outOfGameCount++;
-      mylog('dbg: outOfGameCount', outOfGameCount, packageName);
       if (now - config.firstOutOfGameTime > config.maxOutOfGameSec) {
         config.nextChkAppOnTime = now + config.hibernateSec*1000;
+        mylog('dbg: outOfGameCount=', config.outOfGameCount, 'sleepSec=',
+            config.hibernateSec, packageName);
         longSleep(config.hibernateSec*1000);
       } else {
         config.nextChkAppOnTime = now + config.appOnChkMS;
+        mylog('dbg: outOfGameCount=', config.outOfGameCount, 'sleepMS=',
+            config.appOnChkMS, packageName);
         longSleep(config.appOnChkMS);
       }
     }
@@ -1340,6 +1500,46 @@ function chkAppOn(now) {
   return config.lastAppOnStatus;
 }
 
+function oneClickPage(now) {
+  switch (config.currentPage.actions.length) {
+    case 0:
+      if (config.currentPage.name === '') {
+        clickUnknown();
+      }
+      break;
+    case 1:
+      myclick(config.currentPage.actions[0]);
+      if (config.currentPage.name == 'Received') {
+        // keepImgLog('dbg:', 'r', 4);
+        mylog('dbg: click received');
+      } else if (config.currentPage.name == 'MailBoxNoMessage') {
+        mylog('dbg: click back gotCoins:', config.gotCoins,
+            'in clicks:', config.msgClicks);
+        config.nextRecvTime = now + 60 * 1000; // check next minute
+      }
+      sleep(config.animationMS);
+      break;
+    case 2:
+      switch (config.currentPage.name) {
+        case 'RootDetection':
+          if (config.isPermitRootScan) {
+            mylog('dbg: click permit');
+            myclick(config.currentPage.actions[1]);
+            sleep(config.animationMS);
+          } else {
+            mylog('dbg: wait human action');
+            longSleep(config.hibernateSec*1000);
+          }
+          break;
+        default:
+          return false;
+      }
+      break;
+    default:
+      return false;
+  }
+  return true;
+}
 
 /* exported start */
 function start(params) {
@@ -1355,8 +1555,19 @@ function start(params) {
     longSleep(3000);
   }
 
-  waitUnknownCount = config.waitUnknownMS/config.captureMS;
-  minSamePageCount = 2 * config.findPageMS / config.captureMS;
+  if (config.testFile !== '') {
+    mylog('dbg: begin of testFile');
+    // config.prevImg = openImage(config.storagePath + config.testFile);
+    config.img = openImage(config.storagePath + '/testdata/' + config.testFile);
+    mylog('dbg:');
+    mylog('dbg: img=', typeof config.img);
+    mylog('dbg: img=', config.img);
+    whyNotPage(config.img, 'FriendPage');
+    whyNotPoint(config.img, 'HeartRed1');
+    releaseImage(config.img);
+    return;
+  }
+
   var now = Date.now();
   if (!config.isRecvGift) {
     config.nextRecvTime = now + 365*24*60*60*1000;
@@ -1367,10 +1578,9 @@ function start(params) {
   if (!config.isPlay) {
     config.nextPlayTime = now + 365*24*60*60*1000;
   }
-
   while (config.isRunning) {
     now = Date.now();
-    if (chkAppOn(now)) {
+    if (!chkAppOn(now)) {
       continue;
     }
     if (config.prevImg !== 0) {
@@ -1385,219 +1595,47 @@ function start(params) {
       longSleep(config.captureMS);
       continue;
     }
-    var score = getIdentityScore(img1, img2);
+    var score = getIdentityScore(config.prevImg, config.img);
     mylog('dbg: score=', score);
     if (score < config.diffScore) {
       longSleep(config.captureMS);
       continue;
     }
     config.prevPage = config.currentPage;
-    config.currentPage = findPage(img, config.pagePixels);
-    isRedMail = checkPoint(img, 'RedMail');
-    // var action;
-    if (now > nextRecvTime) {
-      if (isRedMail) {
-        mylog('dbg: Recv');
-      } else if (now > nextSendTime) {
-        mylog('dbg: Send');
-      } else if (now > nextPlayTime) {
-        mylog('dbg: Play');
-      }
-    } else if (now > nextSendTime) {
-      mylog('dbg: Send');
-    } else if (now > nextPlayTime) {
-      mylog('dbg: Play');
+    config.currentPage = findPage();
+    isRedMail = checkPoint(config.img, 'RedMail');
+    mylog('dbg: page=', config.currentPage.name, 'isRedMail=', isRedMail);
+    if (oneClickPage(now)) {
+      continue;
+    }
+    if (now > config.nextRecvTime && isRedMail &&
+       (config.currentPage.name == 'FriendPage'||
+       config.currentPage.name == 'ChooseBonusItem')) {
+      mylog('dbg: Recv');
+      myclick(config.points['Mail']);
+      sleep(config.animationMS);
+    } else if (now > config.nextSendTime) {
+      mySend(now);
+    } else if (now > config.nextPlayTime) {
+      myPlay(now);
+    } else if (config.currentPage.name == 'FriendPage') {
+      mylog('dbg: nothing to do');
+      longSleep(config.hibernateSec*1000);
+    } else {
+      mylog('dbg: invalid page:', config.currentPage.name);
+      keepImgLog('dbg:', 'start', 1);
+      sleep(config.hibernateSec*1000);
+      config.state = 0;
+    }
+    if (config.testFile !== '') {
+      mylog('dbg: end of testFile');
+      break;
     }
     mySleep(config.captureMS);
   }
   fini();
   mylog('dbg: start() end');
   return;
-  switch (currentPage.actions.length) {
-    case 0:
-      if (currentPage.name === '') {
-        // mylog('dbg: sleep 1 second for unknown page');
-        // sleep(5000);
-        if (samePageCount > waitUnknownCount) {
-          clickUnknown(img);
-          sleep(config.findPageMS);
-          lastFindPageTime = 0;
-          samePageCount = 0;
-        }
-      }
-      break;
-    case 1:
-      myclick(currentPage.actions[0]);
-      if (currentPage.name == 'Received') {
-        keepImgLog('dbg:', 'r', 4);
-        sleep(config.animationMS);
-      } else if (currentPage.name == 'MailBoxNoMessage') {
-        mylog('dbg: gotCoins:', gotCoins, 'in clicks:', msgClicks);
-      }
-      break;
-    case 2:
-      switch (currentPage.name) {
-        case 'RootDetection':
-          if (config.isPermitRootScan) {
-            mylog('dbg: click next');
-            myclick(currentPage.actions[1]);
-          } else {
-            mylog('dbg: wait human action');
-            longSleep(config.hibernateSec);
-          }
-          break;
-        case 'ScorePage':
-          if (state == 32) {
-            mylog('dbg: play time(s):', (Date.now() - initPlayTime)/1000);
-            state = 33;
-            nextPlayTime = initPlayTime + config.autoPlayMin * 60 * 1000;
-          }
-          if (config.isRecvGift) {
-            if (checkPoint(img, 'RedMail')) {
-              mylog('dbg: click Mail button');
-              myclick(config.points['Mail']);
-              break;
-            }
-          }
-          if (now > nextSendHeartTime) {
-            myclick(currentPage.actions[0]); // Close
-          } else if (now > nextPlayTime) {
-            myclick(currentPage.actions[1]); // Play
-          }
-          break;
-        case 'MailBox':
-        case 'MailBoxAd':
-          if (config.isRecvGift) {
-            if (checkPoint(img, 'RecvFirstMail')) {
-              if (checkPoint(img, 'FirstMailGet')) {
-                gotCoins++;
-              }
-              msgClicks++;
-              mylog('dbg: click First Mail button');
-              myclick(config.points['RecvFirstMail']);
-              sleep(config.animationMS);
-            } else {
-              whyNotPoint(img, 'RecvFirstMail');
-              whyNotPoint(img, 'FirstMailGet');
-              mylog('dbg: click Back, got coins', gotCoins, 'in clicks:', msgClicks);
-              gotCoins = 0;
-              msgClicks = 0;
-              myclick(currentPage.actions[0]);
-            }
-          } else {
-            mylog('dbg: click Back');
-            myclick(currentPage.actions[0]);
-          }
-          break;
-        case 'ReceiveGiftHeart':
-        case 'PackagePage':
-        case 'ReceiveGiftOther':
-          keepImgLog('dbg:', 'r2', 4);
-          if (config.isRecvGift || config.isSendHeart) {
-            myclick(currentPage.actions[1]); // OK/delete
-          } else {
-            myclick(currentPage.actions[0]); // Close/Cancel
-          }
-          sleep(1000); // skip animation
-          break;
-        case 'ChooseBonusItem':
-          if (config.isRecvGift) {
-            if (checkPoint(img, 'RedMail')) {
-              mylog('dbg: click Mail button');
-              myclick(config.points['Mail']);
-              break;
-            }
-          }
-          if (now > nextSendHeartTime) {
-            myclick(currentPage.actions[0]); // back
-          } else if (now > nextPlayTime) {
-            bonusState = getBonusState(img);
-            if (prevBonusState == bonusState) { // check two times
-              prevBonusState = -1;
-              if (clickBonus(bonusState) == 0) {
-                mylog('dbg: bonus OK, click Start');
-                myclick(currentPage.actions[1]);
-                initPlayTime = now;
-                state = 31;
-              } else {
-                sleep(config.findPageMS);
-                lastFindPageTime = 0;
-                samePageCount = 0;
-              }
-            } else {
-              prevBonusState = bonusState;
-            }
-          } else {
-            myclick(currentPage.actions[0]); // back
-          }
-          break;
-        case 'GamePause':
-          if (now > nextSendHeartTime) {
-            myclick(currentPage.actions[0]); // back
-          } else if (now > nextPlayTime) {
-            myclick(currentPage.actions[1]);
-          } else {
-            myclick(currentPage.actions[0]);
-          }
-          break;
-        case 'TsumsMe':
-        case 'TsumsOther':
-          myclick(currentPage.actions[0]);
-          break;
-        default:
-          mylog('dbg: unknown page');
-          break;
-      }
-      break;
-    default: // more than 2 actions
-      switch (currentPage.name) {
-        case 'GamePlay1':
-        case 'GamePlay2':
-        case 'GamePlay3':
-        case 'GamePlay4':
-          if (state == 31) {
-            mylog('dbg: play start', Date());
-            state = 32;
-          }
-          mylog('dbg: playing', samePageCount);
-          myPlay(img, currentPage);
-          break;
-        case 'FriendPage':
-        case 'FriendPage2':
-          if (config.isRecvGift) {
-            if (checkPoint(img, 'RedMail')) {
-              mylog('dbg: click Mail button');
-              myclick(config.points['Mail']);
-              break;
-            }
-          }
-          if (now > nextSendHeartTime) {
-            if (state != 21 && state != 22) {
-              mylog('dbg: send heart begin', Date());
-              state = 21;
-              config.sendHeartCount = 0;
-              initSendHeartTime = now;
-              toTopFriendPage();
-            } else if (sendHearts(img)) { // end
-              state = 23;
-              var s = (Date.now() - initSendHeartTime)/1000;
-              mylog('dbg:send heart time(s):', s, 'hearts:',
-                  config.sendHeartCount, 'avg/min=',
-                  config.sendHeartCount / s * 60);
-              nextSendHeartTime = initSendHeartTime +
-                      config.sendHeartMin * 60* 1000;
-            }
-          } else if (now > nextPlayTime) {
-            mylog('dbg: click play button');
-            myclick(currentPage.actions[1]); // Play
-          }
-          break;
-        default:
-          mylog('dbg: unknown page');
-          break;
-      }
-      break;
-  }
 }
 
 /* exported stop */
@@ -1608,4 +1646,89 @@ function stop() {
   fini();
   mylog('dbg: stop() end');
 }
+
+// ---------------------
+// test related function
+// ---------------------
+
+/* exported whyNotPoint */
+function whyNotPoint(img, pointName) {
+  var pcolor = config.points[pointName];
+  var pxcolor = getColor(img, pcolor);
+  var diff = myDiffColor(pcolor, pxcolor);
+  if (diff < 60) {
+    mylog('dbg: v', diff, pointName, pcolor, pxcolor);
+  } else {
+    mylog('dbg: x', diff, pointName, pcolor, pxcolor);
+  }
+};
+
+/* exported whyNotPage */
+function whyNotPage(img, pageName) {
+  var page;
+  var p;
+  var pagePixels = config.pagePixels;
+  for (p = 0; p < pagePixels.length; p++) {
+    page = pagePixels[p];
+    if (page.name == pageName) {
+      break;
+    }
+  }
+  if (p == pagePixels.length) {
+    mylog('dbg: pageName invalid:', pageName);
+    return;
+  }
+  mylog('dbg: whyNotPage:', pageName);
+  for (var i in page.colors) {
+    var pcolor = page.colors[i];
+    var pxcolor = getColor(img, pcolor);
+    var diff = myDiffColor(pcolor, pxcolor);
+    if (pcolor.match) {
+      if (diff >= pcolor.threshold) {
+        mylog('dbg: x match', diff, 'img', pxcolor, 'page', pcolor);
+      } else {
+        mylog('dbg: v match', diff, 'img', pxcolor, 'page', pcolor);
+      }
+    } else {
+      if (diff < pcolor.threshold) {
+        mylog('dbg: x notmatch', diff, 'img', pxcolor, 'page', pcolor);
+      } else {
+        mylog('dbg: v notmatch', diff, 'img', pxcolor, 'page', pcolor);
+      }
+    }
+  }
+};
+
+/* exported testMain */
+function testMain() {
+  start([
+    false, // isLangZhTW: false,
+    false, // isRecvGift: false,
+    true, // isSendHeart: true,
+    30, // sendHeartMin: 30, // send heart period
+    false, // isPlay: false,
+    24*60, // autoPlayMin: 24*60, // auto play period
+    1000, // skillPlayMS: 1000,
+    false, // debug: false,
+
+    false, // isBonusScore: false,
+    false, // isBonusCoin: false,
+    false, // isBonusExp: false,
+    false, // isBonusTime: false,
+    false, // isBonusBubble: false,
+    false, // isBonus5to4: false,
+
+    false, // isAutoLaunch: false,
+    true, // isPermitRootScan: true,
+    10, // hibernateSec: 10, // check app on per 10s
+    3000, // maxOutOfGameSec: 3000, // if out of game for 3s, switch to hibernate mode
+    500, // appOnChkMS: 500, // check per 0.5s
+    100, // findPageMS: 100, // call findPage() per 0.1s
+    1000, // waitUnknownMS: 1000, // wait 1 second before click on unknown page
+    50, // captureMS: 50, // sleep per 0.05 second before capture screen
+    // 'eventinfo.png',
+    'friend.onlyone.png',
+  ]);
+}
+
 // vim:et sw=2 ts=2 ai

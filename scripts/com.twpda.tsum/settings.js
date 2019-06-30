@@ -171,7 +171,7 @@ function genStartCommand() {
       command += '"' + v.value + '", ';
     }
   });
-  command += ']);';
+  command += ',""]);'; // default testFile is empty
   console.log('dbg: command=' + command);
   return command;
 }
