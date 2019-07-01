@@ -100,18 +100,17 @@ var config = {
     'HeartBlue1': {x: 910, y: 689, r: 41, g: 69, b: 115}, // blue first heart on friend page
     'HeartEnd1': {x: 550, y: 689, r: 33, g: 117, b: 197}, // 1st light blue frame of heart
     'ZeroScore1': {x: 550, y: 689+196/3, r: 55, g: 93, b: 140}, // blue zero score of 1st
-    // 'HeartRed2': {x: 910, y: 689+196, r: 255, g: 105, b: 140}, // red 2nd heart on friend page
-    // 'HeartRed3': {x: 910, y: 689+196*2, r: 255, g: 105, b: 140}, // red 3rd heart on friend page
-    // 'HeartRed4': {x: 910, y: 689+196*3, r: 255, g: 105, b: 140}, // red 4th heart on friend page
-    // 'HeartBlue2': {x: 910, y: 689+196, r: 3, g: 69, b: 148}, // blue 2nd heart on friend page
-    // 'HeartBlue3': {x: 910, y: 689+196*2, r: 3, g: 69, b: 148}, // blue 3rd heart on friend page
-    // 'HeartBlue4': {x: 910, y: 689+196*3, r: 3, g: 69, b: 148}, // blue 4th heart on friend page
-    // 'ZeroScore2': {x: 550, y: 700+196, r: 55, g: 93, b: 140}, // blue zero score of 2nd
-    // 'ZeroScore3': {x: 550, y: 700+196*2, r: 55, g: 93, b: 140}, // blue zero score of 3rd
-    // 'ZeroScore4': {x: 550, y: 700+196*3, r: 55, g: 93, b: 140}, // blue zero score of 4th
-    // 'HeartEnd2': {x: 550, y: 720+196, r: 33, g: 117, b: 197}, // 2nd light blue frame of heart
-    // 'HeartEnd3': {x: 550, y: 720+196*2, r: 33, g: 117, b: 197}, // 3rd light blue frame of heart
-    // 'HeartEnd4': {x: 550, y: 720+196*3, r: 33, g: 117, b: 197}, // 4th light blue frame of heart
+
+    'outReceiveOk': {x: 835, y: 1092, r: 236, g: 175, b: 6}, // dark yellow ? left of send heart button
+    'outSendHeartFrom': {x: 910, y: 562},
+    'outSendHeartTo': {x: 910, y: 1352},
+    'outSendHeart0': {x: 910, y: 698, r: 209, g: 60, b: 142}, // pink center of send heart button
+    'outSendHeart02': {x: 910, y: 698, r: 3, g: 65, b: 140}, // dark blue center of send heart button
+    'outFriendScoreFrom': {x: 550, y: 935, r: 55, g: 93, b: 140}, // dark blue left of score number
+    'outFriendScoreTo': {x: 760, y: 935}, // right of score number before last digit
+    'outSendHeartEnd': {x: 227, y: 1262, r: 44, g: 78, b: 123}, // dark blue on ranking?
+    'outSendHeartEnd2': {x: 316, y: 1224, r: 55, g: 91, b: 139}, // dark blue on portrait icon?
+    'outSendHeartEnd3': {x: 328, y: 1266, r: 47, g: 85, b: 132}, //  dark blue on name?
   },
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
@@ -672,7 +671,7 @@ function mappingXY(xy) {
   return {x: nx, y: ny};
 };
 
-function myclick(xy) {
+function myClick(xy) {
   var xy = mappingXY(xy);
   tap(xy.x, xy.y, config.during);
 };
@@ -681,36 +680,36 @@ function clickBonus(bonusState) {
   var clickCount = 0;
   if ((bonusState & 1) == (config.bonusState & 1)) {
     mylog('dbg: click BonusScore');
-    myclick(config.points['BonusScore']);
+    myClick(config.points['BonusScore']);
     clickCount++;
   };
   if ((bonusState & 2) == (config.bonusState & 2)) {
     mylog('dbg: click BonusCoin');
-    myclick(config.points['BonusCoin']);
+    myClick(config.points['BonusCoin']);
     clickCount++;
   };
   if ((bonusState & 4) == (config.bonusState & 4)) {
     mylog('dbg: click BonusExp');
-    myclick(config.points['BonusExp']);
+    myClick(config.points['BonusExp']);
     clickCount++;
   };
   if ((bonusState & 8) == (config.bonusState & 8)) {
     mylog('dbg: click BonusTime');
-    myclick(config.points['BonusTime']);
+    myClick(config.points['BonusTime']);
     clickCount++;
   };
   if ((bonusState & 16) == (config.bonusState & 16)) {
     mylog('dbg: click BonusBubble');
-    myclick(config.points['BonusBubble']);
+    myClick(config.points['BonusBubble']);
     clickCount++;
   };
   if ((bonusState & 32) == (config.bonusState & 32)) {
     mylog('dbg: click Bonus5to4');
-    myclick(config.points['Bonus5to4']);
+    myClick(config.points['Bonus5to4']);
     clickCount++;
   };
   if (clickCount > 0) {
-    sleep(config.animationMS);
+    longSleep(config.animationMS);
   }
   return clickCount;
 };
@@ -729,13 +728,13 @@ function clickUnknown() {
   for (var i in buttons) {
     if (checkPoint(config.img, buttons[i])) {
       mylog('dbg: click Close'+(i+1), buttons[i]);
-      myclick(config.points[buttons[i]]);
-      sleep(config.animationMS);
+      myClick(config.points[buttons[i]]);
+      longSleep(config.animationMS);
       return;
     }
   }
   mylog('dbg: click screen center');
-  myclick({x: config.oriScreenWidth/2, y: config.oriScreenHeight/2});
+  myClick({x: config.oriScreenWidth/2, y: config.oriScreenHeight/2});
   longSleep(config.animationMS);
 };
 
@@ -804,19 +803,19 @@ function myRecv(now) {
       }
       config.msgClicks++;
       mylog('dbg: click First Mail button');
-      myclick(config.points['RecvFirstMail']);
-      sleep(config.animationMS);
+      myClick(config.points['RecvFirstMail']);
+      longSleep(config.animationMS);
     } else {
       whyNotPoint(config.img, 'RecvFirstMail');
       whyNotPoint(config.img, 'FirstMailGet');
       mylog('dbg: click Back, got coins', gotCoins, 'in clicks:', config.msgClicks);
       config.gotCoins = 0;
       config.msgClicks = 0;
-      myclick(config.currentPage.actions[0]);
+      myClick(config.currentPage.actions[0]);
     }
   } else {
     mylog('dbg: click Back');
-    myclick(config.currentPage.actions[0]);
+    myClick(config.currentPage.actions[0]);
   }
 }
 
@@ -834,7 +833,8 @@ function mySend(now) {
         config.sendHeartCount = 0;
         config.initSendHeartTime = now;
         toTopFriendPage();
-      } else if (sendHearts(config.img)) { // end
+      // } else if (sendHearts(config.img)) { // end
+      } else if (taskSendHearts()) { // end
         state = 23;
         var s = (Date.now() - config.initSendHeartTime)/1000;
         mylog('dbg:send heart time(s):', s, 'hearts:',
@@ -847,8 +847,8 @@ function mySend(now) {
     case 'PackagePage':
     case 'ReceiveGiftHeart':
     case 'ReceiveGiftOther':
-      myclick(config.currentPage.actions[1]); // OK/delete
-      sleep(config.animationMS);
+      myClick(config.currentPage.actions[1]); // OK/delete
+      longSleep(config.animationMS);
       break;
     default:
       mylog('dbg: invalid logic');
@@ -868,15 +868,15 @@ function myPlay(now) {
       break;
     case 'FriendPage':
       mylog('dbg: click play button');
-      myclick(config.currentPage.actions[1]); // Play
-      sleep(config.animationMS);
+      myClick(config.currentPage.actions[1]); // Play
+      longSleep(config.animationMS);
       break;
     case 'ChooseBonusItem':
       var bonusState = getBonusState(config.img);
       if (clickBonus(bonusState) == 0) {
         mylog('dbg: bonus OK, click Start');
-        myclick(config.currentPage.actions[1]);
-        sleep(time.animationMS);
+        myClick(config.currentPage.actions[1]);
+        longSleep(time.animationMS);
         config.initPlayTime = now;
         config.state = 31;
       }
@@ -891,7 +891,7 @@ function myPlay(now) {
       }
       config.runTimes++;
       if (checkSkillON(img)) {
-        myclick(currentPage.actions[1]); // click MyTsum to use skill
+        myClick(currentPage.actions[1]); // click MyTsum to use skill
         longSleep(config.skillPlayMS);
       } else {
         board = scanBoard(img);
@@ -900,10 +900,10 @@ function myPlay(now) {
           clickLinks(paths);
         } else {
           // TODO: find bubbles, click bubbles, keep at most 2 bubbles.
-          myclick(currentPage.actions[2]); // click Fan
-          sleep(config.animationMS);
-          myclick(currentPage.actions[2]); // click Fan
-          sleep(config.animationMS);
+          myClick(currentPage.actions[2]); // click Fan
+          longSleep(config.animationMS);
+          myClick(currentPage.actions[2]); // click Fan
+          longSleep(config.animationMS);
         }
       }
       break;
@@ -915,14 +915,14 @@ function myPlay(now) {
         config.nextPlayTime = config.initPlayTime + config.autoPlayMin * 60 * 1000;
       }
       // TODO: if want to crazy play, click play
-      myclick(config.currentPage.actions[0]); // Close
-      // myclick(config.currentPage.actions[1]); // Play
-      sleep(config.animationMS);
+      myClick(config.currentPage.actions[0]); // Close
+      // myClick(config.currentPage.actions[1]); // Play
+      longSleep(config.animationMS);
       break;
     case 'GamePause':
       mylog('dbg: wait human click continue or retry');
       sleep(config.hibernateSec*1000);
-      // myclick(config.currentPage.actions[1]); // continue play
+      // myClick(config.currentPage.actions[1]); // continue play
       break;
     case 'GamePause':
     case 'PackagePage':
@@ -931,8 +931,8 @@ function myPlay(now) {
     case 'TsumsMe':
     case 'TsumsOther':
       mylog('dbg: click Back');
-      myclick(config.currentPage.actions[0]);
-      sleep(config.animationMS);
+      myClick(config.currentPage.actions[0]);
+      longSleep(config.animationMS);
       break;
     default:
       mylog('dbg: invalid logic');
@@ -1318,17 +1318,6 @@ function toTopFriendPage() {
   moveTo(xy.x, 350000, 100);
   tapUp(xy.x, 350000, 100);
   longSleep(1500);
-  /*
-  mylog('dbg: adjust 1/4 grid height');
-  tapDown(xy.x, xy.y, 100);
-  var xy2 = mappingXY(config.points['HeartRed2']);
-  var y2 = xy.y-(xy2.y - xy.y)/4;
-  moveTo(xy.x, y2, 100);
-  tapUp(xy.x, y2, 100);
-  sleep(500);
-  keepImgLog('dbg:', 'f', 5);
-  mylog(time); // for stop
-  */
 }
 
 function toNextFriendPage() {
@@ -1394,6 +1383,7 @@ function clickDeltaPoint(pointName, dx, dy) {
   tap(nx, ny, config.during);
 }
 
+/* exported sendHearts */
 function sendHearts(img) { // return isEnd
   var zeroCount = 0;
   var dyGrid = config.friendGridHeight*config.resizeFactor;
@@ -1434,7 +1424,7 @@ function sendHearts(img) { // return isEnd
     //  zeroCount++;
     } else if (checkPoint(img, 'HeartRed'+i)) {
       mylog('dbg: HeartRed, i=', i);
-      myclick(config.points['HeartRed'+i]);
+      myClick(config.points['HeartRed'+i]);
       sleep(1000);
       config.sendHeartCount++;
       return false;
@@ -1457,7 +1447,70 @@ function sendHearts(img) { // return isEnd
   return true;
 }
 
-// check app on focus window, if yes, return true
+function colorOf(pointName) {
+  return {r: config.points[pointName].r, g: config.points[pointName].g,
+    b: config.points[pointName].b};
+}
+
+// return true if end of send heart process
+function taskSendHearts() { // use r2studio official algorithm
+  var hfx = config.points['outSendHeartFrom'].x;
+  var hfy = config.points['outSendHeartFrom'].y;
+  var hty = config.points['outSendHeartTo'].y;
+  var heartsPos = [];
+  var isOk = isSameColor(colorOf['outReceiveOk'],
+      getColor(config.img, config.points['outReceiveOk']), 40);
+
+  // scan red heart per 8 point vertically, if found shift vertial 140 points
+  for (var y = hfy; y <= hty; y += 8) {
+    var isHs = isSameColor(colorOf['outSendHeart0'],
+        getColor(config.img, {x: hfx, y: y}), 40);
+    if (isHs) {
+      heartsPos.push({x: hfx, y: y});
+      y += 140;
+    }
+  }
+
+  // check if first heart is zero score
+  var isZero = true;
+  var fx = config.points['outFriendScoreFrom'].x;
+  var tx = config.points['outFriendScoreTo'].x;
+  // TODO: if first heart is on edge, use next heart to calculate score location
+  var sy = (heartsPos.length == 0) ? config.points['outFriendScoreFrom'].y :
+    (heartsPos[0].y + 35);
+  for (var px = fx; px <= tx; px += 20) {
+    isZero = isSameColor(colorOf['outFriendScoreFrom'],
+        getColor(config.img, {x: px, y: sy}), 40);
+    if (!isZero) {
+      break;
+    }
+  }
+
+  var isNotEnd = isSameColor(colorOf['outSendHeartEnd'],
+      getColor(config.img, config.points['outSendHeartEnd']), 40);
+  var isEnd2 = isSameColor(colorOf['outSendHeartEnd2'],
+      getColor(config.img, config.points['outSendHeartEnd2']), 40);
+  var isEnd3 = isSameColor(colorOf['outSendHeartEnd3'],
+      getColor(config.img, config.points['outSendHeartEnd3']), 40);
+  var isEnd = (!isNotEnd && isEnd2 && isEnd3);
+
+  mylog('dbg: heartCount=', heartsPos.length);
+
+  if (isOk && heartsPos.length == 0) {
+    myClick(config.points['outReceiveOk']); // why ?
+  }
+  if ((heartsPos.length == 0 && isEnd) || (isZero && heartsPos.length != 0)) {
+    return true;
+  }
+  if (heartPos.length > 0) {
+    myClick(heartPos[0]);
+    longSleep(config.animationMS);
+    return false;
+  }
+  toNextFriendPage();
+  return false;
+}
+
 function chkAppOn(now) {
   if (now > config.nextChkAppOnTime) {
     var packageName='';
@@ -1508,7 +1561,7 @@ function oneClickPage(now) {
       }
       break;
     case 1:
-      myclick(config.currentPage.actions[0]);
+      myClick(config.currentPage.actions[0]);
       if (config.currentPage.name == 'Received') {
         // keepImgLog('dbg:', 'r', 4);
         mylog('dbg: click received');
@@ -1517,15 +1570,15 @@ function oneClickPage(now) {
             'in clicks:', config.msgClicks);
         config.nextRecvTime = now + 60 * 1000; // check next minute
       }
-      sleep(config.animationMS);
+      longSleep(config.animationMS);
       break;
     case 2:
       switch (config.currentPage.name) {
         case 'RootDetection':
           if (config.isPermitRootScan) {
             mylog('dbg: click permit');
-            myclick(config.currentPage.actions[1]);
-            sleep(config.animationMS);
+            myClick(config.currentPage.actions[1]);
+            longSleep(config.animationMS);
           } else {
             mylog('dbg: wait human action');
             longSleep(config.hibernateSec*1000);
@@ -1612,8 +1665,8 @@ function start(params) {
        (config.currentPage.name == 'FriendPage'||
        config.currentPage.name == 'ChooseBonusItem')) {
       mylog('dbg: Recv');
-      myclick(config.points['Mail']);
-      sleep(config.animationMS);
+      myClick(config.points['Mail']);
+      longSleep(config.animationMS);
     } else if (now > config.nextSendTime) {
       mySend(now);
     } else if (now > config.nextPlayTime) {
