@@ -3,10 +3,10 @@
 var config = {
   // UI options NOTE: keep the same order with settings.js and setupUIOptions()
   isLangZhTW: false,
-  isRecvGift: false,
+  isRecvGift: true,
   isSendHeart: true,
   sendHeartMin: 30, // send heart period
-  isPlay: false,
+  isPlay: true,
   autoPlayMin: 24*60, // auto play period
   skillPlayMS: 1000,
   debug: false,
@@ -92,14 +92,16 @@ var config = {
     'Bonus5to4': {x: 351, y: 1127, r: 49, g: 121, b: 206}, // blue 32
     'Close1': {x: 540, y: 1329, r: 247, g: 190, b: 16}, // yellow Close of PackageInfo
     'Close2': {x: 550, y: 1581, r: 238, g: 187, b: 10}, // yellow Close of MailBoxNoMessage
-    'Close3': {x: 382, y: 1612, r: 239, g: 182, b: 8}, // yellow Close of OptionsPage
+    'Close3': {x: 563, y: 1581, r: 247, g: 194, b: 8}, // yellow Close of Login Bonus page
+    'Close4': {x: 382, y: 1612, r: 239, g: 182, b: 8}, // yellow Close of OptionsPage
     'SkillOn1': {x: 137, y: 1555, r: 255, g: 255, b: 247}, // white MyTsum button 11 clock part
     'SkillOn2': {x: 137, y: 1555, r: 247, g: 219, b: 25}, // light yellow to dark MyTsum button 11 clock part
+    'HeartWhite1': {x: 910, y: 689, r: 253, g: 253, b: 253}, // white first heart on friend page
     'HeartYellow1': {x: 910, y: 689, r: 239, g: 189, b: 16}, // yellow first heart on friend page
     'HeartRed1': {x: 910, y: 689, r: 255, g: 105, b: 140}, // red first heart on friend page
+    'ZeroScore1': {x: 550, y: 689, r: 49, g: 85, b: 140}, // blue zero score of 1st
     'HeartBlue1': {x: 910, y: 689, r: 41, g: 69, b: 115}, // blue first heart on friend page
     'HeartEnd1': {x: 550, y: 689, r: 33, g: 117, b: 197}, // 1st light blue frame of heart
-    'ZeroScore1': {x: 550, y: 689+196/3, r: 55, g: 93, b: 140}, // blue zero score of 1st
 
     'outReceiveOk': {x: 835, y: 1092, r: 236, g: 175, b: 6}, // dark yellow ? left of send heart button
     'outSendHeartFrom': {x: 910, y: 562},
@@ -108,8 +110,10 @@ var config = {
     'outSendHeart02': {x: 910, y: 698, r: 3, g: 65, b: 140}, // dark blue center of send heart button
     'outFriendScoreFrom': {x: 550, y: 935, r: 55, g: 93, b: 140}, // dark blue left of score number
     'outFriendScoreTo': {x: 760, y: 935}, // right of score number before last digit
-    'outSendHeartEnd': {x: 227, y: 1262, r: 44, g: 78, b: 123}, // dark blue on ranking?
-    'outSendHeartEnd2': {x: 316, y: 1224, r: 55, g: 91, b: 139}, // dark blue on portrait icon?
+    // 'outSendHeartEnd': {x: 227, y: 1262, r: 44, g: 78, b: 123}, // dark blue on ranking?
+    // 'outSendHeartEnd2': {x: 316, y: 1224, r: 55, g: 91, b: 139}, // dark blue on portrait icon?
+    'outSendHeartEnd': {x: 173, y: 1266, r: 44, g: 78, b: 123}, // dark blue on ranking?
+    'outSendHeartEnd2': {x: 316, y: 1266, r: 55, g: 91, b: 139}, // dark blue on portrait icon?
     'outSendHeartEnd3': {x: 328, y: 1266, r: 47, g: 85, b: 132}, //  dark blue on name?
   },
 
@@ -342,7 +346,7 @@ var config = {
   }, {
     name: 'ChooseBonusItem',
     colors: [
-      {x: 153, y: 380, r: 222, g: 61, b: 148, match: true, threshold: 60}, // first red heart
+      // {x: 153, y: 380, r: 222, g: 61, b: 148, match: true, threshold: 60}, // first red heart, not work on 5th years
       {x: 859, y: 380, r: 239, g: 174, b: 8, match: true, threshold: 60}, // message box
       {x: 545, y: 469, r: 255, g: 255, b: 255, match: true, threshold: 60}, // Bonus Items white title
       {x: 179, y: 1580, r: 247, g: 190, b: 16, match: true, threshold: 60}, // yellow Back button
@@ -596,7 +600,6 @@ function checkPoint(img, pointName) {
   return (diff < 60);
 };
 
-/* exported isSameColor TODO:remove */
 function isSameColor(c1, c2, diff) {
   if (diff == undefined) {
     diff = 20;
@@ -721,10 +724,10 @@ function clickUnknown() {
     mylog('dbg: out of game');
     return;
   }
-  // whyNotPage(img, 'ChooseBonusItem');
+  whyNotPage(config.img, 'ChooseBonusItem');
 
   mylog('dbg: try click yellow button if found');
-  var buttons = ['Close1', 'Close2', 'Close3'];
+  var buttons = ['Close4', 'Close3', 'Close2', 'Close1'];
   for (var i in buttons) {
     if (checkPoint(config.img, buttons[i])) {
       mylog('dbg: click Close'+(i+1), buttons[i]);
@@ -837,17 +840,23 @@ function mySend(now) {
       } else if (taskSendHearts()) { // end
         state = 23;
         var s = (Date.now() - config.initSendHeartTime)/1000;
-        mylog('dbg:send heart time(s):', s, 'hearts:',
-            config.sendHeartCount, 'avg/min=',
-            config.sendHeartCount / s * 60);
         config.nextSendTime = config.initSendHeartTime +
               config.sendHeartMin * 60* 1000;
+        mylog('dbg:send heart time(s):', s, 'hearts:',
+            config.sendHeartCount, 'avg/min=', config.sendHeartCount / s * 60,
+            'nextSendTime=', new Date(config.nextSendTime));
       }
       break;
     case 'PackagePage':
     case 'ReceiveGiftHeart':
     case 'ReceiveGiftOther':
       myClick(config.currentPage.actions[1]); // OK/delete
+      longSleep(config.animationMS);
+      break;
+    case 'ChooseBonusItem':
+    case 'ScorePage':
+    case 'GamePause': // TODO: require human ?
+      myClick(config.currentPage.actions[0]); // back
       longSleep(config.animationMS);
       break;
     default:
@@ -876,7 +885,7 @@ function myPlay(now) {
       if (clickBonus(bonusState) == 0) {
         mylog('dbg: bonus OK, click Start');
         myClick(config.currentPage.actions[1]);
-        longSleep(time.animationMS);
+        longSleep(config.animationMS);
         config.initPlayTime = now;
         config.state = 31;
       }
@@ -890,19 +899,19 @@ function myPlay(now) {
         config.state = 32;
       }
       config.runTimes++;
-      if (checkSkillON(img)) {
-        myClick(currentPage.actions[1]); // click MyTsum to use skill
+      if (checkSkillON(config.img)) {
+        myClick(config.currentPage.actions[1]); // click MyTsum to use skill
         longSleep(config.skillPlayMS);
       } else {
-        board = scanBoard(img);
+        board = scanBoard(config.img);
         var paths = calculatePaths(board);
         if (paths.length > 3) {
           clickLinks(paths);
         } else {
           // TODO: find bubbles, click bubbles, keep at most 2 bubbles.
-          myClick(currentPage.actions[2]); // click Fan
+          myClick(config.currentPage.actions[2]); // click Fan
           longSleep(config.animationMS);
-          myClick(currentPage.actions[2]); // click Fan
+          myClick(config.currentPage.actions[2]); // click Fan
           longSleep(config.animationMS);
         }
       }
@@ -1047,7 +1056,7 @@ function findBubbles(img) {
   var hsvImg = clone(grayImg);
   convertColor(grayImg, 6); // CV_BGR2GRAY
   convertColor(hsvImg, 40); // CV_BGR2HSV
-  var points = houghCircles(mask, 3, 1, config.tsumWidth, 4, 7,
+  var points = houghCircles(grayImg, 3, 1, config.tsumWidth, 4, 7,
       config.tsumWidth/2, config.tsumWidth);
   var circleImg = 0;
   if (config.debug && (config.runTimes % config.snapCount)==0) {
@@ -1062,8 +1071,8 @@ function findBubbles(img) {
     // get 5 point avg color as
     var rgb0 = getImageColor(img, p.x, p.y);
     var hsv0 = getImageColor(hsvImg, p.x, p.y);
-    var rgbU = rgb0; var rgbD = rbg0; var rgbL = rgb0; var rgbR = rgb0;
-    var hsvU = hsv0; var hsvD = rbg0; var hsvL = hsv0; var hsvR = hsv0;
+    var rgbU = rgb0; var rgbD = rgb0; var rgbL = rgb0; var rgbR = rgb0;
+    var hsvU = hsv0; var hsvD = hsv0; var hsvL = hsv0; var hsvR = hsv0;
     if (p.y >= 1) {
       rgbU = getImageColor(img, p.x, p.y - 1);
       hsvU = getImageColor(hsvImg, p.x, p.y - 1);
@@ -1087,7 +1096,7 @@ function findBubbles(img) {
       r: (hsv0.r + hsvU.r + hsvD.r + hsvL.r + hsvR.r)/5,
       g: (hsv0.g + hsvU.g + hsvD.g + hsvL.g + hsvR.g)/5,
       b: (hsv0.b + hsvU.b + hsvD.b + hsvL.b + hsvR.b)/5};
-    mylog('dbg:', i, result);
+    mylog('dbg:', k, result);
     results.push(result);
   }
   if (config.debug && (config.runTimes % config.snapCount)==0) {
@@ -1290,26 +1299,42 @@ function scanBoard(img) {
   return board;
 };
 
+function genImgFileName(name, i) {
+  var now=Date.now();
+  var d=new Date(now);
+  if (i === undefined) {
+    return config.storagePath + '/tmp/' +
+      ('0' + d.getMinutes()).slice(-2) + ('0' + d.getSeconds()).slice(-2) +
+      '.' + ('000' + now % 1000).slice(-3) + '.' + name + '.png';
+  }
+  return config.storagePath + '/tmp/' +
+    ('0' + d.getMinutes()).slice(-2) + ('0' + d.getSeconds()).slice(-2) +
+    '.' + ('000' + now % 1000).slice(-3) + '.' + name + '.' + i + '.png';
+}
+
+function saveImg(srcLineNo, img, name) {
+  var fileName = genImgFileName(name);
+  mylog(srcLineNo, 'saveImg:', fileName);
+  saveImage(img, fileName);
+}
+
 // keepImgLog keep count images per 0.5 seconds
 // eg. keepImgLog('dbg:','f', 2) -> mmss.sss.name.1.png, mmss.sss.name.2.png
 /* exported keepImgLog */
 function keepImgLog(srcLineNo, name, count) {
   for (var i=1; i<=count; i++) {
-    var now=Date.now();
-    var d=new Date(now);
-    var filename= config.storagePath + '/tmp/' +
-      ('0' + d.getMinutes()).slice(-2) + ('0' + d.getSeconds()).slice(-2) +
-      '.' + ('000' + now % 1000).slice(-3) + '.' + name + '.' + i + '.png';
+    var filename = genImgFileName(name, i);
     var img = getScreenshotModify(0, 0, config.appWidth, config.appHeight,
         config.resizeAppWidth, config.resizeAppHeight, config.imageQuality);
-    saveImage(img, filename);
     mylog(srcLineNo, 'keepImgLog:', filename);
+    saveImage(img, filename);
     if (count > 1) {
       sleep(500);
     }
   }
 }
 
+/* exported toTopFriendPage */
 function toTopFriendPage() {
   mylog('dbg: to top friend page');
   var xy = mappingXY(config.points['HeartRed1']);
@@ -1322,50 +1347,85 @@ function toTopFriendPage() {
 
 function toNextFriendPage() {
   mylog('dbg: move up 4 times grid height');
-  var xy = mappingXY(config.points['HeartRed4']);
-  tapDown(xy.x, xy.y, 100);
-  var xy2 = mappingXY(config.points['HeartRed3']);
-  var dy = (xy.y-xy2.y);
-  moveTo(xy.x, xy.y-dy, 100);
-  moveTo(xy.x, xy.y-dy*2, 100);
-  moveTo(xy.x, xy.y-dy*3, 100);
-  moveTo(xy.x, xy.y-dy*3.85, 100);
-  tapUp(xy.x, xy.y-dy*3.85, 100);
-  longSleep(1000);
+  var xy = mappingXY(config.points['HeartRed1']);
+  var dy = config.friendGridHeight;
+  var y = xy.y+dy*3;
+  tapDown(xy.x, y, 100);
+  moveTo(xy.x, y, 100);
+  moveTo(xy.x, y-dy*3, 100);
+  tapUp(xy.x, y-dy*3, 100);
+  longSleep(config.animationMS);
 }
 
-// return offY if it is similar color from (x,y+dy)~(x,y+dy+offY)
+// return offY if it is similar color from (x,y+dy)~(x,y+dy-offY)
 // otherwise return -1
 // if isMatch is true, then return first match point offset
 // if isMatch is false, then return first NOT match point offset
-function chkDownPoints(pointName, dy, offY, isMatch) {
+// NOTE: dy, offY, return value are in original capture pixel unit
+function chkUpPoints(pointName, dy, offY, isMatch) {
   var pcolor = config.points[pointName];
   var rxy = mappingResizeXY(pcolor);
+  offY *= config.resizeFactor;
+  dy *= config.resizeFactor;
   for (var y=0; y<offY; y++) {
-    var pxcolor = getImageColor(config.img, rxy.x, rxy.y+dy+y);
+    var pxcolor = getImageColor(config.img, rxy.x, rxy.y+dy-y);
     var diff = myDiffColor(pcolor, pxcolor);
+    // mylog('dbg: diff=', diff, 'x=', rxy.x, 'y=', rxy.y+dy-y);
     if (isMatch) {
-      if (diff < 60) {
-        return y;
+      if (diff < 80) {
+        return y/config.resizeFactor;
       }
     } else {
-      if (diff >= 60) {
-        return y;
+      if (diff >= 80) {
+        return y/config.resizeFactor;
       }
     }
   }
   return -1;
 }
 
-// return true, if it is similar color from (x,y+dy)~(x-offX,y+dy)
-/* exported chkLeftColorLine */
-function chkLeftColorLine(pointName, dy, offX) {
+// return offY if it is similar color from (x,y+dy)~(x,y+dy+offY)
+// otherwise return -1
+// if isMatch is true, then return first match point offset
+// if isMatch is false, then return first NOT match point offset
+// NOTE: dy, offY, return value are in original capture pixel unit
+function chkDownPoints(pointName, dy, offY, isMatch) {
   var pcolor = config.points[pointName];
   var rxy = mappingResizeXY(pcolor);
-  for (var x=0; x<offX; x++) {
-    var pxcolor = getImageColor(config.img, rxy.x-x, rxy.y+dy);
+  offY *= config.resizeFactor;
+  dy *= config.resizeFactor;
+  for (var y=0; y<offY; y++) {
+    var pxcolor = getImageColor(config.img, rxy.x, rxy.y+dy+y);
     var diff = myDiffColor(pcolor, pxcolor);
-    if (diff > 60) {
+    // mylog('dbg: diff=', diff, 'x=', rxy.x, 'y=', rxy.y+dy+y);
+    if (isMatch) {
+      if (diff < 80) {
+        // mylog('dbg: y=', y, 'config.resizeFactor=', config.resizeFactor);
+        return y/config.resizeFactor;
+      }
+    } else {
+      if (diff >= 80) {
+        return y/config.resizeFactor;
+      }
+    }
+  }
+  return -1;
+}
+
+// return true, if it is similar color from (x+dx,y+dy)~(x+dx-offX,y+dy)
+// NOTE: dy, offX, return value are in original capture pixel unit
+/* exported chkLeftColorLine */
+function chkLeftColorLine(pointName, dx, dy, offX) {
+  var pcolor = config.points[pointName];
+  var rxy = mappingResizeXY(pcolor);
+  dx *= config.resizeFactor;
+  dy *= config.resizeFactor;
+  offX *= config.resizeFactor;
+  for (var x=0; x<offX; x++) {
+    // mylog('dbg: chkLeftColorLine', rxy.x+dx-x, rxy.y+dy, dx, dy);
+    var pxcolor = getImageColor(config.img, rxy.x+dx-x, rxy.y+dy);
+    var diff = myDiffColor(pcolor, pxcolor);
+    if (diff > 80) {
       return false;
     }
   }
@@ -1376,44 +1436,86 @@ function chkLeftColorLine(pointName, dy, offX) {
 /* exported clickDeltaPoint */
 function clickDeltaPoint(pointName, dx, dy) {
   var pcolor = config.points[pointName];
-  var nx = Math.round((pcolor.x + dx/config.resizeFactor) *
-    config.appWidthRatio);
-  var ny = Math.round((pcolor.y + dy/config.resizeFactor) *
-    config.appHeightRatio);
+  var nx = Math.round((pcolor.x + dx) * config.appWidthRatio);
+  var ny = Math.round((pcolor.y + dy) * config.appHeightRatio);
   tap(nx, ny, config.during);
 }
 
 /* exported sendHearts */
 function sendHearts(img) { // return isEnd
   var zeroCount = 0;
-  var dyGrid = config.friendGridHeight*config.resizeFactor;
-  var offY = dyGrid/3;
-  var offX = dyGrid;
+  var dyGrid = config.friendGridHeight;
+  var scanY = dyGrid/2;
+  var scanX = dyGrid/2;
+  var scoreDx = -config.friendGridHeight*3/4;
+  var scoreDy = config.friendGridHeight/3;
   var redDy = [];
+  var ansImg=clone(img);
+  var circles = findBubbles(img);
+  mylog('dbg: found circles', circles.length);
+  drawCircle(ansImg, (config.points['HeartWhite1'].x-scanX)*config.resizeFactor,
+      (config.points['HeartWhite1'].y)*config.resizeFactor,
+      4, 255, 0, 0, 0); // draw red circle
+  drawCircle(ansImg, (config.points['HeartWhite1'].x-scanX)*config.resizeFactor,
+      (config.points['HeartWhite1'].y-dyGrid)*config.resizeFactor,
+      4, 255, 0, 0, 0); // draw red circle
+  var baseDy = chkUpPoints('HeartWhite1', 0, dyGrid, true);
+  if (baseDy<0) {
+    mylog('dbg: impossible, baseDy=', baseDy);
+    return true;
+  }
+  drawCircle(ansImg, (config.points['HeartWhite1'].x)*config.resizeFactor,
+      (config.points['HeartWhite1'].y-baseDy)*config.resizeFactor,
+      4, 255, 0, 0, 0); // draw red circle
   for (var i=0; i <4; i++) {
-    dy = chkDownPoints('HeartYellow1', i*dyGrid, offY, true);
+    // scan between 1/4~3/4 grid height
+    var gridOff = (i+0.25)*dyGrid-baseDy;
+    dy = chkDownPoints('HeartYellow1', gridOff, scanY, true);
     mylog('dbg: yellow i=', i, 'dy=', dy);
     if (dy>=0) {
       continue; // skip self
     }
-    dy = chkDownPoints('HeartRed1', i*dyGrid, offY, true);
-    mylog('dbg: red i=', i, 'dy=', dy);
-    if (dy >= 0) {
-      if (chkLeftColorLine('HeartRed1', i*dyGrid+dy, offX)) {
+    drawCircle(ansImg, (config.points['HeartWhite1'].x-10)*config.resizeFactor,
+        (config.points['HeartWhite1'].y+gridOff)*config.resizeFactor,
+        2, 0, 255, 0, 0); // draw green circle
+    drawCircle(ansImg, (config.points['HeartWhite1'].x-20)*config.resizeFactor,
+        (config.points['HeartWhite1'].y+gridOff+scanY)*config.resizeFactor,
+        2, 0, 0, 255, 0); // draw green circle
+    dy = chkDownPoints('HeartRed1', gridOff, scanY, true);
+    var upDy = chkUpPoints('HeartRed1', gridOff, scanY, false);
+    mylog('dbg: red i=', i, 'dy=', dy, 'upDy=', upDy, 'dy+upDy=', upDy+dy);
+    if (dy <= 0 && upDy > 0) {
+      if (upDy > 0) {
+        mylog('dbg: use -upDy', -upDy);
+        dy = -upDy;
+      }
+    }
+    if (dy >= 0 || upDy != -1) {
+      drawCircle(ansImg, (config.points['HeartWhite1'].x+scoreDx)*config.resizeFactor,
+          (config.points['HeartWhite1'].y+gridOff+dy+scoreDy)*config.resizeFactor,
+          2, 255, 255, 0, 0); // draw green circle
+      drawCircle(ansImg, (config.points['HeartWhite1'].x+scoreDx-scanX)*config.resizeFactor,
+          (config.points['HeartWhite1'].y+gridOff+dy+scoreDy)*config.resizeFactor,
+          2, 255, 0, 255, 0); // draw purple circle
+      mylog('dbg: gridOff', gridOff, 'dy', dy, 'scoreDy', scoreDy);
+      if (chkLeftColorLine('ZeroScore1', scoreDx, gridOff+dy+scoreDy, scanX)) {
         zeroCount++;
-        mylog('dbg: zerocount', zerocount);
+        mylog('dbg: zeroCount', zeroCount);
       } else {
-        redDy.push(Math.round(i*dyGrid+dy));
+        drawCircle(ansImg, config.points['HeartWhite1'].x*config.resizeFactor,
+            config.resizeFactor*(config.points['HeartWhite1'].y+(gridOff+dy)),
+            4, 255, 255, 255, 0); // draw white circle
+        redDy.push(Math.round(gridOff+dy));
       }
       continue;
     }
-    dy = chkDownPoints('HeartBlue1', i*dyGrid, offY, false);
+    dy = chkDownPoints('HeartBlue1', gridOff, scanY, false);
     mylog('dbg: blue i=', i, 'dy=', dy);
     if (dy < 0) {
       zeroCount++;
       continue;
     }
-    dy = chkDownPoints('HeartEnd1', i*dyGrid, offY, true);
+    dy = chkDownPoints('HeartEnd1', gridOff, scanY, true);
     mylog('dbg: end i=', i, 'dy=', dy);
     /*
     if (chkDownPoints('HeartYellow1')'
@@ -1424,7 +1526,7 @@ function sendHearts(img) { // return isEnd
     //  zeroCount++;
     } else if (checkPoint(img, 'HeartRed'+i)) {
       mylog('dbg: HeartRed, i=', i);
-      myClick(config.points['HeartRed'+i]);
+      myclick(config.points['HeartRed'+i]);
       sleep(1000);
       config.sendHeartCount++;
       return false;
@@ -1433,11 +1535,15 @@ function sendHearts(img) { // return isEnd
     }
     */
   }
+  saveImg('dbg:', config.img, 'sendHearts0');
+  saveImg('dbg:', ansImg, 'sendHearts');
+  releaseImage(ansImg);
   mylog('dbg: zeroCount=', zeroCount, 'redDy=', redDy);
   longSleep(config.hibernateSec*1000);
   if (redDy.length > 0) {
     return false;
   }
+  return false;
   if (zeroCount == 0) {
     mylog('dbg: toNextFriendPage');
     toNextFriendPage();
@@ -1454,23 +1560,29 @@ function colorOf(pointName) {
 
 // return true if end of send heart process
 function taskSendHearts() { // use r2studio official algorithm
+  mylog('dbg:');
   var hfx = config.points['outSendHeartFrom'].x;
+  mylog('dbg:');
   var hfy = config.points['outSendHeartFrom'].y;
+  mylog('dbg:');
   var hty = config.points['outSendHeartTo'].y;
+  mylog('dbg:');
   var heartsPos = [];
-  var isOk = isSameColor(colorOf['outReceiveOk'],
+  mylog('dbg:');
+  var isOk = isSameColor(colorOf('outReceiveOk'),
       getColor(config.img, config.points['outReceiveOk']), 40);
 
+  mylog('dbg:');
   // scan red heart per 8 point vertically, if found shift vertial 140 points
   for (var y = hfy; y <= hty; y += 8) {
-    var isHs = isSameColor(colorOf['outSendHeart0'],
+    var isHs = isSameColor(colorOf('outSendHeart0'),
         getColor(config.img, {x: hfx, y: y}), 40);
     if (isHs) {
       heartsPos.push({x: hfx, y: y});
       y += 140;
     }
   }
-
+  mylog('dbg:');
   // check if first heart is zero score
   var isZero = true;
   var fx = config.points['outFriendScoreFrom'].x;
@@ -1479,38 +1591,50 @@ function taskSendHearts() { // use r2studio official algorithm
   var sy = (heartsPos.length == 0) ? config.points['outFriendScoreFrom'].y :
     (heartsPos[0].y + 35);
   for (var px = fx; px <= tx; px += 20) {
-    isZero = isSameColor(colorOf['outFriendScoreFrom'],
+    isZero = isSameColor(colorOf('outFriendScoreFrom'),
         getColor(config.img, {x: px, y: sy}), 40);
     if (!isZero) {
       break;
     }
   }
 
-  var isNotEnd = isSameColor(colorOf['outSendHeartEnd'],
+  mylog('dbg:');
+  // var isNotEnd = isSameColor(colorOf('outSendHeartEnd'),
+  //    getColor(config.img, config.points['outSendHeartEnd']), 40);
+  var isEnd1 = isSameColor(colorOf('outSendHeartEnd'),
       getColor(config.img, config.points['outSendHeartEnd']), 40);
-  var isEnd2 = isSameColor(colorOf['outSendHeartEnd2'],
+  var isEnd2 = isSameColor(colorOf('outSendHeartEnd2'),
       getColor(config.img, config.points['outSendHeartEnd2']), 40);
-  var isEnd3 = isSameColor(colorOf['outSendHeartEnd3'],
+  var isEnd3 = isSameColor(colorOf('outSendHeartEnd3'),
       getColor(config.img, config.points['outSendHeartEnd3']), 40);
-  var isEnd = (!isNotEnd && isEnd2 && isEnd3);
+  // var isEnd = (!isNotEnd && isEnd2 && isEnd3);
+  var isEnd = (isEnd1 && isEnd2 && isEnd3);
 
+  mylog('dbg: isEnd1=', isEnd1, 'isEnd2=', isEnd2, 'isEnd3=', isEnd3,
+      'isEnd=', isEnd);
   mylog('dbg: heartCount=', heartsPos.length);
 
   if (isOk && heartsPos.length == 0) {
     myClick(config.points['outReceiveOk']); // why ?
   }
+  mylog('dbg:');
   if ((heartsPos.length == 0 && isEnd) || (isZero && heartsPos.length != 0)) {
+    mylog('dbg:');
     return true;
   }
-  if (heartPos.length > 0) {
-    myClick(heartPos[0]);
+  mylog('dbg:');
+  if (heartsPos.length > 0) {
+    myClick(heartsPos[0]);
     longSleep(config.animationMS);
+    mylog('dbg: len', heartsPos.length);
     return false;
   }
+  mylog('dbg:');
   toNextFriendPage();
   return false;
 }
 
+// check app on focus window, if yes, return true
 function chkAppOn(now) {
   if (now > config.nextChkAppOnTime) {
     var packageName='';
