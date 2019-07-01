@@ -1,12 +1,14 @@
 #!/bin/bash
 set -ex
-RUN_TIME=$((5*60))
+RUN_TIME=$((30))
 PACKAGE_NAME=com.linecorp.LGTMTMG
 ACTIVITY_NAME=.TsumTsum
 TEST_LOG=test.log
 STORAGE_PATH=/sdcard/Robotmon
 RUN_SCRIPT_TIME=${RUN_TIME}s
 APP_START_TIME=5
+IS_STOP=0 # 1 for stop, 0 for skiip stop app
+
 if [[ -z "$IP" ]]; then
   IP=$(ip r|grep default| cut -d' ' -f3)
 fi
@@ -22,6 +24,9 @@ if ! ping -c 1 "$IP"; then
 fi
 mystop() {
   pkill rbmcmd || true
+  if [[ $IS_STOP -eq 0 ]]; then
+    return
+  fi
   if adb shell am force-stop $PACKAGE_NAME; then
     sleep 1
   fi
