@@ -1,6 +1,6 @@
 #!/bin/bash
 set -ex
-RUN_TIME=$((90))
+RUN_TIME=$((120))
 PACKAGE_NAME=com.linecorp.LGTMTMG
 ACTIVITY_NAME=.TsumTsum
 TEST_LOG=test.log
