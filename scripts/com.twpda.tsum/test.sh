@@ -23,10 +23,10 @@ if ! ping -c 1 "$IP"; then
   exit 1
 fi
 mystop() {
-  pkill rbmcmd || true
   if [[ $IS_STOP -eq 0 ]]; then
     return
   fi
+  pkill rbmcmd || true
   if adb shell am force-stop $PACKAGE_NAME; then
     sleep 1
   fi
@@ -71,7 +71,6 @@ rm -rf tmp/*
 adb pull -a $STORAGE_PATH/tmp .
 gthumb tmp&
 mystop
-pkill rbmcmd || true
 
 echo "done"
 # vim:et sw=2 ts=2 ai nocp sta

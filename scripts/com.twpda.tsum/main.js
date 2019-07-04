@@ -1605,7 +1605,7 @@ function taskSendHearts() { // use r2studio official algorithm
       break; ;
     }
   }
-  mylog('dbg: heartCount=', heartsPos.length, 'isEnd=', isEnd);
+  // mylog('dbg: heartCount=', heartsPos.length, 'isEnd=', isEnd);
 
   // if (isOk && heartsPos.length == 0) {
   //  myClick(config.points['outReceiveOk']); // why ?
@@ -1614,7 +1614,10 @@ function taskSendHearts() { // use r2studio official algorithm
   if ((heartsPos.length == 0 && isEnd) || (isZero && heartsPos.length != 0)) {
     config.endSendCount++;
     if (config.endSendCount > 2) {
-      keepImgLog('dbg:', 'sendend', 1);
+      // keepImgLog('dbg:', 'sendend', 1);
+      if (config.isRecvGift) {
+        config.nextRecvTime = now;
+      }
       return true;
     }
     mylog('dbg: to next page, endSendCount=', config.endSendCount);
@@ -1626,10 +1629,10 @@ function taskSendHearts() { // use r2studio official algorithm
   if (heartsPos.length > 0) {
     myClick(heartsPos[0]);
     longSleep(config.animationMS);
-    mylog('dbg: len', heartsPos.length);
+    // mylog('dbg: len', heartsPos.length);
     return false;
   }
-  mylog('dbg:');
+  // mylog('dbg:');
   toNextFriendPage();
   return false;
 }
