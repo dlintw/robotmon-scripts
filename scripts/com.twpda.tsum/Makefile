@@ -50,3 +50,5 @@ test2: all
 	cp index.js index2.js
 	echo "testMain();" >> index2.js
 	./test.sh
+reset:
+	rbmcmd $$IP:8081 reset

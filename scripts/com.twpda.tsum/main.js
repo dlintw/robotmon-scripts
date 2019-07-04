@@ -6,7 +6,7 @@ var config = {
   isRecvGift: true,
   isSendHeart: true,
   sendHeartMin: 30, // send heart period
-  isPlay: true,
+  isPlay: false,
   autoPlayMin: 24*60, // auto play period
   skillPlayMS: 1000,
   debug: false,
@@ -77,6 +77,8 @@ var config = {
   msgClicks: 0,
   prevImg: 0,
   img: 0,
+  endSendCount: 0,
+  endRecvCount: 0,
 
   points: {
     'RedMail': {x: 964, y: 311, r: 255, g: 32, b: 41}, // red number
@@ -90,10 +92,12 @@ var config = {
     'BonusTime': {x: 799, y: 857, r: 49, g: 121, b: 206}, // blue 8
     'BonusBubble': {x: 136, y: 1127, r: 49, g: 117, b: 206}, // blue 16
     'Bonus5to4': {x: 351, y: 1127, r: 49, g: 121, b: 206}, // blue 32
-    'Close1': {x: 540, y: 1329, r: 247, g: 190, b: 16}, // yellow Close of PackageInfo
-    'Close2': {x: 550, y: 1581, r: 238, g: 187, b: 10}, // yellow Close of MailBoxNoMessage
-    'Close3': {x: 563, y: 1581, r: 247, g: 194, b: 8}, // yellow Close of Login Bonus page
-    'Close4': {x: 382, y: 1612, r: 239, g: 182, b: 8}, // yellow Close of OptionsPage
+    'Close1': {x: 645, y: 1080, r: 239, g: 174, b: 8}, // yellow Close of error code page
+    'Close2': {x: 540, y: 1329, r: 247, g: 190, b: 16}, // yellow Close of PackageInfo
+    'Close3': {x: 550, y: 1581, r: 238, g: 187, b: 10}, // yellow Close of MailBoxNoMessage
+    'Close4': {x: 563, y: 1581, r: 247, g: 194, b: 8}, // yellow Close of Login Bonus page
+    'Close5': {x: 382, y: 1612, r: 239, g: 182, b: 8}, // yellow Close of OptionsPage
+    // yellow Close of OptionsPage
     'SkillOn1': {x: 137, y: 1555, r: 255, g: 255, b: 247}, // white MyTsum button 11 clock part
     'SkillOn2': {x: 137, y: 1555, r: 247, g: 219, b: 25}, // light yellow to dark MyTsum button 11 clock part
     'HeartWhite1': {x: 910, y: 689, r: 253, g: 253, b: 253}, // white first heart on friend page
@@ -112,11 +116,12 @@ var config = {
     'outFriendScoreTo': {x: 760, y: 935}, // right of score number before last digit
     // 'outSendHeartEnd': {x: 227, y: 1262, r: 44, g: 78, b: 123}, // dark blue on ranking?
     // 'outSendHeartEnd2': {x: 316, y: 1224, r: 55, g: 91, b: 139}, // dark blue on portrait icon?
-    'outSendHeartEnd1': {x: 173, y: 1266, r: 44, g: 78, b: 123}, // dark blue on ranking?
-    'outSendHeartEnd2': {x: 173+20, y: 1266, r: 44, g: 78, b: 123}, // dark blue on ranking?
-    'outSendHeartEnd3': {x: 173+40, y: 1266, r: 44, g: 78, b: 123}, // dark blue on ranking?
-    'outSendHeartEnd4': {x: 316, y: 1266, r: 55, g: 91, b: 139}, // dark blue on portrait icon?
-    'outSendHeartEnd5': {x: 328, y: 1266, r: 47, g: 85, b: 132}, //  dark blue on name?
+    'outSendHeartEnd1': {x: 173, y: 1266, r: 44, g: 78, b: 123}, // dark blue on ranking
+    'outSendHeartEnd2': {x: 173, y: 1266+45, r: 44, g: 78, b: 123}, // dark blue on ranking
+    'outSendHeartEnd3': {x: 173, y: 1266+90, r: 44, g: 78, b: 123}, // dark blue on ranking
+    'outSendHeartEnd4': {x: 316, y: 1266, r: 55, g: 91, b: 139}, // dark blue on portrait icon
+    'outSendHeartEnd5': {x: 316, y: 1266+45, r: 55, g: 91, b: 139}, // dark blue on portrait icon
+    'outSendHeartEnd6': {x: 316, y: 1266+90, r: 55, g: 91, b: 139}, // dark blue on portrait icon
   },
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
@@ -729,7 +734,7 @@ function clickUnknown() {
   // whyNotPage(config.img, 'ChooseBonusItem');
 
   mylog('dbg: try click yellow button if found');
-  var buttons = ['Close4', 'Close3', 'Close2', 'Close1'];
+  var buttons = ['Close5', 'Close4', 'Close3', 'Close2', 'Close1'];
   for (var i in buttons) {
     if (checkPoint(config.img, buttons[i])) {
       mylog('dbg: click Close'+(i+1), buttons[i]);
@@ -827,10 +832,6 @@ function myRecv(now) {
 function mySend(now) {
   mylog('dbg: mySend');
   switch (config.currentPage.name) {
-    case 'MailBox':
-    case 'MailBoxAd':
-      myRecv(now);
-      break;
     case 'FriendPage':
       if (config.state != 21 && config.state != 22) {
         mylog('dbg: send heart begin', Date());
@@ -857,13 +858,19 @@ function mySend(now) {
       break;
     case 'ChooseBonusItem':
     case 'ScorePage':
-    case 'GamePause': // TODO: require human ?
       myClick(config.currentPage.actions[0]); // back
+      longSleep(config.animationMS);
+      break;
+    case 'GamePlay1':
+    case 'GamePlay2':
+    case 'GamePlay3':
+    case 'GamePlay4':
+      myClick(config.currentPage.actions[0]); // pause
       longSleep(config.animationMS);
       break;
     default:
       mylog('dbg: invalid logic');
-      keepImgLog('dbg:', 'send', 1);
+      keepImgLog('dbg:', 'logic', 1);
       sleep(config.hibernateSec*1000);
       config.state = 0;
       break;
@@ -873,10 +880,6 @@ function mySend(now) {
 function myPlay(now) {
   mylog('dbg: myPlay');
   switch (config.currentPage.name) {
-    case 'MailBox':
-    case 'MailBoxAd':
-      myRecv(now);
-      break;
     case 'FriendPage':
       mylog('dbg: click play button');
       myClick(config.currentPage.actions[1]); // Play
@@ -930,25 +933,6 @@ function myPlay(now) {
       // myClick(config.currentPage.actions[1]); // Play
       longSleep(config.animationMS);
       break;
-    case 'GamePause':
-      mylog('dbg: wait human click continue or retry');
-      sleep(config.hibernateSec*1000);
-      // myClick(config.currentPage.actions[1]); // continue play
-      break;
-    case 'ReceiveGiftOther':
-    case 'PackagePage':
-    case 'ReceiveGiftHeart':
-      if (config.isRecvGift) {
-        mylog('dbg: click OK');
-        myClick(config.currentPage.actions[1]);
-        longSleep(config.animationMS);
-      } else {
-        mylog('dbg: click Back');
-        myClick(config.currentPage.actions[0]);
-        longSleep(config.animationMS);
-      }
-      break;
-    case 'GamePause':
     case 'TsumsMe':
     case 'TsumsOther':
       mylog('dbg: click Back');
@@ -1364,8 +1348,8 @@ function toNextFriendPage() {
   var y = xy.y+dy*3;
   tapDown(xy.x, y, 100);
   moveTo(xy.x, y, 100);
-  moveTo(xy.x, y-dy*3, 100);
-  tapUp(xy.x, y-dy*3, 100);
+  moveTo(xy.x, y-dy*3.2, 100);
+  tapUp(xy.x, y-dy*3.2, 100);
   longSleep(config.animationMS);
 }
 
@@ -1613,31 +1597,31 @@ function taskSendHearts() { // use r2studio official algorithm
   // mylog('dbg:');
   // var isNotEnd = isSameColor(colorOf('outSendHeartEnd'),
   //    getColor(config.img, config.points['outSendHeartEnd']), 40);
-  var isEnd1 = isSameColor(colorOf('outSendHeartEnd1'),
-      getColor(config.img, config.points['outSendHeartEnd1']), 40);
-  var isEnd2 = isSameColor(colorOf('outSendHeartEnd2'),
-      getColor(config.img, config.points['outSendHeartEnd2']), 40);
-  var isEnd3 = isSameColor(colorOf('outSendHeartEnd3'),
-      getColor(config.img, config.points['outSendHeartEnd3']), 40);
-  var isEnd4 = isSameColor(colorOf('outSendHeartEnd4'),
-      getColor(config.img, config.points['outSendHeartEnd4']), 40);
-  var isEnd5 = isSameColor(colorOf('outSendHeartEnd5'),
-      getColor(config.img, config.points['outSendHeartEnd5']), 40);
-  // var isEnd = (!isNotEnd && isEnd2 && isEnd3);
-  var isEnd = (isEnd1 && isEnd2 && isEnd3 && isEnd4 && isEnd5);
-
-  mylog('dbg: isEnd1=', isEnd1, 'isEnd2=', isEnd2, 'isEnd3=', isEnd3,
-      'isEnd4=', isEnd4, 'isEnd5=', isEnd5);
-  mylog('dbg: heartCount=', heartsPos.length);
+  var isEnd = true;
+  for (var i=1; i<=9; i++) {
+    if (!isSameColor(colorOf('outSendHeartEnd'+i),
+        getColor(config.img, config.points['outSendHeartEnd'+i]), 40)) {
+      isEnd = false;
+      break; ;
+    }
+  }
+  mylog('dbg: heartCount=', heartsPos.length, 'isEnd=', isEnd);
 
   // if (isOk && heartsPos.length == 0) {
   //  myClick(config.points['outReceiveOk']); // why ?
   // }
   // mylog('dbg:');
   if ((heartsPos.length == 0 && isEnd) || (isZero && heartsPos.length != 0)) {
-    keepImgLog('dbg:', 'sendend', 1);
-    return true;
+    config.endSendCount++;
+    if (config.endSendCount > 2) {
+      keepImgLog('dbg:', 'sendend', 1);
+      return true;
+    }
+    mylog('dbg: to next page, endSendCount=', config.endSendCount);
+    toNextFriendPage();
+    return false;
   }
+  config.endSendCount = 0;
   // mylog('dbg:');
   if (heartsPos.length > 0) {
     myClick(heartsPos[0]);
@@ -1693,7 +1677,7 @@ function chkAppOn(now) {
   return config.lastAppOnStatus;
 }
 
-function oneClickPage(now) {
+function simpleClick(now) {
   switch (config.currentPage.actions.length) {
     case 0:
       if (config.currentPage.name === '') {
@@ -1706,9 +1690,15 @@ function oneClickPage(now) {
         // keepImgLog('dbg:', 'r', 4);
         mylog('dbg: click received');
       } else if (config.currentPage.name == 'MailBoxNoMessage') {
-        mylog('dbg: click back gotCoins:', config.gotCoins,
-            'in clicks:', config.msgClicks);
-        config.nextRecvTime = now + 60 * 1000; // check next minute
+        config.endRecvCount++;
+        mylog('dbg: endRecvCount', config.endRecvCount);
+        if (config.endRecvCount > 2) {
+          config.nextRecvTime = now + 60 * 1000; // check next minute
+          mylog('dbg: click back gotCoins:', config.gotCoins,
+              'in clicks:', config.msgClicks, 'nextRecvTime=',
+              new Date(config.nextRecvTime));
+          config.endRecvCount = 0;
+        }
       }
       longSleep(config.animationMS);
       break;
@@ -1723,6 +1713,38 @@ function oneClickPage(now) {
             mylog('dbg: wait human action');
             longSleep(config.hibernateSec*1000);
           }
+          break;
+        case 'MailBox':
+        case 'MailBoxAd':
+          myRecv(now);
+          break;
+        case 'ReceiveGiftOther':
+        case 'PackagePage':
+        case 'ReceiveGiftHeart':
+          if (config.isRecvGift) {
+            mylog('dbg: click OK');
+            myClick(config.currentPage.actions[1]);
+            longSleep(config.animationMS);
+          } else {
+            mylog('dbg: click Back');
+            myClick(config.currentPage.actions[0]);
+            longSleep(config.animationMS);
+          }
+          break;
+        case 'GamePause':
+          if (config.isPlay) {
+            mylog('dbg: click continue');
+            myClick(config.currentPage.actions[1]);
+            longSleep(config.animationMS);
+            if (config.initPlayTime == 0) {
+              config.initPlayTime = now;
+              config.state = 31;
+            }
+          } else {
+            mylog('dbg: click Try again');
+            myClick(config.currentPage.actions[0]);
+            longSleep(config.animationMS);
+          };
           break;
         default:
           return false;
@@ -1798,7 +1820,7 @@ function start(params) {
     config.currentPage = findPage();
     isRedMail = checkPoint(config.img, 'RedMail');
     mylog('dbg: page=', config.currentPage.name, 'isRedMail=', isRedMail);
-    if (oneClickPage(now)) {
+    if (simpleClick(now)) {
       continue;
     }
     if (now > config.nextRecvTime && isRedMail &&
@@ -1812,7 +1834,7 @@ function start(params) {
     } else if (now > config.nextPlayTime) {
       myPlay(now);
     } else if (config.currentPage.name == 'FriendPage') {
-      mylog('dbg: nothing to do nextSendTime=', new Date(config.nextSendTime),
+      mylog('dbg: nothing to do, wait nextSendTime=', new Date(config.nextSendTime),
           'nextPlayTime=', new Date(config.nextPlayTime));
       longSleep(config.hibernateSec*1000);
     } else {
