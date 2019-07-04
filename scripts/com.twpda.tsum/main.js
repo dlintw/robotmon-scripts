@@ -841,8 +841,8 @@ function mySend(now) {
         config.state = 21;
         config.sendHeartCount = 0;
         config.initSendHeartTime = now;
-        toTopFriendPage();
-      } else if (taskSendHearts(now)) { // end
+        // toTopFriendPage();
+      } else if (sendHearts(now)) { // end
         state = 23;
         var s = (Date.now() - config.initSendHeartTime)/1000;
         config.nextSendTime = config.initSendHeartTime +
@@ -1458,7 +1458,7 @@ function colorOf(pointName) {
 }
 
 // return true if end of send heart process
-function taskSendHearts(now) { // use r2studio official algorithm
+function sendHearts(now) { // use r2studio official algorithm
   var hfx = config.points['outSendHeartFrom'].x;
   var hfy = config.points['outSendHeartFrom'].y;
   var hty = config.points['outSendHeartTo'].y;
@@ -1508,7 +1508,7 @@ function taskSendHearts(now) { // use r2studio official algorithm
     if (config.endSendCount > 2) {
       // keepImgLog('dbg:', 'sendend', 1);
       mylog('dbg: end of send hearts');
-      if (config.isRecvGift) {
+      if (config.isRecvGift && config.sendHeartCount > 0) {
         mylog('dbg: force click recv mail');
         config.nextRecvTime = 0;
         myClick(config.points['Mail']);
@@ -1524,6 +1524,7 @@ function taskSendHearts(now) { // use r2studio official algorithm
   // mylog('dbg:');
   if (heartsPos.length > 0) {
     myClick(heartsPos[0]);
+    config.sendHeartCount++;
     longSleep(config.animationMS);
     // mylog('dbg: len', heartsPos.length);
     return false;
@@ -1591,7 +1592,7 @@ function simpleClick(now) {
       } else if (config.currentPage.name == 'MailBoxNoMessage') {
         config.endRecvCount++;
         mylog('dbg: endRecvCount', config.endRecvCount);
-        if (config.endRecvCount > 2) {
+        if (config.endRecvCount > 1 || config.msgClicks == 0) {
           config.nextRecvTime = now + 60 * 1000; // check next minute
           mylog('dbg: click back gotCoins:', config.gotCoins,
               'in clicks:', config.msgClicks, 'nextRecvTime=',
