@@ -117,11 +117,13 @@ var config = {
     // 'outSendHeartEnd': {x: 227, y: 1262, r: 44, g: 78, b: 123}, // dark blue on ranking?
     // 'outSendHeartEnd2': {x: 316, y: 1224, r: 55, g: 91, b: 139}, // dark blue on portrait icon?
     'outSendHeartEnd1': {x: 173, y: 1266, r: 44, g: 78, b: 123}, // dark blue on ranking
-    'outSendHeartEnd2': {x: 173, y: 1266+45, r: 44, g: 78, b: 123}, // dark blue on ranking
-    'outSendHeartEnd3': {x: 173, y: 1266+90, r: 44, g: 78, b: 123}, // dark blue on ranking
-    'outSendHeartEnd4': {x: 316, y: 1266, r: 55, g: 91, b: 139}, // dark blue on portrait icon
-    'outSendHeartEnd5': {x: 316, y: 1266+45, r: 55, g: 91, b: 139}, // dark blue on portrait icon
-    'outSendHeartEnd6': {x: 316, y: 1266+90, r: 55, g: 91, b: 139}, // dark blue on portrait icon
+    'outSendHeartEnd2': {x: 173, y: 1266+30, r: 44, g: 78, b: 123}, // dark blue on ranking
+    'outSendHeartEnd3': {x: 173, y: 1266+60, r: 44, g: 78, b: 123}, // dark blue on ranking
+    'outSendHeartEnd4': {x: 173, y: 1266+90, r: 44, g: 78, b: 123}, // dark blue on ranking
+    'outSendHeartEnd5': {x: 316, y: 1266, r: 55, g: 91, b: 139}, // dark blue on portrait icon
+    'outSendHeartEnd6': {x: 316, y: 1266+30, r: 55, g: 91, b: 139}, // dark blue on portrait icon
+    'outSendHeartEnd7': {x: 316, y: 1266+60, r: 55, g: 91, b: 139}, // dark blue on portrait icon
+    'outSendHeartEnd8': {x: 316, y: 1266+90, r: 55, g: 91, b: 139}, // dark blue on portrait icon
   },
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
@@ -611,6 +613,7 @@ function isSameColor(c1, c2, diff) {
   if (diff == undefined) {
     diff = 20;
   }
+  // mylog('dbg:');
   if (Math.abs(c1.r - c2.r) > diff) {
     return false;
   }
@@ -839,8 +842,7 @@ function mySend(now) {
         config.sendHeartCount = 0;
         config.initSendHeartTime = now;
         toTopFriendPage();
-      // } else if (sendHearts(config.img)) { // end
-      } else if (taskSendHearts()) { // end
+      } else if (taskSendHearts(now)) { // end
         state = 23;
         var s = (Date.now() - config.initSendHeartTime)/1000;
         config.nextSendTime = config.initSendHeartTime +
@@ -1014,6 +1016,7 @@ function findTsums(img) {
   for (var k in points) {
     var p = points[k];
     if (config.debug && (config.runTimes % config.snapCount)==0) {
+      mylog('dbg:');
       drawCircle(circleImg, p.x, p.y, p.r, 255, 0, 0, 0); // draw red circle
     }
     var hsv1 = getImageColor(hsvImg, p.x, p.y);
@@ -1032,6 +1035,7 @@ function findTsums(img) {
     }
     var avgb = (hsv1.b + hsv2.b + hsv3.b + hsv4.b + hsv5.b) / 5;
     var avgg = (hsv1.g + hsv2.g + hsv3.g + hsv4.g + hsv5.g) / 5;
+    mylog('dbg:');
     var avgr = (hsv1.r + hsv2.r + hsv3.r + hsv4.r + hsv5.r) / 5;
     results.push({x: p.x, y: p.y, z: p.r, b: avgb, g: avgg, r: avgr});
   }
@@ -1046,6 +1050,7 @@ function findTsums(img) {
   return results;
 }
 
+/* exported findBubbles */
 function findBubbles(img) {
   var grayImg = clone(img);
   smooth(grayImg, 2, 7); // CV_GAUSSIAN with size 7 filter
@@ -1062,6 +1067,7 @@ function findBubbles(img) {
   for (var k in points) {
     var p = points[k];
     if (config.debug && (config.runTimes % config.snapCount)==0) {
+      mylog('dbg:');
       drawCircle(circleImg, p.x, p.y, p.r, 255, 0, 0, 0); // draw red circle
     }
     // get 5 point avg color as
@@ -1085,6 +1091,7 @@ function findBubbles(img) {
       rgbR = getImageColor(img, p.x + 1, p.y);
       hsvR = getImageColor(hsvImg, p.x + 1, p.y);
     }
+    mylog('dbg:');
     var result = {x: p.x, y: p.y, z: p.r,
       r: (rgb0.r + rgbU.r + rgbD.r + rgbL.r + rgbR.r)/5,
       g: (rgb0.g + rgbU.g + rgbD.g + rgbL.g + rgbR.g)/5,
@@ -1111,6 +1118,7 @@ function distanceHSV(p1, p2) {
   // Note: here the .b, .g, .r is HSV
   var dh = Math.abs(p1.b - p2.b);
   dh = Math.min(dh, 256-dh)*2; // hue range from 0~255, after min range in 0~128
+  mylog('dbg:');
   var d = Math.sqrt(dh*dh + (p1.g-p2.g)*(p1.g-p2.g) + (p1.r-p2.r)*(p1.r-p2.r));
   if (dh < 20) {
     d -= 10;
@@ -1118,6 +1126,7 @@ function distanceHSV(p1, p2) {
   if (Math.abs(p1.g - p2.g) < 20) {
     d -= 10;
   }
+  mylog('dbg:');
   if (p1.r < 120 && p2.r < 120) {
     d -= 20;
   }
@@ -1130,6 +1139,7 @@ function classifyTsums(points) {
     return tcs;
   }
   var p = points[0];
+  mylog('dbg:');
   tcs.push({sumb: p.b, sumg: p.g, sumr: p.r, b: p.b, g: p.g, r: p.r, points: [p]});
   for (var i in points) {
     var p = points[i];
@@ -1140,6 +1150,7 @@ function classifyTsums(points) {
       if (d < 15) {
         var count = tc.points.length + 1;
         isSame = true;
+        mylog('dbg:');
         tc.sumb += p.b; tc.sumg += p.g; tc.sumr += p.r;
         tc.b = tc.sumb/count; tc.g = tc.sumg/count; tc.r = tc.sumr/count;
         tc.points.push(p);
@@ -1147,6 +1158,7 @@ function classifyTsums(points) {
       }
     }
     if (!isSame) {
+      mylog('dbg:');
       tcs.push({sumb: p.b, sumg: p.g, sumr: p.r, b: p.b, g: p.g, r: p.r, points: [p]});
     }
   }
@@ -1308,6 +1320,7 @@ function genImgFileName(name, i) {
     '.' + ('000' + now % 1000).slice(-3) + '.' + name + '.' + i + '.png';
 }
 
+/* exported saveImg */
 function saveImg(srcLineNo, img, name) {
   var fileName = genImgFileName(name);
   mylog(srcLineNo, 'saveImg:', fileName);
@@ -1358,6 +1371,7 @@ function toNextFriendPage() {
 // if isMatch is true, then return first match point offset
 // if isMatch is false, then return first NOT match point offset
 // NOTE: dy, offY, return value are in original capture pixel unit
+/* exported chkUpPoints */
 function chkUpPoints(pointName, dy, offY, isMatch) {
   var pcolor = config.points[pointName];
   var rxy = mappingResizeXY(pcolor);
@@ -1385,6 +1399,7 @@ function chkUpPoints(pointName, dy, offY, isMatch) {
 // if isMatch is true, then return first match point offset
 // if isMatch is false, then return first NOT match point offset
 // NOTE: dy, offY, return value are in original capture pixel unit
+/* exported chkDownPoints */
 function chkDownPoints(pointName, dy, offY, isMatch) {
   var pcolor = config.points[pointName];
   var rxy = mappingResizeXY(pcolor);
@@ -1437,138 +1452,18 @@ function clickDeltaPoint(pointName, dx, dy) {
   tap(nx, ny, config.during);
 }
 
-/* exported sendHearts */
-function sendHearts(img) { // return isEnd
-  var zeroCount = 0;
-  var dyGrid = config.friendGridHeight;
-  var scanY = dyGrid/2;
-  var scanX = dyGrid/2;
-  var scoreDx = -config.friendGridHeight*3/4;
-  var scoreDy = config.friendGridHeight/3;
-  var redDy = [];
-  var ansImg=clone(img);
-  var circles = findBubbles(img);
-  mylog('dbg: found circles', circles.length);
-  drawCircle(ansImg, (config.points['HeartWhite1'].x-scanX)*config.resizeFactor,
-      (config.points['HeartWhite1'].y)*config.resizeFactor,
-      4, 255, 0, 0, 0); // draw red circle
-  drawCircle(ansImg, (config.points['HeartWhite1'].x-scanX)*config.resizeFactor,
-      (config.points['HeartWhite1'].y-dyGrid)*config.resizeFactor,
-      4, 255, 0, 0, 0); // draw red circle
-  var baseDy = chkUpPoints('HeartWhite1', 0, dyGrid, true);
-  if (baseDy<0) {
-    mylog('dbg: impossible, baseDy=', baseDy);
-    return true;
-  }
-  drawCircle(ansImg, (config.points['HeartWhite1'].x)*config.resizeFactor,
-      (config.points['HeartWhite1'].y-baseDy)*config.resizeFactor,
-      4, 255, 0, 0, 0); // draw red circle
-  for (var i=0; i <4; i++) {
-    // scan between 1/4~3/4 grid height
-    var gridOff = (i+0.25)*dyGrid-baseDy;
-    dy = chkDownPoints('HeartYellow1', gridOff, scanY, true);
-    mylog('dbg: yellow i=', i, 'dy=', dy);
-    if (dy>=0) {
-      continue; // skip self
-    }
-    drawCircle(ansImg, (config.points['HeartWhite1'].x-10)*config.resizeFactor,
-        (config.points['HeartWhite1'].y+gridOff)*config.resizeFactor,
-        2, 0, 255, 0, 0); // draw green circle
-    drawCircle(ansImg, (config.points['HeartWhite1'].x-20)*config.resizeFactor,
-        (config.points['HeartWhite1'].y+gridOff+scanY)*config.resizeFactor,
-        2, 0, 0, 255, 0); // draw green circle
-    dy = chkDownPoints('HeartRed1', gridOff, scanY, true);
-    var upDy = chkUpPoints('HeartRed1', gridOff, scanY, false);
-    mylog('dbg: red i=', i, 'dy=', dy, 'upDy=', upDy, 'dy+upDy=', upDy+dy);
-    if (dy <= 0 && upDy > 0) {
-      if (upDy > 0) {
-        mylog('dbg: use -upDy', -upDy);
-        dy = -upDy;
-      }
-    }
-    if (dy >= 0 || upDy != -1) {
-      drawCircle(ansImg, (config.points['HeartWhite1'].x+scoreDx)*config.resizeFactor,
-          (config.points['HeartWhite1'].y+gridOff+dy+scoreDy)*config.resizeFactor,
-          2, 255, 255, 0, 0); // draw green circle
-      drawCircle(ansImg, (config.points['HeartWhite1'].x+scoreDx-scanX)*config.resizeFactor,
-          (config.points['HeartWhite1'].y+gridOff+dy+scoreDy)*config.resizeFactor,
-          2, 255, 0, 255, 0); // draw purple circle
-      mylog('dbg: gridOff', gridOff, 'dy', dy, 'scoreDy', scoreDy);
-      if (chkLeftColorLine('ZeroScore1', scoreDx, gridOff+dy+scoreDy, scanX)) {
-        zeroCount++;
-        mylog('dbg: zeroCount', zeroCount);
-      } else {
-        drawCircle(ansImg, config.points['HeartWhite1'].x*config.resizeFactor,
-            config.resizeFactor*(config.points['HeartWhite1'].y+(gridOff+dy)),
-            4, 255, 255, 255, 0); // draw white circle
-        redDy.push(Math.round(gridOff+dy));
-      }
-      continue;
-    }
-    dy = chkDownPoints('HeartBlue1', gridOff, scanY, false);
-    mylog('dbg: blue i=', i, 'dy=', dy);
-    if (dy < 0) {
-      zeroCount++;
-      continue;
-    }
-    dy = chkDownPoints('HeartEnd1', gridOff, scanY, true);
-    mylog('dbg: end i=', i, 'dy=', dy);
-    /*
-    if (chkDownPoints('HeartYellow1')'
-    if (checkPoint(img, 'HeartEnd'+i)) {
-      mylog('dbg: zero, i=', i);
-      zeroCount++;
-    // } else if (checkPoint(img, 'ZeroScore'+i)) {
-    //  zeroCount++;
-    } else if (checkPoint(img, 'HeartRed'+i)) {
-      mylog('dbg: HeartRed, i=', i);
-      myclick(config.points['HeartRed'+i]);
-      sleep(1000);
-      config.sendHeartCount++;
-      return false;
-    } else {
-      mylog('dbg: HeartBlue, i=', i);
-    }
-    */
-  }
-  saveImg('dbg:', config.img, 'sendHearts0');
-  saveImg('dbg:', ansImg, 'sendHearts');
-  releaseImage(ansImg);
-  mylog('dbg: zeroCount=', zeroCount, 'redDy=', redDy);
-  longSleep(config.hibernateSec*1000);
-  if (redDy.length > 0) {
-    return false;
-  }
-  return false;
-  if (zeroCount == 0) {
-    mylog('dbg: toNextFriendPage');
-    toNextFriendPage();
-    return false;
-  }
-  mylog('dbg: zeroCount', zeroCount);
-  return true;
-}
-
 function colorOf(pointName) {
   return {r: config.points[pointName].r, g: config.points[pointName].g,
     b: config.points[pointName].b};
 }
 
 // return true if end of send heart process
-function taskSendHearts() { // use r2studio official algorithm
-  // mylog('dbg:');
+function taskSendHearts(now) { // use r2studio official algorithm
   var hfx = config.points['outSendHeartFrom'].x;
-  // mylog('dbg:');
   var hfy = config.points['outSendHeartFrom'].y;
-  // mylog('dbg:');
   var hty = config.points['outSendHeartTo'].y;
-  // mylog('dbg:');
   var heartsPos = [];
-  // mylog('dbg:');
-  // var isOk = isSameColor(colorOf('outReceiveOk'),
-  //    getColor(config.img, config.points['outReceiveOk']), 40);
 
-  // mylog('dbg:');
   // scan red heart per 8 point vertically, if found shift vertial 140 points
   for (var y = hfy; y <= hty; y += 8) {
     var isHs = isSameColor(colorOf('outSendHeart0'),
@@ -1594,11 +1489,8 @@ function taskSendHearts() { // use r2studio official algorithm
     }
   }
 
-  // mylog('dbg:');
-  // var isNotEnd = isSameColor(colorOf('outSendHeartEnd'),
-  //    getColor(config.img, config.points['outSendHeartEnd']), 40);
   var isEnd = true;
-  for (var i=1; i<=9; i++) {
+  for (var i=1; i<=8; i++) {
     if (!isSameColor(colorOf('outSendHeartEnd'+i),
         getColor(config.img, config.points['outSendHeartEnd'+i]), 40)) {
       isEnd = false;
@@ -1615,8 +1507,12 @@ function taskSendHearts() { // use r2studio official algorithm
     config.endSendCount++;
     if (config.endSendCount > 2) {
       // keepImgLog('dbg:', 'sendend', 1);
+      mylog('dbg: end of send hearts');
       if (config.isRecvGift) {
-        config.nextRecvTime = now;
+        mylog('dbg: force click recv mail');
+        config.nextRecvTime = 0;
+        myClick(config.points['Mail']);
+        longSleep(config.animationMS);
       }
       return true;
     }
