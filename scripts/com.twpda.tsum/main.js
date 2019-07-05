@@ -4,8 +4,9 @@ var config = {
   // UI options NOTE: keep the same order with settings.js and setupUIOptions()
   isLangZhTW: false,
   isRecvGift: true,
+  autoRecvMin: 5, // auto Recv gift  period
   isSendHeart: true,
-  sendHeartMin: 30, // send heart period
+  autoSendMin: 30, // send heart period
   isPlay: false,
   autoPlayMin: 24*60, // auto play period
   skillPlayMS: 1000,
@@ -27,7 +28,7 @@ var config = {
   waitUnknownMS: 1000, // wait 1 second before click on unknown page
   captureMS: 50, // sleep per 0.05 second before capture screen
   testFile: '', // test file which can't assigned by UI
-  uiOptionCount: 23, // count of UI options
+  uiOptionCount: 24, // count of UI options
 
   // globals (default value at compile time)
   appName: 'com.twpda.tsum',
@@ -55,7 +56,6 @@ var config = {
   skillOnCount: 0,
   snapCount: 6,
   friendGridHeight: 196,
-  state: 0,
 
   nextChkAppOnTime: 0,
   outOfGameCount: 0,
@@ -67,13 +67,10 @@ var config = {
   nextRecvTime: 0,
   nextSendTime: 0,
   nextPlayTime: 0,
-  initSendHeartTime: 0,
+  initRecvTime: 0,
+  initSendTime: 0,
   initPlayTime: 0,
   gotCoins: 0,
-  // state could be:
-  //   init(0) ->send0(21)->send1(22)->send2(23)->maybe 0,11,31
-  //           ->play0(31)->play1(32)->play2(33)->maybe 0,11,22
-  state: 0,
   msgClicks: 0,
   prevImg: 0,
   img: 0,
@@ -486,8 +483,9 @@ function setupUIOptions(args) {
   var i=0;
   config.isLangZhTW = args[i++];
   config.isRecvGift = args[i++];
+  config.autoRecvMin = args[i++];
   config.isSendHeart = args[i++];
-  config.sendHeartMin = args[i++];
+  config.autoSendMin = args[i++];
   config.isPlay = args[i++];
   config.autoPlayMin = args[i++];
   config.skillPlayMS = args[i++];
@@ -810,6 +808,9 @@ function checkSkillON(img) {
 function myRecv(now) {
   mylog('dbg: myRecv');
   if (config.isRecvGift) {
+    if (config.initRecvTime == 0) {
+      config.initRecvTime = now;
+    }
     if (checkPoint(config.img, 'RecvFirstMail')) {
       if (checkPoint(config.img, 'FirstMailGet')) {
         config.gotCoins++;
@@ -819,11 +820,9 @@ function myRecv(now) {
       myClick(config.points['RecvFirstMail']);
       longSleep(config.animationMS);
     } else {
-      whyNotPoint(config.img, 'RecvFirstMail');
-      whyNotPoint(config.img, 'FirstMailGet');
+      // whyNotPoint(config.img, 'RecvFirstMail');
+      // whyNotPoint(config.img, 'FirstMailGet');
       mylog('dbg: click Back, got coins', gotCoins, 'in clicks:', config.msgClicks);
-      config.gotCoins = 0;
-      config.msgClicks = 0;
       myClick(config.currentPage.actions[0]);
     }
   } else {
@@ -836,20 +835,18 @@ function mySend(now) {
   mylog('dbg: mySend');
   switch (config.currentPage.name) {
     case 'FriendPage':
-      if (config.state != 21 && config.state != 22) {
-        mylog('dbg: send heart begin', Date());
-        config.state = 21;
+      if (config.initSendTime == 0) {
+        config.initSendTime = now;
         config.sendHeartCount = 0;
-        config.initSendHeartTime = now;
-        // toTopFriendPage();
-      } else if (sendHearts(now)) { // end
-        state = 23;
-        var s = (Date.now() - config.initSendHeartTime)/1000;
-        config.nextSendTime = config.initSendHeartTime +
-              config.sendHeartMin * 60* 1000;
+      }
+      if (sendHearts(now)) { // true for end
+        var s = (Date.now() - config.initSendTime)/1000;
+        config.nextSendTime = config.initSendTime +
+              config.autoSendMin * 60* 1000;
         mylog('dbg: send heart time(s):', s, 'hearts:',
             config.sendHeartCount, 'avg/min=', config.sendHeartCount / s * 60,
             'nextSendTime=', new Date(config.nextSendTime));
+        config.initSendTime = 0;
       }
       break;
     case 'PackagePage':
@@ -874,7 +871,6 @@ function mySend(now) {
       mylog('dbg: invalid logic');
       keepImgLog('dbg:', 'logic', 1);
       sleep(config.hibernateSec*1000);
-      config.state = 0;
       break;
   }
 }
@@ -1511,8 +1507,6 @@ function sendHearts(now) { // use r2studio official algorithm
       if (config.isRecvGift && config.sendHeartCount > 0) {
         mylog('dbg: force click recv mail');
         config.nextRecvTime = 0;
-        myClick(config.points['Mail']);
-        longSleep(config.animationMS);
       }
       return true;
     }
@@ -1592,11 +1586,15 @@ function simpleClick(now) {
       } else if (config.currentPage.name == 'MailBoxNoMessage') {
         config.endRecvCount++;
         mylog('dbg: endRecvCount', config.endRecvCount);
-        if (config.endRecvCount > 1 || config.msgClicks == 0) {
-          config.nextRecvTime = now + 60 * 1000; // check next minute
+        if (config.endRecvCount > 1) { // check twice
+          config.nextRecvTime = config.initSendTime + config.autoRecvMin * 60 * 1000;
           mylog('dbg: click back gotCoins:', config.gotCoins,
-              'in clicks:', config.msgClicks, 'nextRecvTime=',
-              new Date(config.nextRecvTime));
+              'in clicks:', config.msgClicks,
+            ' avg coins/min:', config.gotCoins / (config.initRecvTime - now) * 60 * 1000;
+            'nextRecvTime=', new Date(config.nextRecvTime));
+          config.initRecvTime = 0;
+          config.gotCoins = 0;
+          config.msgClicks = 0;
           config.endRecvCount = 0;
         }
       }
@@ -1723,9 +1721,9 @@ function start(params) {
     if (simpleClick(now)) {
       continue;
     }
-    if (now > config.nextRecvTime && isRedMail &&
-       (config.currentPage.name == 'FriendPage'||
-       config.currentPage.name == 'ChooseBonusItem')) {
+    if (config.isRecvGift && (config.currentPage.name == 'FriendPage'||
+       config.currentPage.name == 'ChooseBonusItem')) &&
+      (now > config.nextRecvTime || isRedMail)) {
       mylog('dbg: Recv');
       myClick(config.points['Mail']);
       longSleep(config.animationMS);
@@ -1820,8 +1818,9 @@ function testMain() {
   start([
     false, // isLangZhTW: false,
     false, // isRecvGift: false,
+    5, // autoRecvMin: 5, // recv gift period
     true, // isSendHeart: true,
-    30, // sendHeartMin: 30, // send heart period
+    30, // autoSendMin: 30, // send heart period
     false, // isPlay: false,
     24*60, // autoPlayMin: 24*60, // auto play period
     1000, // skillPlayMS: 1000,

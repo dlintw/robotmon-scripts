@@ -6,6 +6,8 @@ var uiState = [ // UI options NOTE: keep the same order with main.js
   {label: 'Switch language:English(英文)',
     labelZh: '切換語言:中文(Chinese)', value: false}, // true for zh_TW
   {label: 'Receive gift', labelZh: '收禮物', value: true},
+  {label: 'Receive gift period(Min)', labelZh: '收禮周期(分)',
+    value: 5, min: 1, max: 60, step: 1},
   {label: 'Send hearts', labelZh: '送心', value: false},
   {label: 'Send heart period(Min)', labelZh: '送心周期(分)',
     value: 30, min: 10, max: 60000, step: 10},
