@@ -1521,7 +1521,7 @@ function simpleClick(now) {
         clickUnknown();
       } else if (config.currentPage.name === 'Get30000Coins') {
         keycode('BACK', 10);
-        longSleep(config.animationMS);
+        longSleep(2000);
       }
       break;
     case 1:
