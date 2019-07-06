@@ -7,8 +7,10 @@ var config = {
   autoRecvMin: 5, // auto Recv gift  period
   isSendHeart: true,
   autoSendMin: 30, // send heart period
-  isPlay: false,
-  autoPlayMin: 24*60, // auto play period
+  isPlay: true,
+  autoPlayMin: 1, // auto play period
+  // autoPlayMin: 24*60, // auto play period
+  autoFanSec: 5, // auto fan period
   skillPlayMS: 1000,
   debug: false,
 
@@ -28,7 +30,7 @@ var config = {
   waitUnknownMS: 1000, // wait 1 second before click on unknown page
   captureMS: 50, // sleep per 0.05 second before capture screen
   testFile: '', // test file which can't assigned by UI
-  uiOptionCount: 24, // count of UI options
+  uiOptionCount: 25, // count of UI options
 
   // globals (default value at compile time)
   appName: 'com.twpda.tsum',
@@ -54,7 +56,7 @@ var config = {
     [255, 0, 255], [255, 255, 0]],
   runTimes: 0, // keep count of screenshots count
   skillOnCount: 0,
-  snapCount: 6,
+  snapCount: 1, // capture image myPlay() runtime per snapCount
   friendGridHeight: 196,
 
   nextChkAppOnTime: 0,
@@ -67,6 +69,7 @@ var config = {
   nextRecvTime: 0,
   nextSendTime: 0,
   nextPlayTime: 0,
+  nextFanTime: 0,
   initRecvTime: 0,
   initSendTime: 0,
   initPlayTime: 0,
@@ -76,6 +79,7 @@ var config = {
   img: 0,
   endSendCount: 0,
   endRecvCount: 0,
+  isPlaying: false, // when playing disable diff color check to save 0.5 ms
 
   points: {
     'RedMail': {x: 964, y: 311, r: 255, g: 32, b: 41}, // red number
@@ -97,6 +101,12 @@ var config = {
     // yellow Close of OptionsPage
     'SkillOn1': {x: 137, y: 1555, r: 255, g: 255, b: 247}, // white MyTsum button 11 clock part
     'SkillOn2': {x: 137, y: 1555, r: 247, g: 219, b: 25}, // light yellow to dark MyTsum button 11 clock part
+    'SkillOff1': {x: 137, y: 1555, r: 85, g: 112, b: 157},
+    'SkillOff2': {x: 137, y: 1555, r: 72, g: 139, b: 181},
+    'SkillOff3': {x: 137, y: 1555, r: 16, g: 73, b: 128},
+    'SkillOff4': {x: 137, y: 1555, r: 3, g: 153, b: 178},
+    // 'SkillOn1': {x: 151, y: 1560, r: 247, g: 219, b: 247}, // white MyTsum button 11 clock part
+    // 'SkillOn2': {x: 151, y: 1560, r: 247, g: 219, b: 25}, // light yellow to dark MyTsum button 11 clock part
     'HeartWhite1': {x: 910, y: 689, r: 253, g: 253, b: 253}, // white first heart on friend page
     'HeartYellow1': {x: 910, y: 689, r: 239, g: 189, b: 16}, // yellow first heart on friend page
     'HeartRed1': {x: 910, y: 689, r: 255, g: 105, b: 140}, // red first heart on friend page
@@ -124,28 +134,45 @@ var config = {
   },
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
-    // ZERO ACTIONS PAGES => just wait
-    /*
-    name: 'NetworkDisable+',
+    // check Game Play at first priority
+    name: 'GamePlay1', // blue around MyTsum
     colors: [
-      {x: 540, y: 825, r: 90, g: 57, b: 25, match: false, threshold: 60}, // yellow gift conflict with PackagePage
-      {x: 932, y: 1077, r: 232, g: 171, b: 5, match: true, threshold: 80},
-      {x: 478, y: 1080, r: 236, g: 94, b: 116, match: true, threshold: 80},
+      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
+      {x: 137, y: 1555, r: 90, g: 117, b: 164, match: true, threshold: 160}, // light blue to dark MyTsum button 11 clock part
+      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
     ],
-    actions: [], // just sleep
+    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
   }, {
-*/
+    name: 'GamePlay2', // yellow around MyTsum
+    colors: [
+      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
+      {x: 137, y: 1555, r: 247, g: 219, b: 25, match: true, threshold: 160}, // light yellow to dark MyTsum button 11 clock part
+      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
+    ],
+    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
+  }, {
+    name: 'GamePlay3', // white around MyTsum
+    colors: [
+      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
+      {x: 137, y: 1555, r: 255, g: 255, b: 247, match: true, threshold: 120}, // white MyTsum button 11 clock part
+      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
+    ],
+    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
+  }, {
+    name: 'GamePlay4', // black around MyTsum
+    colors: [
+      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
+      {x: 137, y: 1555, r: 33, g: 36, b: 33, match: true, threshold: 120}, // black MyTsum button 11 clock part
+      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
+    ],
+    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
+  }, {
     // ONE ACTIONS PAGES => always click
-    /*
-    name: 'NetworkTimeout+',
-    colors: [
-      {x: 478, y: 1080, r: 232, g: 171, b: 5, match: true, threshold: 80},
-      {x: 155, y: 1073, r: 239, g: 170, b: 8, match: true, threshold: 60}, // yellow Try Again button conflict of GamePause
-      {x: 932, y: 1077, r: 232, g: 171, b: 5, match: true, threshold: 80},
-    ],
-    actions: [{x: 885, y: 1084}], // TODO: retry?
-  }, {
-  */
+
     name: 'ChooseLanguage',
     colors: [
       {x: 777, y: 208, r: 255, g: 255, b: 255, match: true, threshold: 60}, // white Language button left edge
@@ -153,29 +180,6 @@ var config = {
       {x: 553, y: 1539, r: 247, g: 190, b: 16, match: true, threshold: 60}, // yellow to Start button's top
     ],
     actions: [{x: 553, y: 1539}],
-  }, {
-    /*
-    name: 'OptionsPage',
-    colors: [
-      {x: 550, y: 347, r: 33, g: 194, b: 230, match: true, threshold: 60}, // blue top frame
-      {x: 317, y: 441, r: 255, g: 251, b: 255, match: true, threshold: 60}, // white title
-      {x: 373, y: 1015, r: 239, g: 170, b: 8, match: true, threshold: 60}, // yellow Envents button
-      {x: 171, y: 1158, r: 239, g: 174, b: 8, match: true, threshold: 60}, // yellow Notice button
-      {x: 582, y: 1152, r: 239, g: 178, b: 8, match: true, threshold: 60}, // yellow How To Play button
-      {x: 158, y: 1301, r: 247, g: 174, b: 16, match: true, threshold: 60}, // yellow Account button
-      {x: 585, y: 1292, r: 247, g: 178, b: 8, match: true, threshold: 60}, // yellow Help button
-      {x: 382, y: 1612, r: 239, g: 182, b: 8, match: true, threshold: 60}, // yellow Close
-    ],
-    actions: [{x: 382, y: 1612}],
-  }, {
-  */
-    name: 'TodayMission+',
-    colors: [
-      {x: 540, y: 1480, r: 238, g: 181, b: 12, match: true, threshold: 80},
-      {x: 975, y: 500, r: 161, g: 224, b: 231, match: true, threshold: 80},
-      {x: 554, y: 1332, r: 24, g: 189, b: 219, match: true, threshold: 80},
-    ],
-    actions: [{x: 558, y: 1473}],
   }, {
     name: 'PackageInfo',
     colors: [
@@ -205,81 +209,26 @@ var config = {
       {x: 799, y: 1048, r: 27, g: 188, b: 217, match: true, threshold: 80},
     ],
     actions: [{x: 799, y: 716}], // Any key
-    /*
-  }, { // FriendInfo of Friend Page, SocailAccount of Setting Page
-    name: 'FriendInfo',
-    colors: [
-      {x: 565, y: 576, r: 31, g: 190, b: 220, match: true, threshold: 80},
-      {x: 540, y: 825, r: 90, g: 57, b: 25, match: false, threshold: 60}, // yellow gift conflict of PackagePage
-      {x: 155, y: 1073, r: 239, g: 170, b: 8, match: false, threshold: 60}, // yellow Try Again button conflict of GamePause
-      {x: 547, y: 1195, r: 27, g: 192, b: 222, match: true, threshold: 80},
-      {x: 554, y: 1332, r: 238, g: 186, b: 12, match: true, threshold: 80},
-    ],
-    actions: [{x: 576, y: 1408}], // TODO:?
-    */
-  }, { // LevelUp and RankUp
-    name: 'LevelUp+',
-    colors: [
-      {x: 140, y: 1656, r: 233, g: 175, b: 6, match: true, threshold: 80}, // left of the close button
-      {x: 450, y: 1656, r: 233, g: 175, b: 6, match: true, threshold: 80}, // right of the close button
-      {x: 620, y: 1656, r: 233, g: 175, b: 6, match: true, threshold: 80}, // left of the share button
-      {x: 930, y: 1656, r: 233, g: 175, b: 6, match: true, threshold: 80}, // right of the share button
-    ],
-    actions: [{x: 300, y: 1660}], // TODO:test
-    /*
-  }, { // including EventPage, MyInfo, SettingPage, others
-    name: 'ClosePage', // the close button at center bottom
-    colors: [
-      // {x: 738, y: 414, r: 240, g: 245, b: 239, match: false, threshold: 60}, // white Mail Box title (not MailBox2)
-      {x: 604, y: 1419, r: 234, g: 171, b: 6, match: false, threshold: 60}, // yellow receive button (not MailBox)
-      {x: 889, y: 1395, r: 0, g: 105, b: 156, match: false, threshold: 60}, // blue Claim All Button (not MailBoxNoMessage)
-      {x: 540, y: 1588, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
-      {x: 540, y: 1714, r: 233, g: 180, b: 10, match: true, threshold: 60}, // top right of the close button
-    ],
-    actions: [{x: 576, y: 1660}], // Close
-    */
-  }, { // including Login Bonus
-    name: 'ClosePage2', // the close button at 3/4 height
-    colors: [
-      {x: 545, y: 570, r: 33, g: 198, b: 239, match: true, threshold: 60}, // top center of blue info box
-      {x: 545, y: 1260, r: 25, g: 190, b: 230, match: true, threshold: 60}, // bottom center of blue info box
-      {x: 545, y: 1409, r: 247, g: 190, b: 8, match: true, threshold: 60}, // top center of yellow Close button
-      {x: 549, y: 1562, r: 230, g: 121, b: 8, match: true, threshold: 60}, // bottom center of yellow Close button
-    ],
-    actions: [{x: 545, y: 1409}], // Close
   }, {
-    name: 'HighScore',
+    name: 'NotEnoughHearts',
     colors: [
-      {x: 547, y: 748, r: 33, g: 202, b: 239, match: true, threshold: 60}, // blue frame top
-      {x: 186, y: 922, r: 41, g: 77, b: 123, match: true, threshold: 60}, // dark blue middle frame
-      {x: 547, y: 1087, r: 25, g: 186, b: 222, match: true, threshold: 60}, // blue frame bottom
-      {x: 152, y: 1379, r: 247, g: 182, b: 16, match: true, threshold: 60}, // yellow Close button
-      {x: 619, y: 1379, r: 247, g: 182, b: 16, match: true, threshold: 60}, // yellow Share button
+      {x: 541, y: 550, r: 33, g: 190, b: 230, match: true, threshold: 60}, // blue frame
+      {x: 117, y: 961, r: 239, g: 171, b: 11, match: true, threshold: 60}, // yellow Buy with Rubies button
+      {x: 618, y: 961, r: 239, g: 171, b: 11, match: true, threshold: 60}, // yellow Ask Friends button
+      {x: 541, y: 1203, r: 33, g: 190, b: 230, match: true, threshold: 60}, // blue frame
+      {x: 538, y: 1329, r: 247, g: 190, b: 16, match: true, threshold: 60}, // yellow Close button
     ],
-    actions: [{x: 152, y: 1379}], // Close
+    actions: [{x: 538, y: 1329}], // Close
   }, {
-    name: 'GetTsum',
+    name: 'MagicalTime',
     colors: [
-      {x: 323, y: 1071, r: 239, g: 105, b: 156, match: true, threshold: 60}, // pink New
-      {x: 161, y: 1071, r: 33, g: 186, b: 222, match: true, threshold: 60}, // blue frame top
-      {x: 149, y: 1242, r: 33, g: 65, b: 107, match: true, threshold: 60}, // dark blue frame
-      {x: 220, y: 1407, r: 33, g: 194, b: 230, match: true, threshold: 60}, // blue frame bottom
-      {x: 389, y: 1631, r: 239, g: 174, b: 8, match: true, threshold: 60}, // yellow Close button
+      {x: 541, y: 544, r: 33, g: 190, b: 230, match: true, threshold: 60}, // blue frame
+      {x: 204, y: 1355, r: 239, g: 171, b: 11, match: true, threshold: 60}, // yellow Cancel button
+      {x: 673, y: 1355, r: 239, g: 171, b: 11, match: true, threshold: 60}, // yellow OK button
+      {x: 541, y: 1491, r: 33, g: 190, b: 230, match: true, threshold: 60}, // blue frame
     ],
-    actions: [{x: 389, y: 1631}], // Close
+    actions: [{x: 204, y: 1355}], // Cancel
   }, {
-    name: 'MagicalTime', // Do you want to continue? (extend time by use ruby)
-    colors: [
-      {x: 532, y: 534, r: 33, g: 190, b: 230, match: true, threshold: 60}, // blue top frame
-      {x: 280, y: 636, r: 239, g: 243, b: 239, match: true, threshold: 60}, // white title
-      {x: 130, y: 984, r: 33, g: 65, b: 107, match: true, threshold: 60}, // dark blue frame
-      {x: 644, y: 956, r: 33, g: 202, b: 230, match: true, threshold: 60}, // light blue near ruby
-      {x: 205, y: 1354, r: 247, g: 174, b: 8, match: true, threshold: 60}, // yellow Cancel button
-      {x: 650, y: 1354, r: 247, g: 178, b: 16, match: true, threshold: 60}, // yellow OK button
-    ],
-    actions: [{x: 205, y: 1354}], // Cancel
-  }, {
-
     // TWO ACTIONS PAGES => first for back/cancel/close, second for ok
     name: 'RootDetection',
     colors: [
@@ -407,71 +356,6 @@ var config = {
       {x: 799, y: 1653, r: 232, g: 170, b: 7, match: true, threshold: 60}, // left of the myTsum button
     ],
     actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 799, y: 1653}], // Card, Play, MyTsum
-    /*
-  }, {
-    name: 'FriendPage2+',
-    colors: [
-      {x: 698, y: 464, r: 244, g: 249, b: 243, match: true, threshold: 60}, // left top of the ranking time
-      {x: 187, y: 1599, r: 240, g: 218, b: 72, match: true, threshold: 60}, // top of the card button
-      {x: 540, y: 1649, r: 175, g: 188, b: 197, match: true, threshold: 60}, // center of the Tsum Hades
-      {x: 799, y: 1653, r: 232, g: 170, b: 7, match: true, threshold: 60}, // left of the myTsum button
-    ],
-    actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 799, y: 1653}], // Card, Play, MyTsum
-  }, {
-    name: 'FriendPage3+',
-    colors: [
-      {x: 540, y: 1649, r: 203, g: 192, b: 237, match: true, threshold: 80}, // center of the Tsum Ursula
-      {x: 187, y: 1599, r: 240, g: 218, b: 72, match: true, threshold: 80}, // top of the card button
-      {x: 799, y: 1653, r: 232, g: 170, b: 7, match: true, threshold: 80}, // left of the myTsum button
-      {x: 698, y: 464, r: 244, g: 249, b: 243, match: true, threshold: 80}, // left top of the ranking time
-    ],
-    actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 799, y: 1653}], // Card, Play, MyTsum
-  }, {
-    name: 'FriendPage4+',
-    colors: [
-      {x: 540, y: 1649, r: 79, g: 89, b: 94, match: true, threshold: 80}, // center of the Tsum Maleficentd
-      {x: 187, y: 1599, r: 240, g: 218, b: 72, match: true, threshold: 80}, // top of the card button
-      {x: 799, y: 1653, r: 232, g: 170, b: 7, match: true, threshold: 80}, // left of the myTsum button
-      {x: 698, y: 464, r: 244, g: 249, b: 243, match: true, threshold: 80}, // left top of the ranking time
-    ],
-    actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 799, y: 1653}], // Card, Play, MyTsum
-    */
-  }, {
-    name: 'GamePlay1', // blue around MyTsum
-    colors: [
-      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
-      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
-      {x: 137, y: 1555, r: 90, g: 117, b: 164, match: true, threshold: 160}, // light blue to dark MyTsum button 11 clock part
-      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
-    ],
-    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
-  }, {
-    name: 'GamePlay2', // yellow around MyTsum
-    colors: [
-      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
-      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
-      {x: 137, y: 1555, r: 247, g: 219, b: 25, match: true, threshold: 160}, // light yellow to dark MyTsum button 11 clock part
-      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
-    ],
-    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
-  }, {
-    name: 'GamePlay3', // white around MyTsum
-    colors: [
-      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
-      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
-      {x: 137, y: 1555, r: 255, g: 255, b: 247, match: true, threshold: 120}, // white MyTsum button 11 clock part
-      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
-    ],
-    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
-  }, {
-    name: 'GamePlay4', // black around MyTsum
-    colors: [
-      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
-      {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
-      {x: 137, y: 1555, r: 33, g: 36, b: 33, match: true, threshold: 120}, // black MyTsum button 11 clock part
-      {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
-    ],
-    actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
   }],
 };
 
@@ -488,6 +372,7 @@ function setupUIOptions(args) {
   config.autoSendMin = args[i++];
   config.isPlay = args[i++];
   config.autoPlayMin = args[i++];
+  config.autoFanSec = args[i++];
   config.skillPlayMS = args[i++];
   config.debug = args[i++];
 
@@ -533,7 +418,7 @@ function init(args) {
       config.virtualButtonHeight);
   config.playOffsetX = 0;
   config.playOffsetY = (config.appHeight - config.appWidth)/2 +
-    1.5*config.tsumWidth;
+    1*config.tsumWidth;
   config.playWidth = config.appWidth;
   config.playHeight= config.appWidth;
   config.sendHeartCount = 0;
@@ -643,6 +528,9 @@ function findPage() {
     if (i == page.colors.length) {
       result.push(page);
       names.push(page.name);
+      if (config.isPlaying) {
+        break;
+      }
     }
   }
   if (result.length === 1) {
@@ -726,19 +614,20 @@ function clickBonus(bonusState) {
 };
 
 function clickUnknown() {
+  // saveImg('dbg:', config.img, 'NotEnoughHearts');
+  // whyNotPage(config.img, 'NotEnoughHearts');
+
   config.nextChkAppOnTime = 0; // force check again
   longSleep(config.animationMS);
   if (!chkAppOn()) {
     mylog('dbg: out of game');
     return;
   }
-  // whyNotPage(config.img, 'ChooseBonusItem');
-
   mylog('dbg: try click yellow button if found');
   var buttons = ['Close5', 'Close4', 'Close3', 'Close2', 'Close1'];
   for (var i in buttons) {
     if (checkPoint(config.img, buttons[i])) {
-      mylog('dbg: click Close'+(i+1), buttons[i]);
+      mylog('dbg: click', buttons[i]);
       myClick(config.points[buttons[i]]);
       longSleep(config.animationMS);
       return;
@@ -793,15 +682,24 @@ function clickLinks(paths) {
 };
 
 function checkSkillON(img) {
-  var result = false;
+  var result = true;
+  for (var i=1; i<=4; i++) {
+    if (checkPoint(img, 'SkillOff'+i)) {
+      result = false;
+      break;
+    }
+  }
+  /*
   if (checkPoint(img, 'SkillOn1') || checkPoint(img, 'SkillOn2')) {
     config.skillOnCount++;
-    if (config.skillOnCount > 2) {
+    if (config.skillOnCount >= 2) {
       result = true;
     }
   } else {
     config.skillOnCount= 0;
   }
+  */
+  mylog('dbg: check skillCount', config.skillOnCount);
   return result;
 };
 
@@ -838,6 +736,7 @@ function mySend(now) {
       if (config.initSendTime == 0) {
         config.initSendTime = now;
         config.sendHeartCount = 0;
+        toTopFriendPage();
       }
       if (sendHearts(now)) { // true for end
         var s = (Date.now() - config.initSendTime)/1000;
@@ -860,23 +759,36 @@ function mySend(now) {
       myClick(config.currentPage.actions[0]); // back
       longSleep(config.animationMS);
       break;
+    case 'TsumsOther':
+    case 'TsumsMe':
+      userPlay('dbg:', now);
+      break;
     case 'GamePlay1':
     case 'GamePlay2':
     case 'GamePlay3':
     case 'GamePlay4':
-      myClick(config.currentPage.actions[0]); // pause
-      longSleep(config.animationMS);
+      mylog('dbg: wait game over for manual play');
+      longSleep(config.hibernateSec * 1000);
       break;
     default:
-      mylog('dbg: invalid logic');
-      keepImgLog('dbg:', 'logic', 1);
+      // mylog('dbg: invalid logic');
+      keepImgLog('dbg:', 'invalid.'+ config.currentPage.name, 1);
       sleep(config.hibernateSec*1000);
       break;
   }
 }
 
+function clickFan(now) {
+  myClick(config.currentPage.actions[2]); // click Fan
+  longSleep(config.animationMS);
+  myClick(config.currentPage.actions[2]); // click Fan
+  longSleep(config.animationMS);
+  config.nextFanTime = Date.now() + config.autoFanSec * 1000;
+}
+
 function myPlay(now) {
   mylog('dbg: myPlay');
+  config.isPlaying = false;
   switch (config.currentPage.name) {
     case 'FriendPage':
       mylog('dbg: click play button');
@@ -888,43 +800,55 @@ function myPlay(now) {
       if (clickBonus(bonusState) == 0) {
         mylog('dbg: bonus OK, click Start');
         myClick(config.currentPage.actions[1]);
-        longSleep(config.animationMS);
-        config.initPlayTime = now;
-        config.state = 31;
+        longSleep(1000);
+        config.isPlaying = true;
       }
       break;
     case 'GamePlay1':
     case 'GamePlay2':
     case 'GamePlay3':
     case 'GamePlay4':
-      if (config.state == 31) {
+      if (config.initPlayTime == 0) {
+        config.initPlayTime = now;
+        config.nextFanTime = now + config.autoFanSec * 1000;
+        config.runTimes = 0;
+        longSleep(500);
         mylog('dbg: play start', Date());
-        config.state = 32;
       }
+      config.isPlaying = true;
       config.runTimes++;
+      /*
+      if (config.debug && config.runTimes >= 2) { // TODO: remove
+        stop();
+        break;
+      }
+      */
       if (checkSkillON(config.img)) {
+        // keepImgLog('dbg:', 'skill', 1);
         myClick(config.currentPage.actions[1]); // click MyTsum to use skill
         longSleep(config.skillPlayMS);
+      } else if (now > config.nextFanTime) {
+        clickFan(now);
       } else {
         board = scanBoard(config.img);
         var paths = calculatePaths(board);
-        if (paths.length > 3) {
+        paths = paths.splice(0, 6); // don't generate bubble
+        if (paths.length >= 3) {
           clickLinks(paths);
         } else {
           // TODO: find bubbles, click bubbles, keep at most 2 bubbles.
-          myClick(config.currentPage.actions[2]); // click Fan
-          longSleep(config.animationMS);
-          myClick(config.currentPage.actions[2]); // click Fan
-          longSleep(config.animationMS);
+          mylog('dbg: not found, click fan');
+          clickFan(now);
         }
       }
       break;
     case 'ScorePage':
       mylog('dbg: play end', Date());
-      if (state == 32) {
-        mylog('dbg: play time(s):', (Date.now() - initPlayTime)/1000);
-        config.state = 33;
+      if (config.initPlayTime !== 0) {
         config.nextPlayTime = config.initPlayTime + config.autoPlayMin * 60 * 1000;
+        mylog('dbg: play time(s):', (Date.now() - config.initPlayTime)/1000,
+            'nextPlayTime:', new Date(config.nextPlayTime));
+        config.initPlayTime = 0;
       }
       // TODO: if want to crazy play, click play
       myClick(config.currentPage.actions[0]); // Close
@@ -933,15 +857,11 @@ function myPlay(now) {
       break;
     case 'TsumsMe':
     case 'TsumsOther':
-      mylog('dbg: click Back');
-      myClick(config.currentPage.actions[0]);
-      longSleep(config.animationMS);
+      userPlay('dbg:', now);
       break;
     default:
-      mylog('dbg: invalid logic');
-      keepImgLog('dbg:', 'play', 1);
+      keepImgLog('dbg:', 'invalid.'+ config.currentPage.name, 1);
       sleep(config.hibernateSec*1000);
-      config.state = 0;
       break;
   }
 }
@@ -977,16 +897,15 @@ function findTsums(img) {
   // debug purpose end
   */
 
-  /*
+
   // H<80 or H>120,  S<160 or S>255, V<20 or V>210
   var filter1 = outRange(hsvImg, 80, 160, 20, 0, 120, 255, 210, 255);
-  saveImage(filter1, config.storagePath + '/tmp/f2_filter1.png');
+  // saveImage(filter1, config.storagePath + '/tmp/f2_filter1.png');
   // H<80 or H>130,  S<100 or S>170, V<90 or V>190
   var filter2 = outRange(filter1, 80, 100, 90, 0, 130, 170, 190, 255);
-  saveImage(filter2, config.storagePath + '/tmp/f3_filter2.png');
+  // saveImage(filter2, config.storagePath + '/tmp/f3_filter2.png');
   releaseImage(filter1);
-  */
-  var filter2 = outRange(hsvImg, 80, 100, 20, 0, 120, 255, 210, 255);
+  // var filter2 = outRange(hsvImg, 80, 100, 20, 0, 120, 255, 210, 255);
   // saveImage(filter2, config.storagePath + '/tmp/f3_filter2.png');
   var mask = bgrToGray(filter2);
   // saveImage(mask, config.storagePath + '/tmp/f4_bgrtogray.png');
@@ -1000,8 +919,9 @@ function findTsums(img) {
   // p2: 7 float, canny parameter
   // minR:8 int, min radius
   // maxR:14 int, max radius
+  // if search 0.5w ~ 1w, will found too many wrong circles
   var points = houghCircles(mask, 3, 1, config.tsumWidth, 4, 7,
-      config.tsumWidth/2, config.tsumWidth);
+      config.tsumWidth/3, config.tsumWidth/2);
   smooth(hsvImg, 1, 22); // smooth more
   // saveImage(mask, config.storagePath + '/tmp/f5_blurmore.png');
   var circleImg=0;
@@ -1031,7 +951,7 @@ function findTsums(img) {
     }
     var avgb = (hsv1.b + hsv2.b + hsv3.b + hsv4.b + hsv5.b) / 5;
     var avgg = (hsv1.g + hsv2.g + hsv3.g + hsv4.g + hsv5.g) / 5;
-    mylog('dbg:');
+    // mylog('dbg:');
     var avgr = (hsv1.r + hsv2.r + hsv3.r + hsv4.r + hsv5.r) / 5;
     results.push({x: p.x, y: p.y, z: p.r, b: avgb, g: avgg, r: avgr});
   }
@@ -1112,6 +1032,7 @@ function findBubbles(img) {
 // ref: https://stackoverflow.com/questions/35113979/calculate-distance-between-colors-in-hsv-space
 function distanceHSV(p1, p2) {
   // Note: here the .b, .g, .r is HSV
+  /*
   var dh = Math.abs(p1.b - p2.b);
   dh = Math.min(dh, 256-dh)*2; // hue range from 0~255, after min range in 0~128
   mylog('dbg:');
@@ -1119,10 +1040,15 @@ function distanceHSV(p1, p2) {
   if (dh < 20) {
     d -= 10;
   }
+  */
+  var d = Math.sqrt((p1.b-p2.b)*(p1.b-p2.b) + (p1.g-p2.g)*(p1.g-p2.g) + (p1.r-p2.r)*(p1.r-p2.r));
+  if (Math.abs(p1.b - p2.b) < 20) {
+    d -= 10;
+  }
   if (Math.abs(p1.g - p2.g) < 20) {
     d -= 10;
   }
-  mylog('dbg:');
+  // mylog('dbg:');
   if (p1.r < 120 && p2.r < 120) {
     d -= 20;
   }
@@ -1135,7 +1061,7 @@ function classifyTsums(points) {
     return tcs;
   }
   var p = points[0];
-  mylog('dbg:');
+  // mylog('dbg:');
   tcs.push({sumb: p.b, sumg: p.g, sumr: p.r, b: p.b, g: p.g, r: p.r, points: [p]});
   for (var i in points) {
     var p = points[i];
@@ -1146,7 +1072,7 @@ function classifyTsums(points) {
       if (d < 15) {
         var count = tc.points.length + 1;
         isSame = true;
-        mylog('dbg:');
+        // mylog('dbg:');
         tc.sumb += p.b; tc.sumg += p.g; tc.sumr += p.r;
         tc.b = tc.sumb/count; tc.g = tc.sumg/count; tc.r = tc.sumr/count;
         tc.points.push(p);
@@ -1154,7 +1080,7 @@ function classifyTsums(points) {
       }
     }
     if (!isSame) {
-      mylog('dbg:');
+      // mylog('dbg:');
       tcs.push({sumb: p.b, sumg: p.g, sumr: p.r, b: p.b, g: p.g, r: p.r, points: [p]});
     }
   }
@@ -1278,6 +1204,11 @@ function scanBoard(img) {
   tcs.sort(function(a, b) {
     return a.points.length > b.points.length ? -1: 1;
   });
+  if (config.debug) {
+    for (var i in tcs) {
+      mylog('dbg: i', i, 'path.len=', tcs[i].points.length);
+    }
+  }
   var board = [];
   for (var i in tcs) {
     if (i >= config.tsumCount) {
@@ -1295,11 +1226,11 @@ function scanBoard(img) {
     }
   }
   if (config.debug && (config.runTimes % config.snapCount)==0) {
-    saveImage(srcImg, config.storagePath + '/tmp/' + config.runTimes + '_click.png');
+    saveImage(srcImg, config.storagePath + '/tmp/' + config.runTimes + '_board.png');
   }
   releaseImage(srcImg);
-  mylog('dbg: board length', board.length);
-  mylog('dbg: recognition Time', Date.now() - startTime);
+  mylog('dbg: board length', board.length, 'recognition Time',
+      Date.now() - startTime);
   return board;
 };
 
@@ -1327,6 +1258,7 @@ function saveImg(srcLineNo, img, name) {
 // eg. keepImgLog('dbg:','f', 2) -> mmss.sss.name.1.png, mmss.sss.name.2.png
 /* exported keepImgLog */
 function keepImgLog(srcLineNo, name, count) {
+  var startTime = Date.now();
   for (var i=1; i<=count; i++) {
     var filename = genImgFileName(name, i);
     var img = getScreenshotModify(0, 0, config.appWidth, config.appHeight,
@@ -1334,7 +1266,7 @@ function keepImgLog(srcLineNo, name, count) {
     mylog(srcLineNo, 'keepImgLog:', filename);
     saveImage(img, filename);
     if (count > 1) {
-      sleep(500);
+      startTime = mySleep(500, startTime);
     }
   }
 }
@@ -1579,24 +1511,54 @@ function simpleClick(now) {
       }
       break;
     case 1:
+      if (config.currentPage.name == 'MagicalTime') {
+        longSleep(1000); // if manual want to press
+      }
       myClick(config.currentPage.actions[0]);
-      if (config.currentPage.name == 'Received') {
-        // keepImgLog('dbg:', 'r', 4);
-        mylog('dbg: click received');
-      } else if (config.currentPage.name == 'MailBoxNoMessage') {
-        config.endRecvCount++;
-        mylog('dbg: endRecvCount', config.endRecvCount);
-        if (config.endRecvCount > 1) { // check twice
-          config.nextRecvTime = config.initSendTime + config.autoRecvMin * 60 * 1000;
-          mylog('dbg: click back gotCoins:', config.gotCoins,
-              'in clicks:', config.msgClicks,
-            ' avg coins/min:', config.gotCoins / (config.initRecvTime - now) * 60 * 1000;
-            'nextRecvTime=', new Date(config.nextRecvTime));
-          config.initRecvTime = 0;
-          config.gotCoins = 0;
-          config.msgClicks = 0;
-          config.endRecvCount = 0;
-        }
+      switch (config.currentPage.name) {
+        case 'MagicalTime':
+          mylog('dbg: click Cancel');
+          break;
+        case 'Received':
+          mylog('dbg: click received');
+          break;
+        case 'MailBoxNoMessage':
+          config.endRecvCount++;
+          mylog('dbg: endRecvCount', config.endRecvCount);
+          if (config.endRecvCount > 1) { // check twice
+            if (config.initRecvTime > 0) {
+              config.nextRecvTime = config.initRecvTime + config.autoRecvMin * 60 * 1000;
+              var takeSec = (now - config.initRecvTime)/1000;
+              if (takeSec == 0) {
+                takeSec = 1;
+              };
+              mylog('dbg: click back gotCoins:', config.gotCoins,
+                  'in clicks:', config.msgClicks,
+                  'takes time(s):', takeSec,
+                  'avg coins/min:', config.gotCoins * 60 / takeSec,
+                  'nextRecvTime=', new Date(config.nextRecvTime));
+            } else {
+              config.nextRecvTime = now + config.autoRecvMin * 60 * 1000;
+            }
+            config.initRecvTime = 0;
+            config.gotCoins = 0;
+            config.msgClicks = 0;
+            config.endRecvCount = 0;
+          }
+          break;
+        case 'NotEnoughHearts':
+          mylog('dbg: click Close for NotEnoughHearts');
+          if (config.isPlay) {
+            var delayTime = 15 * 60 * 1000; // 15 mins
+            if (config.nextPlayTime - now < delayTime) {
+              config.nextPlayTime = now + delayTime;
+              mylog('dbg: extend nextPlayTime:', new Date(config.nextPlayTime));
+            }
+          }
+          break;
+        default:
+          mylog('dbg: click on', config.currentPage.name);
+          break;
       }
       longSleep(config.animationMS);
       break;
@@ -1634,10 +1596,6 @@ function simpleClick(now) {
             mylog('dbg: click continue');
             myClick(config.currentPage.actions[1]);
             longSleep(config.animationMS);
-            if (config.initPlayTime == 0) {
-              config.initPlayTime = now;
-              config.state = 31;
-            }
           } else {
             mylog('dbg: click Try again');
             myClick(config.currentPage.actions[0]);
@@ -1652,6 +1610,17 @@ function simpleClick(now) {
       return false;
   }
   return true;
+}
+
+function userPlay(srcLine, now) {
+  if (config.isPlay) {
+    var delayTime = 3 * 60 * 1000; // 3 mins
+    if (config.nextPlayTime - now < delayTime) {
+      config.nextPlayTime = now + delayTime;
+      mylog(srcLine, 'change Tsum, extend nextPlayTime:', new Date(config.nextPlayTime));
+      longSleep(config.hibernateSec*1000);
+    }
+  }
 }
 
 /* exported start */
@@ -1691,6 +1660,7 @@ function start(params) {
   if (!config.isPlay) {
     config.nextPlayTime = now + 365*24*60*60*1000;
   }
+  config.isPlaying = false;
   while (config.isRunning) {
     now = Date.now();
     if (!chkAppOn(now)) {
@@ -1708,11 +1678,13 @@ function start(params) {
       longSleep(config.captureMS);
       continue;
     }
-    var score = getIdentityScore(config.prevImg, config.img);
-    mylog('dbg: score=', score);
-    if (score < config.diffScore) {
-      longSleep(config.captureMS);
-      continue;
+    if (!config.isPlaying) {
+      var score = getIdentityScore(config.prevImg, config.img);
+      mylog('dbg: score=', score);
+      if (score < config.diffScore) {
+        longSleep(config.captureMS);
+        continue;
+      }
     }
     config.prevPage = config.currentPage;
     config.currentPage = findPage();
@@ -1722,30 +1694,51 @@ function start(params) {
       continue;
     }
     if (config.isRecvGift && (config.currentPage.name == 'FriendPage'||
-       config.currentPage.name == 'ChooseBonusItem')) &&
+       config.currentPage.name == 'ChooseBonusItem') &&
       (now > config.nextRecvTime || isRedMail)) {
       mylog('dbg: Recv');
       myClick(config.points['Mail']);
       longSleep(config.animationMS);
-    } else if (now > config.nextSendTime) {
+    } else if (now > config.nextSendTime && !config.isPlaying) {
       mySend(now);
     } else if (now > config.nextPlayTime) {
       myPlay(now);
-    } else if (config.currentPage.name == 'FriendPage') {
-      mylog('dbg: nothing to do, wait nextSendTime=', new Date(config.nextSendTime),
-          'nextPlayTime=', new Date(config.nextPlayTime));
-      longSleep(config.hibernateSec*1000);
     } else {
-      mylog('dbg: invalid page:', config.currentPage.name);
-      keepImgLog('dbg:', 'start', 1);
-      sleep(config.hibernateSec*1000);
-      config.state = 0;
+      switch (config.currentPage.name) {
+        case 'TsumsMe':
+        case 'TsumsOther':
+          userPlay('dbg:', now);
+          break;
+        case 'GamePlay1':
+        case 'GamePlay2':
+        case 'GamePlay3':
+        case 'GamePlay4':
+          mylog('dbg: wait game over for manual play');
+          longSleep(config.hibernateSec*1000);
+          break;
+        case 'ScorePage':
+        case 'ChooseBonusItem':
+          mylog('dbg: click back on', config.currentPage.name);
+          myClick(config.currentPage.actions[0]); // back
+          longSleep(config.animationMS);
+          break;
+        case 'FriendPage':
+          mylog('dbg: nothing to do, wait nextSendTime=', new Date(config.nextSendTime),
+              'nextPlayTime=', new Date(config.nextPlayTime));
+          longSleep(config.hibernateSec*1000);
+          break;
+        default:
+          mylog('dbg: invalid page:', config.currentPage.name);
+          // keepImgLog('dbg:', 'start', 1);
+          sleep(config.hibernateSec*1000);
+          break;
+      }
     }
     if (config.testFile !== '') {
       mylog('dbg: end of testFile');
       break;
     }
-    mySleep(config.captureMS);
+    mySleep(config.captureMS, now);
   }
   fini();
   mylog('dbg: start() end');

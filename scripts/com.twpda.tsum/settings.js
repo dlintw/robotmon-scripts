@@ -14,6 +14,8 @@ var uiState = [ // UI options NOTE: keep the same order with main.js
   {label: 'Play game', labelZh: '玩遊戲', value: true},
   {label: 'Play period(Min)', labelZh: '自動玩週期(分)',
     value: 1, min: 1, max: 2400, step: 1},
+  {label: 'Auto use fan(Sec)', labelZh: '自動點風扇(秒)',
+    value: 4, min: 3, max: 5*60, step: 1},
   {label: 'skill play time(msec)', labelZh: '技能動畫時間(微秒)',
     value: 1000, min: 0, max: 5000, step: 500},
   {label: 'Debug', labelZh: '除錯', value: false},
