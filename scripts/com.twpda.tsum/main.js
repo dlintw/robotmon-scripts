@@ -171,6 +171,16 @@ var config = {
     ],
     actions: [{x: 917, y: 210}, {x: 137, y: 1555}, {x: 913, y: 1562}], // Pause, MyTsum, Fan
   }, {
+    // ZERO ACTIONS PAGES
+    name: 'Get30000Coins',
+    colors: [
+      {x: 122, y: 620, r: 52, g: 209, b: 254, match: true, threshold: 60}, // blue top
+      {x: 201, y: 686, r: 255, g: 255, b: 255, match: true, threshold: 60}, // white
+      {x: 184, y: 1101, r: 78, g: 204, b: 15, match: true, threshold: 60}, // green Login Line
+      {x: 208, y: 1626, r: 255, g: 255, b: 255, match: true, threshold: 60}, // white
+    ],
+    actions: [],
+  }, {
     // ONE ACTIONS PAGES => always click
 
     name: 'ChooseLanguage',
@@ -616,6 +626,7 @@ function clickBonus(bonusState) {
 function clickUnknown() {
   // saveImg('dbg:', config.img, 'NotEnoughHearts');
   // whyNotPage(config.img, 'NotEnoughHearts');
+  // whyNotPage(config.img, 'Get30000Coins');
 
   config.nextChkAppOnTime = 0; // force check again
   longSleep(config.animationMS);
@@ -1508,6 +1519,9 @@ function simpleClick(now) {
     case 0:
       if (config.currentPage.name === '') {
         clickUnknown();
+      } else if (config.currentPage.name === 'Get30000Coins') {
+        keycode('BACK', 10);
+        longSleep(config.animationMS);
       }
       break;
     case 1:
@@ -1696,7 +1710,7 @@ function start(params) {
     if (config.isRecvGift && (config.currentPage.name == 'FriendPage'||
        config.currentPage.name == 'ChooseBonusItem') &&
       (now > config.nextRecvTime || isRedMail)) {
-      mylog('dbg: Recv');
+      mylog('dbg: Recv, isRedMail', isRedMail);
       myClick(config.points['Mail']);
       longSleep(config.animationMS);
     } else if (now > config.nextSendTime && !config.isPlaying) {
