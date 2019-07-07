@@ -817,10 +817,10 @@ function clearHorizontalBubbles(yCount, startDelay, endDelay) {
     longSleep(startDelay);
   }
   if (yCount != undefined) {
-    fy = fromY + (5-yCount)*gridWidth;
+    fy = ty - (yCount-1)*gridWidth;
   }
   for (var bx = fx; bx <= tx; bx += gridWidth) {
-    for (var by = ty; by >= fy; by -= gridWidth) {
+    for (var by = fy; by >= ty; by += gridWidth) {
       tap(bx, by, 10);
     }
   }
@@ -876,8 +876,6 @@ function myPlay(now) {
         config.clearBubbles++;
         config.prevFanTime = Date.now();
         config.nextFanTime = config.prevFanTime + config.autoFanSec * 1000;
-      } else if (config.clearBubbles > 0) {
-        clearHorizontalBubbles(2); // clean bottom 2 lines
       } else if (now > config.nextFanTime) {
         if (now - config.prevFanTime > 2000) {
           clickFan(now);
@@ -888,8 +886,9 @@ function myPlay(now) {
         paths = paths.splice(0, 6); // don't generate bubble
         if (paths.length >= 3) {
           clickLinks(paths);
+        } else if (config.clearBubbles > 0) {
+          clearHorizontalBubbles(2); // clean bottom 2 lines
         } else {
-          // TODO: find bubbles, click bubbles, keep at most 2 bubbles.
           if (now - config.prevFanTime > 2000) {
             mylog('dbg: not found, click fan');
             clickFan(now);
