@@ -84,6 +84,7 @@ var config = {
   clearBubbles: 0, // bubbles count after skills
   zeroPath: 0, // zero path count
 
+  // NOTE: y axis must between 310 and 1640 to prevent robotmon AD overwrite
   points: {
     'RedMail': {x: 964, y: 311, r: 255, g: 32, b: 41}, // red number
     'Mail': {x: 909, y: 366, r: 164, g: 89, b: 58}, // dark yellow mail
@@ -98,7 +99,7 @@ var config = {
     'Bonus5to4': {x: 351, y: 1127, r: 49, g: 121, b: 206}, // blue 32
     'Close1': {x: 645, y: 1080, r: 239, g: 174, b: 8}, // yellow Close of error code page
     'Close2': {x: 540, y: 1329, r: 247, g: 190, b: 16}, // yellow Close of PackageInfo
-    'Close3': {x: 550, y: 1581, r: 238, g: 187, b: 10}, // yellow Close of MailBoxNoMessage
+    'Close3': {x: 538, y: 1547, r: 247, g: 190, b: 16}, // yellow Close of Choose Language
     'Close4': {x: 563, y: 1581, r: 247, g: 194, b: 8}, // yellow Close of Login Bonus page
     'Close5': {x: 382, y: 1612, r: 239, g: 182, b: 8}, // yellow Close of OptionsPage
     // yellow Close of OptionsPage
@@ -144,7 +145,7 @@ var config = {
     // check Game Play at first priority
     name: 'GamePlay1', // blue around MyTsum
     colors: [
-      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 917, y: 310, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
       {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
       {x: 137, y: 1555, r: 90, g: 117, b: 164, match: true, threshold: 160}, // light blue to dark MyTsum button 11 clock part
       {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
@@ -153,7 +154,7 @@ var config = {
   }, {
     name: 'GamePlay2', // yellow around MyTsum
     colors: [
-      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 917, y: 310, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
       {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
       {x: 137, y: 1555, r: 247, g: 219, b: 25, match: true, threshold: 160}, // light yellow to dark MyTsum button 11 clock part
       {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
@@ -162,7 +163,7 @@ var config = {
   }, {
     name: 'GamePlay3', // white around MyTsum
     colors: [
-      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 917, y: 310, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
       {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
       {x: 137, y: 1555, r: 255, g: 255, b: 247, match: true, threshold: 120}, // white MyTsum button 11 clock part
       {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
@@ -171,7 +172,7 @@ var config = {
   }, {
     name: 'GamePlay4', // black around MyTsum
     colors: [
-      {x: 917, y: 210, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
+      {x: 917, y: 310, r: 247, g: 210, b: 8, match: true, threshold: 60}, // yellow Pause button higher part
       {x: 923, y: 325, r: 230, g: 146, b: 8, match: true, threshold: 90}, // dark yellow Pause button lower part
       {x: 137, y: 1555, r: 33, g: 36, b: 33, match: true, threshold: 120}, // black MyTsum button 11 clock part
       {x: 913, y: 1562, r: 247, g: 215, b: 0, match: true, threshold: 200}, // light yellow to dark Fan button upper part
@@ -189,15 +190,16 @@ var config = {
     actions: [],
   }, {
     // ONE ACTIONS PAGES => always click
-
+    /*
     name: 'ChooseLanguage',
     colors: [
-      {x: 777, y: 208, r: 255, g: 255, b: 255, match: true, threshold: 60}, // white Language button left edge
+      {x: 777, y: 208, r: 255, g: 255, b: 255, match: true, threshold: 60}, // white Language button left edge // TODO:
       {x: 956, y: 212, r: 156, g: 158, b: 156, match: true, threshold: 60}, // gray Language button right triangle
       {x: 553, y: 1539, r: 247, g: 190, b: 16, match: true, threshold: 60}, // yellow to Start button's top
     ],
     actions: [{x: 553, y: 1539}],
   }, {
+  */
     name: 'PackageInfo',
     colors: [
       {x: 546, y: 540, r: 33, g: 194, b: 230, match: true, threshold: 60}, // blue top frame
@@ -264,7 +266,27 @@ var config = {
       {x: 302, y: 1581, r: 235, g: 184, b: 7, match: true, threshold: 60}, // yellow Close button
       {x: 777, y: 1588, r: 248, g: 142, b: 20, match: true, threshold: 80}, // orange Play button
     ],
-    actions: [{x: 309, y: 1653}, {x: 784, y: 1653}], // Close, Play
+    actions: [{x: 302, y: 1581}, {x: 784, y: 1588}], // Close, Play
+  }, {
+    name: 'HighScore',
+    colors: [
+      {x: 525, y: 758, r: 33, g: 194, b: 230, match: true, threshold: 80}, // blue frame
+      {x: 538, y: 1088, r: 33, g: 202, b: 239, match: true, threshold: 80}, // blue frame
+      {x: 158, y: 1342, r: 239, g: 178, b: 8, match: true, threshold: 80}, // yellow Close button
+      {x: 644, y: 1342, r: 247, g: 182, b: 8, match: true, threshold: 80}, // yello share button
+    ],
+    actions: [{x: 158, y: 1342}, {x: 644, y: 1342}], // Close, Share
+  }, {
+    name: 'RankUp',
+    colors: [
+      {x: 548, y: 603, r: 33, g: 198, b: 239, match: true, threshold: 60}, // blue frame
+      {x: 531, y: 867, r: 33, g: 190, b: 222, match: true, threshold: 60}, // blue frame
+      {x: 531, y: 1049, r: 33, g: 198, b: 239, match: true, threshold: 60}, // blue frame
+      {x: 541, y: 1316, r: 33, g: 186, b: 222, match: true, threshold: 60}, // blue frame
+      {x: 151, y: 1537, r: 239, g: 178, b: 8, match: true, threshold: 60}, // yellow Close button
+      {x: 630, y: 1537, r: 239, g: 186, b: 8, match: true, threshold: 60}, // yellow Share  button
+    ],
+    actions: [{x: 151, y: 1557}, {x: 630, y: 1537}], // Close, Share
   }, {
     name: 'MailBox',
     colors: [
@@ -345,9 +367,10 @@ var config = {
       {x: 982, y: 909, r: 115, g: 57, b: 41, match: true, threshold: 60}, // Sort Button dark yellow
       {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 60}, // left bottom back button
       // {x: 922, y: 1620, r: 156, g: 0, b: 0, match: true, threshold: 80}, // right bottom red Store
-      {x: 790, y: 1652, r: 239, g: 174, b: 8, match: true, threshold: 60}, // right bottom yellow button
+      {x: 790, y: 1600, r: 239, g: 174, b: 8, match: true, threshold: 60}, // right bottom yellow button
       // {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
-      {x: 414, y: 1655, r: 49, g: 154, b: 197, match: true, threshold: 60}, // bottom disabled MyTsum Set
+      {x: 406, y: 1603, r: 255, g: 138, b: 16, match: true, threshold: 60}, // blue left top disabled MyTsum Set
+      // {x: 414, y: 1655, r: 49, g: 154, b: 197, match: true, threshold: 60}, // bottom disabled MyTsum Set
     ],
     actions: [{x: 180, y: 1592}, {x: 790, y: 1592}], // Close, Store
   }, {
@@ -357,9 +380,10 @@ var config = {
       {x: 982, y: 909, r: 115, g: 57, b: 41, match: true, threshold: 60}, // Sort Button dark yellow
       {x: 180, y: 1592, r: 238, g: 180, b: 11, match: true, threshold: 60}, // left bottom back button
       // {x: 922, y: 1620, r: 156, g: 0, b: 0, match: true, threshold: 80}, // right bottom red Store
-      {x: 790, y: 1652, r: 239, g: 174, b: 8, match: true, threshold: 60}, // right bottom yellow button
+      {x: 790, y: 1600, r: 239, g: 174, b: 8, match: true, threshold: 60}, // right bottom yellow button
       // {x: 1005, y: 1543, r: 173, g: 0, b: 0, match: true, threshold: 60}, // right bottom red box!
-      {x: 553, y: 1718, r: 239, g: 93, b: 8, match: true, threshold: 60}, // bottom MyTsum Set
+      // {x: 553, y: 1718, r: 239, g: 93, b: 8, match: true, threshold: 60}, // bottom MyTsum Set
+      {x: 406, y: 1603, r: 255, g: 138, b: 16, match: true, threshold: 60}, // orange left top disabled MyTsum Set
     ],
     actions: [{x: 180, y: 1592}, {x: 790, y: 1592}], // Close, Store
   }, {
@@ -370,9 +394,9 @@ var config = {
       {x: 698, y: 464, r: 244, g: 249, b: 243, match: true, threshold: 60}, // left top of the ranking time
       {x: 187, y: 1599, r: 240, g: 218, b: 72, match: true, threshold: 60}, // top of the card button
       {x: 540, y: 1592, r: 246, g: 135, b: 17, match: true, threshold: 60}, // top of the start button
-      {x: 799, y: 1653, r: 232, g: 170, b: 7, match: true, threshold: 60}, // left of the myTsum button
+      {x: 792, y: 1603, r: 247, g: 190, b: 16, match: true, threshold: 60}, // yellow left top of the myTsum button
     ],
-    actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 799, y: 1653}], // Card, Play, MyTsum
+    actions: [{x: 187, y: 1599}, {x: 540, y: 1592}, {x: 792, y: 1603}], // Card, Play, MyTsum
   }],
 };
 
@@ -1629,6 +1653,12 @@ function simpleClick(now) {
       break;
     case 2:
       switch (config.currentPage.name) {
+        case 'HighScore':
+        case 'RankUp':
+          mylog('dbg: click Close');
+          myClick(config.currentPage.actions[0]);
+          longSleep(config.animationMS);
+          break;
         case 'RootDetection':
           if (config.isPermitRootScan) {
             mylog('dbg: click permit');
