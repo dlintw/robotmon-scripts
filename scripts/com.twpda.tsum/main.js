@@ -10,7 +10,7 @@ var config = {
   isPlay: true,
   autoPlayMin: 1, // auto play period
   // autoPlayMin: 24*60, // auto play period
-  autoFanSec: 5, // auto fan period
+  autoFanSec: 4, // auto fan period
   skillPlayMS: 1000,
   debug: false,
 
@@ -50,7 +50,8 @@ var config = {
   imageQuality: 100,
   playResizeWidth: 200,
   playResizeHeight: 200,
-  tsumWidth: 25,
+  // tsumWidth: 25, // assume 8 Tsums put in horizontal line
+  tsumWidth: 16, // same as r2studio
   // for draw different circles
   groupColors: [[255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 255, 255],
     [255, 0, 255], [255, 255, 0]],
@@ -70,6 +71,7 @@ var config = {
   nextSendTime: 0,
   nextPlayTime: 0,
   nextFanTime: 0,
+  prevFanTime: 0,
   initRecvTime: 0,
   initSendTime: 0,
   initPlayTime: 0,
@@ -80,6 +82,8 @@ var config = {
   endSendCount: 0,
   endRecvCount: 0,
   isPlaying: false, // when playing disable diff color check to save 0.5 ms
+  clearBubbles: 0, // bubbles count after skills
+  zeroPath: 0, // zero path count
 
   points: {
     'RedMail': {x: 964, y: 311, r: 255, g: 32, b: 41}, // red number
@@ -131,6 +135,8 @@ var config = {
     'outSendHeartEnd6': {x: 316, y: 1266+30, r: 55, g: 91, b: 139}, // dark blue on portrait icon
     'outSendHeartEnd7': {x: 316, y: 1266+60, r: 55, g: 91, b: 139}, // dark blue on portrait icon
     'outSendHeartEnd8': {x: 316, y: 1266+90, r: 55, g: 91, b: 139}, // dark blue on portrait icon
+    'gameBubblesFrom': {x: 100, y: 632},
+    'gameBubblesTo': {x: 1000, y: 1532},
   },
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
@@ -790,11 +796,33 @@ function mySend(now) {
 }
 
 function clickFan(now) {
-  myClick(config.currentPage.actions[2]); // click Fan
-  longSleep(config.animationMS);
-  myClick(config.currentPage.actions[2]); // click Fan
-  longSleep(config.animationMS);
-  config.nextFanTime = Date.now() + config.autoFanSec * 1000;
+  var p = config.currentPage.actions[2]; // Fan
+
+  tap(p.x, p.y, 60);
+  tap(p.x, p.y, 60);
+  config.prevFanTime = Date.now();
+  config.nextFanTime = config.prevFanTime + config.autoFanSec * 1000;
+}
+
+function clearHorizontalBubbles(startDelay, endDelay, fromY) {
+  var fx = config.points['gameBubblesFrom'].x;
+  var fy = config.points['gameBubblesFrom'].y;
+  var tx = config.points['gameBubblesTo'].x;
+  var ty = config.points['gameBubblesTo'].y;
+  if (startDelay !== undefined) {
+    longSleep(startDelay);
+  }
+  if (fromY !== undefined) {
+    fy = fromY;
+  }
+  for (var bx = fx; bx <= tx; bx += 140) {
+    for (var by = fy; by <= ty; by += 140) {
+      tap(bx, by, 10);
+    }
+  }
+  if (endDelay !== undefined) {
+    longSleep(endDelay);
+  }
 }
 
 function myPlay(now) {
@@ -821,8 +849,10 @@ function myPlay(now) {
     case 'GamePlay4':
       if (config.initPlayTime == 0) {
         config.initPlayTime = now;
-        config.nextFanTime = now + config.autoFanSec * 1000;
         config.runTimes = 0;
+        config.clearBubbles = 0;
+        config.zeroPath = 0;
+        config.nextFanTime = now + config.autoFanSec * 1000;
         longSleep(500);
         mylog('dbg: play start', Date());
       }
@@ -838,8 +868,15 @@ function myPlay(now) {
         // keepImgLog('dbg:', 'skill', 1);
         myClick(config.currentPage.actions[1]); // click MyTsum to use skill
         longSleep(config.skillPlayMS);
+        config.clearBubbles++;
+        config.prevFanTime = Date.now();
+        config.nextFanTime = config.prevFanTime + config.autoFanSec * 1000;
       } else if (now > config.nextFanTime) {
-        clickFan(now);
+        if (now - config.prevFanTime > 2000) {
+          clickFan(now);
+        }
+      } else if (config.clearBubbles > 0) {
+        clearHorizontalBubbles(0, 0, config.points['gameBubblesTo'].y);
       } else {
         board = scanBoard(config.img);
         var paths = calculatePaths(board);
@@ -848,8 +885,10 @@ function myPlay(now) {
           clickLinks(paths);
         } else {
           // TODO: find bubbles, click bubbles, keep at most 2 bubbles.
-          mylog('dbg: not found, click fan');
-          clickFan(now);
+          if (now - config.prevFanTime > 2000) {
+            mylog('dbg: not found, click fan');
+            clickFan(now);
+          }
         }
       }
       break;
@@ -931,8 +970,9 @@ function findTsums(img) {
   // minR:8 int, min radius
   // maxR:14 int, max radius
   // if search 0.5w ~ 1w, will found too many wrong circles
-  var points = houghCircles(mask, 3, 1, config.tsumWidth, 4, 7,
-      config.tsumWidth/3, config.tsumWidth/2);
+  // var points = houghCircles(mask, 3, 1, config.tsumWidth, 4, 7,
+  //   config.tsumWidth/3, config.tsumWidth/2);
+  var points = houghCircles(mask, 3, 1, 22, 4, 7, 8, 14);
   smooth(hsvImg, 1, 22); // smooth more
   // saveImage(mask, config.storagePath + '/tmp/f5_blurmore.png');
   var circleImg=0;
@@ -1222,7 +1262,7 @@ function scanBoard(img) {
   }
   var board = [];
   for (var i in tcs) {
-    if (i >= config.tsumCount) {
+    if (i >= config.tsumCount - 1) {
       break;
     }
     var tc = tcs[i];
