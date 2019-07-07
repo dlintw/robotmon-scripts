@@ -11,7 +11,7 @@ var config = {
   autoPlayMin: 1, // auto play period
   // autoPlayMin: 24*60, // auto play period
   autoFanSec: 4, // auto fan period
-  skillPlayMS: 2000,
+  skillPlayMS: 2500,
   debug: false,
 
   isBonusScore: false,
@@ -26,11 +26,10 @@ var config = {
   hibernateSec: 10, // check app on per 10s
   maxOutOfGameSec: 3000, // if out of game for 3s, switch to hibernate mode
   appOnChkMS: 500, // check per 0.5s
-  findPageMS: 100, // call findPage() per 0.1s
-  waitUnknownMS: 1000, // wait 1 second before click on unknown page
+  waitUnknownSec: 0.5, // wait 1 second before click on unknown page
   captureMS: 50, // sleep per 0.05 second before capture screen
   testFile: '', // test file which can't assigned by UI
-  uiOptionCount: 25, // count of UI options
+  uiOptionCount: 24, // count of UI options
 
   // globals (default value at compile time)
   appName: 'com.twpda.tsum',
@@ -380,6 +379,7 @@ var config = {
 function setupUIOptions(args) {
   if (args.length != config.uiOptionCount) {
     mylog('dbg: setupUIOptions length invalid', args.length);
+    mylog('dbg: args', args);
     return false;
   }
   var i=0;
@@ -406,8 +406,7 @@ function setupUIOptions(args) {
   config.hibernateSec = args[i++];
   config.maxOutOfGameSec = args[i++];
   config.appOnChkMS = args[i++];
-  config.findPageMS = args[i++];
-  config.waitUnknownMS = args[i++];
+  config.waitUnknownSec = args[i++];
   config.captureMS = args[i++];
   config.testFile = args[i++];
 
@@ -637,7 +636,7 @@ function clickUnknown() {
   // whyNotPage(config.img, 'Get30000Coins');
 
   config.nextChkAppOnTime = 0; // force check again
-  longSleep(config.animationMS);
+  longSleep(config.waitUnknownSec*1000);
   if (!chkAppOn()) {
     mylog('dbg: out of game');
     return;
@@ -878,7 +877,13 @@ function myPlay(now) {
         config.nextFanTime = config.prevFanTime + config.autoFanSec * 1000;
       } else if (now > config.nextFanTime) {
         if (now - config.prevFanTime > 2000) {
-          clickFan(now);
+          if (config.clearBubbles > 0) {
+            clearHorizontalBubbles(3); // clean bottom 3 lines
+            config.prevFanTime = Date.now();
+            config.nextFanTime = config.prevFanTime + config.autoFanSec * 1000;
+          } else {
+            clickFan(now);
+          }
         }
       } else {
         board = scanBoard(config.img);
@@ -887,7 +892,9 @@ function myPlay(now) {
         if (paths.length >= 3) {
           clickLinks(paths);
         } else if (config.clearBubbles > 0) {
-          clearHorizontalBubbles(2); // clean bottom 2 lines
+          clearHorizontalBubbles(3); // clean bottom 3 lines
+          config.prevFanTime = Date.now();
+          config.nextFanTime = config.prevFanTime + config.autoFanSec * 1000;
         } else {
           if (now - config.prevFanTime > 2000) {
             mylog('dbg: not found, click fan');
@@ -1889,8 +1896,7 @@ function testMain() {
     10, // hibernateSec: 10, // check app on per 10s
     3000, // maxOutOfGameSec: 3000, // if out of game for 3s, switch to hibernate mode
     500, // appOnChkMS: 500, // check per 0.5s
-    100, // findPageMS: 100, // call findPage() per 0.1s
-    1000, // waitUnknownMS: 1000, // wait 1 second before click on unknown page
+    0.5, // waitUnknownSec: 1000, // wait 1 second before click on unknown page
     50, // captureMS: 50, // sleep per 0.05 second before capture screen
     // 'eventinfo.png',
     'friend.onlyone.png',

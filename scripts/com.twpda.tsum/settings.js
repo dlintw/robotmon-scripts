@@ -16,7 +16,7 @@ var uiState = [ // UI options NOTE: keep the same order with main.js
     value: 1, min: 1, max: 2400, step: 1},
   {label: 'Auto use fan(Sec)', labelZh: '自動點風扇(秒)',
     value: 4, min: 3, max: 5*60, step: 1},
-  {label: 'skill play time(msec)', labelZh: '技能動畫時間(微秒)',
+  {label: 'skill play time(sec)', labelZh: '技能動畫時間(微秒)',
     value: 1000, min: 0, max: 5000, step: 500},
   {label: 'Debug', labelZh: '除錯', value: false},
 
@@ -32,18 +32,16 @@ var uiState = [ // UI options NOTE: keep the same order with main.js
   {label: '--- Misc options', labelZh: '--- 雜項'},
   {label: 'Auto launch Tsum app', labelZh: '自動開啟 Tsum App', value: false},
   {label: 'Permit ROOT scan', labelZh: '允許Root掃描', value: false},
-  {label: 'Hibernate period(msec)', labelZh: '休眠周期(秒)',
+  {label: 'Hibernate period(sec)', labelZh: '休眠周期(秒)',
     value: 10, min: 5, max: 60, step: 5},
-  {label: 'Max not in game time(msec) to hibernate',
+  {label: 'Max not in game time(sec) to hibernate',
     labelZh: '超過最長不在遊戲時間(秒)進入休眠',
     value: 1, min: 1, max: 60, step: 1},
   {label: 'Check in game period(msec)', labelZh: '檢查是否在遊戲內周期(微秒)',
     value: 500, min: 50, max: 3000, step: 50},
-  {label: 'Find game page period(msec)', labelZh: '辨識遊戲頁面周期(微秒)',
-    value: 100, min: 50, max: 3000, step: 50},
-  {label: 'Wait time for click unknown game page(msec)',
-    labelZh: '點擊未知頁面前等待時間(微秒)',
-    value: 1000, min: 1000, max: 10000, step: 1000},
+  {label: 'Wait time for click unknown game page(sec)',
+    labelZh: '點擊未知頁面前等待時間(秒)',
+    value: 0.5, min: 0.5, max: 10, step: 0.5},
   {label: 'Capture period(msec)', labelZh: '擷取畫面周期(微秒)',
     value: 50, min: 50, max: 3000, step: 50},
 ];
@@ -163,19 +161,23 @@ var ConfigPage = {
 function genStartCommand() {
   var command = 'start([';
   uiState.forEach(function(v) {
-    if (typeof v.value === 'boolean') {
-      command += v.value.toString() + ', ';
-    } else if (typeof v.value === 'number') {
-      if (v.list !== undefined) {
-        command += '"' + v.keyList[v.value] + '", ';
-      } else {
-        command += v.value + ', ';
-      }
-    } else if (typeof v.value === 'string') {
-      command += '"' + v.value + '", ';
+    switch (typeof v.value) {
+      case 'boolean':
+        command += v.value.toString() + ', ';
+        break;
+      case 'number':
+        if (v.list !== undefined) {
+          command += '"' + v.keyList[v.value] + '", ';
+        } else {
+          command += v.value + ', ';
+        }
+        break;
+      case 'string':
+        command += '"' + v.value + '", ';
+        break;
     }
   });
-  command += ',""]);'; // default testFile is empty
+  command += '""]);'; // default testFile is empty
   console.log('dbg: command=' + command);
   return command;
 }
