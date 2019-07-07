@@ -11,7 +11,7 @@ var config = {
   autoPlayMin: 1, // auto play period
   // autoPlayMin: 24*60, // auto play period
   autoFanSec: 4, // auto fan period
-  skillPlayMS: 1000,
+  skillPlayMS: 2000,
   debug: false,
 
   isBonusScore: false,
@@ -103,8 +103,10 @@ var config = {
     'Close4': {x: 563, y: 1581, r: 247, g: 194, b: 8}, // yellow Close of Login Bonus page
     'Close5': {x: 382, y: 1612, r: 239, g: 182, b: 8}, // yellow Close of OptionsPage
     // yellow Close of OptionsPage
-    'SkillOn1': {x: 137, y: 1555, r: 255, g: 255, b: 247}, // white MyTsum button 11 clock part
-    'SkillOn2': {x: 137, y: 1555, r: 247, g: 219, b: 25}, // light yellow to dark MyTsum button 11 clock part
+    // 'SkillOn1': {x: 137, y: 1555, r: 255, g: 255, b: 247}, // white MyTsum button 11 clock part
+    // 'SkillOn2': {x: 137, y: 1555, r: 247, g: 219, b: 25}, // light yellow to dark MyTsum button 11 clock part
+    // 'SkillOn3': {x: 137, y: 1555, r: 58, g: 223, b: 255}, // light blue
+    // 'SkillOff1': {x: 137, y: 1555, r: 49, g: 129, b: 181},
     'SkillOff1': {x: 137, y: 1555, r: 85, g: 112, b: 157},
     'SkillOff2': {x: 137, y: 1555, r: 72, g: 139, b: 181},
     'SkillOff3': {x: 137, y: 1555, r: 16, g: 73, b: 128},
@@ -135,8 +137,8 @@ var config = {
     'outSendHeartEnd6': {x: 316, y: 1266+30, r: 55, g: 91, b: 139}, // dark blue on portrait icon
     'outSendHeartEnd7': {x: 316, y: 1266+60, r: 55, g: 91, b: 139}, // dark blue on portrait icon
     'outSendHeartEnd8': {x: 316, y: 1266+90, r: 55, g: 91, b: 139}, // dark blue on portrait icon
-    'gameBubblesFrom': {x: 100, y: 632},
-    'gameBubblesTo': {x: 1000, y: 1532},
+    'gameBubblesFrom': {x: 100, y: 1405-122*5}, // shift 122, total 7*5 grid
+    'gameBubblesTo': {x: 100+122*7, y: 1405},
   },
 
   pagePixels: [{ // sort by action sequence, y, x, comment with color, position, button
@@ -796,6 +798,7 @@ function mySend(now) {
 }
 
 function clickFan(now) {
+  mylog('dbg: click Fan');
   var p = config.currentPage.actions[2]; // Fan
 
   tap(p.x, p.y, 60);
@@ -804,25 +807,27 @@ function clickFan(now) {
   config.nextFanTime = config.prevFanTime + config.autoFanSec * 1000;
 }
 
-function clearHorizontalBubbles(startDelay, endDelay, fromY) {
+function clearHorizontalBubbles(yCount, startDelay, endDelay) {
   var fx = config.points['gameBubblesFrom'].x;
   var fy = config.points['gameBubblesFrom'].y;
   var tx = config.points['gameBubblesTo'].x;
   var ty = config.points['gameBubblesTo'].y;
+  var gridWidth = 122;
   if (startDelay !== undefined) {
     longSleep(startDelay);
   }
-  if (fromY !== undefined) {
-    fy = fromY;
+  if (yCount != undefined) {
+    fy = fromY + (5-yCount)*gridWidth;
   }
-  for (var bx = fx; bx <= tx; bx += 140) {
-    for (var by = fy; by <= ty; by += 140) {
+  for (var bx = fx; bx <= tx; bx += gridWidth) {
+    for (var by = ty; by >= fy; by -= gridWidth) {
       tap(bx, by, 10);
     }
   }
   if (endDelay !== undefined) {
     longSleep(endDelay);
   }
+  config.clearBubbles = 0;
 }
 
 function myPlay(now) {
@@ -871,12 +876,12 @@ function myPlay(now) {
         config.clearBubbles++;
         config.prevFanTime = Date.now();
         config.nextFanTime = config.prevFanTime + config.autoFanSec * 1000;
+      } else if (config.clearBubbles > 0) {
+        clearHorizontalBubbles(2); // clean bottom 2 lines
       } else if (now > config.nextFanTime) {
         if (now - config.prevFanTime > 2000) {
           clickFan(now);
         }
-      } else if (config.clearBubbles > 0) {
-        clearHorizontalBubbles(0, 0, config.points['gameBubblesTo'].y);
       } else {
         board = scanBoard(config.img);
         var paths = calculatePaths(board);
